@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bandvov/social-media-go/application"
+	"github.com/bandvov/social-media-go/utils"
 )
 
 type HTTPHandler struct {
@@ -63,6 +64,56 @@ func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "user registered successfully"})
+}
+
+func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	// Parse and validate the request body
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if request.Email == "" || request.Password == "" {
+		http.Error(w, "email and password are required", http.StatusBadRequest)
+		return
+	}
+
+	// Authenticate user
+	user, err := h.UserService.Authenticate(request.Email, request.Password)
+	if err != nil {
+		http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	// Generate JWT token
+	token, err := utils.GenerateJWT(int(user.ID), user.Username)
+	if err != nil {
+		http.Error(w, "failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	// Set token in cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		HttpOnly: true,
+		Path:     "/",
+	})
+
+	// Respond with user data
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user_id":   user.ID,
+		"username":  user.Username,
+		"email":     user.Email,
+		"firstName": user.FirstName,
+		"lastName":  user.LastName,
+		"role":      user.Role,
+	})
 }
 
 func (h *HTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {

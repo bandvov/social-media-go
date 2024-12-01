@@ -1,6 +1,8 @@
 package application
 
 import (
+	"errors"
+
 	"github.com/bandvov/social-media-go/domain"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,6 +32,21 @@ func (s *UserService) RegisterUser(username, password, email, firstName, lastNam
 	}
 
 	return s.repo.CreateUser(user)
+}
+
+func (s *UserService) Authenticate(email, password string) (*domain.User, error) {
+	// Retrieve user by email
+	user, err := s.repo.GetUserByEmail(email)
+	if err != nil {
+		return nil, errors.New("invalid email or password")
+	}
+
+	// Compare passwords
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, errors.New("invalid email or password")
+	}
+
+	return user, nil
 }
 
 func (s *UserService) UpdateUserData(userID int64, email, password, firstName, lastName, bio, profilePic string) error {
@@ -76,4 +93,12 @@ func (s *UserService) ChangeUserRole(userID int64, newRole string, isAdmin bool)
 	}
 
 	return user.ChangeRole(newRole, isAdmin)
+}
+func (s *UserService) FindByEmail(email string) (*domain.User, error) {
+	user, err := s.repo.GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

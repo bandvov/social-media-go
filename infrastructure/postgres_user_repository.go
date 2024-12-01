@@ -39,6 +39,15 @@ func (r *PostgresUserRepository) GetUserByID(id int64) (*domain.User, error) {
 	}
 	return user, nil
 }
+func (r *PostgresUserRepository) GetUserByEmail(email string) (*domain.User, error) {
+	user := &domain.User{}
+	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE email = $1", email).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
 
 func (r *PostgresUserRepository) UpdateUser(user *domain.User) error {
 	_, err := r.db.Exec("UPDATE users SET email = $1, password = $2, status = $3 WHERE id = $4",

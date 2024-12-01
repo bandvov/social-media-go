@@ -6,11 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/infrastructure"
 	"github.com/bandvov/social-media-go/interfaces"
+	"github.com/bandvov/social-media-go/utils"
 )
 
 func main() {
@@ -47,19 +47,16 @@ func main() {
 	// Initialize HTTP handler
 	handler := interfaces.NewHTTPHandler(userService)
 
-	// Set up routes
-	http.HandleFunc("/register", handler.RegisterUser)
-	http.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPut {
-			handler.UpdateUser(w, r)
-		} else if r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/role") {
-			handler.ChangeUserRole(w, r)
-		} else {
-			http.NotFound(w, r)
-		}
-	})
+	// Create a custom router
+	router := utils.NewRouter()
+
+	// Define routes
+	router.Handle("POST", "/register", handler.RegisterUser)
+	router.Handle("PUT", "/user/", handler.UpdateUser)
+	router.Handle("POST", "/user/role", handler.ChangeUserRole)
+	router.Handle("POST", "/login", handler.Login)
 
 	// Start server
 	log.Println("Server is running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
