@@ -3,6 +3,7 @@ package interfaces
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,10 +13,10 @@ import (
 )
 
 type HTTPHandler struct {
-	UserService *application.UserService
+	UserService application.UserServiceInterface
 }
 
-func NewHTTPHandler(userService *application.UserService) *HTTPHandler {
+func NewHTTPHandler(userService application.UserServiceInterface) *HTTPHandler {
 	return &HTTPHandler{UserService: userService}
 }
 
@@ -34,11 +35,8 @@ func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Username  string `json:"username"`
-		Password  string `json:"password"`
-		Email     string `json:"email"`
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -56,7 +54,7 @@ func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.UserService.RegisterUser(req.Username, req.Password, req.Email, req.FirstName, req.LastName)
+	err := h.UserService.RegisterUser(req.Password, req.Email)
 	if err != nil {
 		http.Error(w, "error registering user: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -161,7 +159,7 @@ func (h *HTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	fmt.Println("here")
 	json.NewEncoder(w).Encode(map[string]string{"message": "user updated successfully"})
 }
 

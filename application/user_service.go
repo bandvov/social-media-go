@@ -7,6 +7,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserServiceInterface defines methods for user-related operations.
+type UserServiceInterface interface {
+	Authenticate(email, password string) (*domain.User, error)
+	RegisterUser(password, email string) error
+	UpdateUserData(userID int64, email, password, firstName, lastName, bio, profilePic string) error
+	ChangeUserRole(userID int64, newRole string, isAdmin bool) error
+	FindByEmail(email string) (*domain.User, error)
+}
 type UserService struct {
 	repo domain.UserRepository
 }
