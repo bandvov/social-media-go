@@ -10,7 +10,9 @@ import (
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/infrastructure"
 	"github.com/bandvov/social-media-go/interfaces"
+	"github.com/bandvov/social-media-go/seeds"
 	"github.com/bandvov/social-media-go/utils"
+	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
 )
 
 func main() {
@@ -30,7 +32,7 @@ func main() {
 	if pgPort == "" {
 		log.Fatal("POSTGRES_PORT is not set in the environment")
 	}
-	dbConnectionString := fmt.Sprintf("postgresql://%v:%v@localhost:%v/%v?sslmode=disable", pgUser, pgPassword, pgDb, pgPort)
+	dbConnectionString := fmt.Sprintf("postgresql://%v:%v@localhost:%v/%v?sslmode=disable", pgUser, pgPassword, pgPort, pgDb)
 
 	db, err := sql.Open("postgres", dbConnectionString)
 	if err != nil {
@@ -49,6 +51,12 @@ func main() {
 
 	// Create a custom router
 	router := utils.NewRouter()
+
+	seeds.Seed(db, "./migrations/create_users_table.sql")
+	seeds.Seed(db, "./migrations/create_posts_table.sql")
+
+	seeds.Seed(db, "./seeds/seed_users.sql")
+	seeds.Seed(db, "./seeds/seed_posts.sql")
 
 	// Define routes
 	router.Handle("POST", "/register", interfaces.LoggerMiddleware(handler.RegisterUser))
