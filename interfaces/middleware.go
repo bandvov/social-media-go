@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/bandvov/social-media-go/utils"
 )
 
 // Define keys for context
@@ -38,27 +40,32 @@ func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 func (h *HTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Extract the cookie
-		cookie, err := r.Cookie("userId")
+		cookie, err := r.Cookie("access_token")
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		// Parse userID from cookie
-		var userID int
-		_, err = fmt.Sscanf(cookie.Value, "%d", &userID)
+		var token string
+		_, err = fmt.Sscanf(cookie.Value, "%d", &token)
 		if err != nil {
-			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			http.Error(w, "Invalid access token", http.StatusBadRequest)
 			return
 		}
 
+		userID, err := utils.ValidateJWT(token)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 		// Retrieve user from the database
 		user, err := h.UserService.GetUserByID(int64(userID))
 		if err != nil {
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
-		
+
 		isAdmin := user.Role == "admin"
 
 		// Add userID and isAdmin to context

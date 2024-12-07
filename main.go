@@ -52,7 +52,7 @@ func main() {
 
 	// Define routes
 	router.Handle("POST", "/register", handler.RegisterUser)
-	router.Handle("PUT", "/user/", handler.UpdateUser)
+	router.Handle("PUT", "/user/", handler.AuthMiddleware(handler.UpdateUser))
 	router.Handle("POST", "/user/role", handler.ChangeUserRole)
 	router.Handle("POST", "/login", handler.Login)
 
