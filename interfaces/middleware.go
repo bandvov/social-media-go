@@ -76,3 +76,17 @@ func (h *HTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r.WithContext(ctx))
 	}
 }
+
+// Middleware to extract userID from cookie and add to context
+func (h *HTTPHandler) IsAdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Retrieve userID and isAdmin from context
+		isAdmin := r.Context().Value(isAdminKey).(bool)
+		if !isAdmin {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		// Call the next handler with updated context
+		next(w, r)
+	}
+}
