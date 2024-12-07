@@ -41,7 +41,7 @@ func main() {
 	defer db.Close()
 
 	// Initialize PostgreSQL repository
-	repo := infrastructure.NewPostgresUserRepository(db)
+	repo := infrastructure.NewUserRepository(db)
 
 	// Initialize service
 	userService := application.NewUserService(repo)

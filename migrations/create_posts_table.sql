@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS public.posts
  (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    author_id INT NOT NULL,
     content TEXT NOT NULL,
     like_count INT DEFAULT 0,
     comment_count INT DEFAULT 0,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.posts
     pinned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (author_id) REFERENCES users(id)
 );
 
 -- Create the trigger function
