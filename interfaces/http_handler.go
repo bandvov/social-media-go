@@ -61,10 +61,7 @@ func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	var request domain.CreateUserRequest
 
 	// Parse and validate the request body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -100,14 +97,7 @@ func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with user data
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"user_id":   user.ID,
-		"username":  user.Username,
-		"email":     user.Email,
-		"firstName": user.FirstName,
-		"lastName":  user.LastName,
-		"role":      user.Role,
-	})
+	json.NewEncoder(w).Encode(user)
 }
 
 func (h *HTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {

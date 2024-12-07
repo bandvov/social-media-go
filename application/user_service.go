@@ -51,6 +51,7 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, errors.New("invalid email or password")
 	}
+	user.Password = ""
 
 	return user, nil
 }

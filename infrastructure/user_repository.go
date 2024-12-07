@@ -41,8 +41,8 @@ func (r *UserRepository) GetUserByID(id int64) (*domain.User, error) {
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	user := &domain.User{}
-	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE email = $1", email).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
+	err := r.db.QueryRow("SELECT id,  password, email, status, role FROM users WHERE email = $1", email).
+		Scan(&user.ID, &user.Password, &user.Email, &user.Status, &user.Role)
 	if err != nil {
 		return nil, err
 	}

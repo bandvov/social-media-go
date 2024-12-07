@@ -7,15 +7,15 @@ import (
 
 type User struct {
 	ID         int64
-	Username   string
-	Password   string
+	Username   string `json:"username,omitempty"`
+	Password   string `json:"password,omitempty"`
 	Email      string
-	Status     string // "active", "inactive", "banned"
-	Role       string // "user", "admin", "moderator"
-	FirstName  string
-	LastName   string
-	ProfilePic string    // URL to profile picture
-	Bio        string    // Short biography
+	Status     string    // "active", "inactive", "banned"
+	Role       string    // "user", "admin", "moderator"
+	FirstName  string    `json:"first_name,omitempty"`
+	LastName   string    `json:"last_name,omitempty"`
+	ProfilePic string    `json:"profile_pic,omitempty"` // URL to profile picture
+	Bio        string    `json:"bio,omitempty"`         // Short biography
 	CreatedAt  time.Time // Account creation timestamp
 	UpdatedAt  time.Time // Last update timestamp
 }
