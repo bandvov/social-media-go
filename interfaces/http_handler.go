@@ -89,7 +89,7 @@ func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Set token in cookies
 	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
+		Name:     "access_token",
 		Value:    token,
 		HttpOnly: true,
 		Path:     "/",
