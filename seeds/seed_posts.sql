@@ -1,4 +1,4 @@
-INSERT INTO posts (user_id, content, visibility, tags, like_count, comment_count, share_count, pinned)
+INSERT INTO posts (author_id, content, visibility, tags, like_count, comment_count, share_count, pinned)
 VALUES 
 (1, 'Enjoying the sunny day at the beach!', 'public', '#beach,#sunnyday', 10, 5, 3, FALSE),
 (2, 'Just tried a new recipe, and it is amazing!', 'public', '#cooking,#recipe', 20, 8, 2, FALSE),
