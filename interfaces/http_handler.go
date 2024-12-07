@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bandvov/social-media-go/application"
+	"github.com/bandvov/social-media-go/domain"
 	"github.com/bandvov/social-media-go/utils"
 )
 
@@ -33,28 +34,23 @@ func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	var req struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var newUser domain.CreateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if err := ValidateEmail(req.Email); err != nil {
+	if err := ValidateEmail(newUser.Email); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := ValidatePassword(req.Password); err != nil {
+	if err := ValidatePassword(newUser.Password); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := h.UserService.RegisterUser(req.Password, req.Email)
+	err := h.UserService.RegisterUser(newUser)
 	if err != nil {
 		http.Error(w, "error registering user: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -199,7 +195,6 @@ func (h *HTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]string{"message": "user role changed successfully"})
 }
-
 
 func (h *HTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	// Extract token from Authorization header

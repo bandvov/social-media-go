@@ -65,15 +65,16 @@ func TestLogin_Success(t *testing.T) {
 
 func TestRegister_Success(t *testing.T) {
 	handler := &HTTPHandler{UserService: &application.MockUserService{
-		RegisterUserFunc: func(email, password string) error {
+		RegisterUserFunc: func(user domain.CreateUserRequest) error {
 			return nil
 		},
 	}}
 
-	reqBody := map[string]string{
-		"email":    "newuser@example.com",
-		"password": "password123",
+	reqBody := domain.CreateUserRequest{
+		Email:    "newuser@example.com",
+		Password: "password123",
 	}
+	
 	body, _ := json.Marshal(reqBody)
 
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(body))

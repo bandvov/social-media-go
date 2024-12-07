@@ -15,8 +15,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(user *domain.User) error {
-	_, err := r.db.Exec("INSERT INTO users (username, password, email, status, role) VALUES ($1, $2, $3, $4, $5)",
-		user.Username, user.Password, user.Email, user.Status, user.Role)
+	_, err := r.db.Exec("INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)",
+		user.Password, user.Email, user.Status, user.Role)
 	return err
 }
 
