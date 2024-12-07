@@ -1,7 +1,18 @@
 package interfaces
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"net/http"
+)
+
+// Define keys for context
+type contextKey string
+
+const (
+	userIDKey  contextKey = "userID"
+	isAdminKey contextKey = "isAdmin"
 )
 
 func AdminOnlyMiddleware(next http.Handler) http.Handler {
@@ -14,4 +25,47 @@ func AdminOnlyMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Request: %s %s", r.Method, r.URL.Path)
+		next(w, r)
+	}
+}
+
+// Middleware to extract userID from cookie and add to context
+func (h *HTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Extract the cookie
+		cookie, err := r.Cookie("userId")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Parse userID from cookie
+		var userID int
+		_, err = fmt.Sscanf(cookie.Value, "%d", &userID)
+		if err != nil {
+			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			return
+		}
+
+		// Retrieve user from the database
+		user, err := h.UserService.GetUserByID(int64(userID))
+		if err != nil {
+			http.Error(w, "User not found", http.StatusUnauthorized)
+			return
+		}
+		
+		isAdmin := user.Role == "admin"
+
+		// Add userID and isAdmin to context
+		ctx := context.WithValue(r.Context(), userIDKey, user.ID)
+		ctx = context.WithValue(ctx, isAdminKey, isAdmin)
+
+		// Call the next handler with updated context
+		next(w, r.WithContext(ctx))
+	}
 }

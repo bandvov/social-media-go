@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -55,4 +56,30 @@ func ParseJWT(tokenStr string) (*Claims, error) {
 	}
 
 	return nil, jwt.ErrInvalidKey
+}
+
+// ValidateJWT validates a JWT token and returns the user ID
+func ValidateJWT(tokenString string) (int64, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+		return token, nil
+	})
+
+	if err != nil || !token.Valid {
+		return 0, errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return 0, errors.New("invalid token claims")
+	}
+
+	userID, ok := claims["user_id"].(int64)
+	if !ok {
+		return 0, errors.New("invalid user ID in token")
+	}
+
+	return userID, nil
 }
