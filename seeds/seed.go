@@ -53,5 +53,5 @@ func Seed(db *sql.DB, filePath string) {
 		log.Fatalf("Error reading the SQL file: %v", err)
 	}
 
-	fmt.Println("SQL file imported successfully!")
+	fmt.Printf("SQL file %v imported successfully!\n", filePath)
 }

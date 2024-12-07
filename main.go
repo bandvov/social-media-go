@@ -54,9 +54,11 @@ func main() {
 
 	seeds.Seed(db, "./migrations/create_users_table.sql")
 	seeds.Seed(db, "./migrations/create_posts_table.sql")
+	seeds.Seed(db, "./migrations/media_urls_create_table.sql")
 
 	seeds.Seed(db, "./seeds/seed_users.sql")
 	seeds.Seed(db, "./seeds/seed_posts.sql")
+	seeds.Seed(db, "./seeds/seed_media_urls.sql")
 
 	// Define routes
 	router.Handle("POST", "/register", interfaces.LoggerMiddleware(handler.RegisterUser))
