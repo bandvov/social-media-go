@@ -8,6 +8,7 @@ type MockUserService struct {
 	UpdateUserDataFunc func(userID int64, email, password, firstName, lastName, bio, profilePic string) error
 	ChangeUserRoleFunc func(userID int64, newRole string, isAdmin bool) error
 	FindByEmailFunc    func(email string) (*domain.User, error)
+	GetUserByIDFunc    func(id int64) (*domain.User, error)
 }
 
 func (m *MockUserService) Authenticate(email, password string) (*domain.User, error) {
@@ -25,4 +26,7 @@ func (m *MockUserService) UpdateUserData(userID int64, email, password, firstNam
 }
 func (m *MockUserService) FindByEmail(email string) (*domain.User, error) {
 	return m.FindByEmailFunc(email)
+}
+func (m *MockUserService) GetUserByID(id int64) (*domain.User, error) {
+	return m.GetUserByIDFunc(id)
 }

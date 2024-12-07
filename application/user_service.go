@@ -10,10 +10,11 @@ import (
 // UserServiceInterface defines methods for user-related operations.
 type UserServiceInterface interface {
 	Authenticate(email, password string) (*domain.User, error)
-	RegisterUser(password, email string) error
+	RegisterUser(email, password string) error
 	UpdateUserData(userID int64, email, password, firstName, lastName, bio, profilePic string) error
 	ChangeUserRole(userID int64, newRole string, isAdmin bool) error
 	FindByEmail(email string) (*domain.User, error)
+	GetUserByID(id int64) (*domain.User, error)
 }
 type UserService struct {
 	repo domain.UserRepository
@@ -23,20 +24,17 @@ func NewUserService(repo domain.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) RegisterUser(username, password, email, firstName, lastName string) error {
+func (s *UserService) RegisterUser(email, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	user := &domain.User{
-		Username:  username,
-		Password:  string(hashedPassword),
-		Email:     email,
-		FirstName: firstName,
-		LastName:  lastName,
-		Status:    "active",
-		Role:      "user",
+		Password: string(hashedPassword),
+		Email:    email,
+		Status:   "active",
+		Role:     "user",
 	}
 
 	return s.repo.CreateUser(user)
@@ -104,6 +102,15 @@ func (s *UserService) ChangeUserRole(userID int64, newRole string, isAdmin bool)
 }
 func (s *UserService) FindByEmail(email string) (*domain.User, error) {
 	user, err := s.repo.GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *UserService) GetUserByID(id int64) (*domain.User, error) {
+	user, err := s.repo.GetUserByID(id)
 	if err != nil {
 		return nil, err
 	}

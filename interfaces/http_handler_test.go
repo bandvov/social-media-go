@@ -133,3 +133,42 @@ func TestUpdateUser_Success(t *testing.T) {
 	// 	t.Errorf("expected firstName %s, got %s", "Updated", respBody["firstName"])
 	// }
 }
+
+// TestGetUserProfile_Success tests retrieving the user profile with valid authorization
+func TestGetUserProfile_Success(t *testing.T) {
+	mockUser := &domain.User{
+		ID:        1,
+		Username:  "existinguser@example.com",
+		Email:     "existinguser@example.com",
+		FirstName: "Existing",
+		LastName:  "User",
+		Role:      "user",
+	}
+	// Arrange
+	handler := &HTTPHandler{UserService: &application.MockUserService{
+		GetUserByIDFunc: func(userID int64) (*domain.User, error) {
+			return mockUser, nil
+		},
+	}}
+
+	req := httptest.NewRequest("GET", "/profile", nil)
+	req.Header.Set("Authorization", "Bearer valid-jwt-token")
+	rec := httptest.NewRecorder()
+
+	// Act
+	handler.GetUserProfile(rec, req)
+
+	// Assert
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+
+	var respBody map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &respBody); err != nil {
+		t.Fatalf("response body unmarshal failed: %v", err)
+	}
+
+	if respBody["email"] != "user1@example.com" {
+		t.Errorf("expected email %s, got %s", "user1@example.com", respBody["email"])
+	}
+}

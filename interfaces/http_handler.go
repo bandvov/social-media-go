@@ -199,3 +199,31 @@ func (h *HTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]string{"message": "user role changed successfully"})
 }
+
+
+func (h *HTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	// Extract token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := authHeader[7:]
+	userID, err := utils.ValidateJWT(tokenString)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	// Fetch user profile from service
+	user, err := h.UserService.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Respond with user profile data
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
+}
