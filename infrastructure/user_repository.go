@@ -15,8 +15,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(user *domain.User) error {
-	_, err := r.db.Exec("INSERT INTO users (username, password, email, status, role) VALUES ($1, $2, $3, $4, $5)",
-		user.Username, user.Password, user.Email, user.Status, user.Role)
+	_, err := r.db.Exec("INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)",
+		user.Password, user.Email, user.Status, user.Role)
 	return err
 }
 
@@ -41,8 +41,8 @@ func (r *UserRepository) GetUserByID(id int64) (*domain.User, error) {
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	user := &domain.User{}
-	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE email = $1", email).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
+	err := r.db.QueryRow("SELECT id,  password, email, status, role FROM users WHERE email = $1", email).
+		Scan(&user.ID, &user.Password, &user.Email, &user.Status, &user.Role)
 	if err != nil {
 		return nil, err
 	}

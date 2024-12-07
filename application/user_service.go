@@ -10,7 +10,7 @@ import (
 // UserServiceInterface defines methods for user-related operations.
 type UserServiceInterface interface {
 	Authenticate(email, password string) (*domain.User, error)
-	RegisterUser(email, password string) error
+	RegisterUser(user domain.CreateUserRequest) error
 	UpdateUserData(userID int64, email, password, firstName, lastName, bio, profilePic string) error
 	ChangeUserRole(userID int64, newRole string, isAdmin bool) error
 	FindByEmail(email string) (*domain.User, error)
@@ -24,15 +24,15 @@ func NewUserService(repo domain.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) RegisterUser(email, password string) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func (s *UserService) RegisterUser(u domain.CreateUserRequest) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	user := &domain.User{
 		Password: string(hashedPassword),
-		Email:    email,
+		Email:    u.Email,
 		Status:   "active",
 		Role:     "user",
 	}
@@ -51,6 +51,7 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, errors.New("invalid email or password")
 	}
+	user.Password = ""
 
 	return user, nil
 }

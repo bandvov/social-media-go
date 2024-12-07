@@ -4,7 +4,7 @@ import "github.com/bandvov/social-media-go/domain"
 
 type MockUserService struct {
 	AuthenticateFunc   func(email, password string) (*domain.User, error)
-	RegisterUserFunc   func(password, email string) error
+	RegisterUserFunc   func(user domain.CreateUserRequest) error
 	UpdateUserDataFunc func(userID int64, email, password, firstName, lastName, bio, profilePic string) error
 	ChangeUserRoleFunc func(userID int64, newRole string, isAdmin bool) error
 	FindByEmailFunc    func(email string) (*domain.User, error)
@@ -14,8 +14,8 @@ type MockUserService struct {
 func (m *MockUserService) Authenticate(email, password string) (*domain.User, error) {
 	return m.AuthenticateFunc(email, password)
 }
-func (m *MockUserService) RegisterUser(email, password string) error {
-	return m.RegisterUserFunc(email, password)
+func (m *MockUserService) RegisterUser(user domain.CreateUserRequest) error {
+	return m.RegisterUserFunc(user)
 }
 func (m *MockUserService) ChangeUserRole(userID int64, newRole string, isAdmin bool) error {
 	return m.ChangeUserRoleFunc(userID, newRole, isAdmin)
