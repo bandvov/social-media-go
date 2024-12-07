@@ -51,10 +51,10 @@ func main() {
 	router := utils.NewRouter()
 
 	// Define routes
-	router.Handle("POST", "/register", handler.RegisterUser)
-	router.Handle("PUT", "/user/", handler.AuthMiddleware(handler.UpdateUser))
-	router.Handle("POST", "/user/role", handler.ChangeUserRole)
-	router.Handle("POST", "/login", handler.Login)
+	router.Handle("POST", "/register", interfaces.LoggerMiddleware(handler.RegisterUser))
+	router.Handle("PUT", "/user/", interfaces.LoggerMiddleware(handler.AuthMiddleware(handler.UpdateUser)))
+	router.Handle("POST", "/user/role", interfaces.LoggerMiddleware(handler.AuthMiddleware(handler.ChangeUserRole)))
+	router.Handle("POST", "/login", interfaces.LoggerMiddleware(handler.Login))
 
 	// Start server
 	log.Println("Server is running on :8080")
