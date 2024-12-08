@@ -36,7 +36,7 @@ func GenerateJWT(userID int) (string, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(*&jwt.SigningMethodES256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(JWTSecretKey)
 }
 
@@ -52,7 +52,7 @@ func ParseJWT(tokenStr string) (*Claims, error) {
 
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		// Check if the signing method is HMAC
-		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return JWTSecretKey, nil
@@ -99,6 +99,6 @@ func ValidateJWT(tokenString string) (int, error) {
 	if !ok {
 		return 0, errors.New("invalid user ID in token")
 	}
-	
+
 	return int(userID), nil
 }

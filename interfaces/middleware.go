@@ -61,10 +61,11 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		
+
 		// Retrieve user from the database
 		user, err := h.UserService.GetUserByID(userID)
 		if err != nil {
+			
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}

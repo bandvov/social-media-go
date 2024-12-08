@@ -32,22 +32,42 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 }
 
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
-	user := &domain.User{}
+	var user domain.NullableUser
 	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE id = $1", id).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return &domain.User{
+		ID:         user.ID,
+		Username:   user.Username.String,
+		Email:      user.Email,
+		Password:   user.Status,
+		ProfilePic: user.ProfilePic.String,
+		Status:     user.Status,
+		Role:       user.Role,
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
+	}, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
-	user := &domain.User{}
+	var user domain.NullableUser
 	err := r.db.QueryRow("SELECT id,  password, email, status, role FROM users WHERE email = $1", email).
 		Scan(&user.ID, &user.Password, &user.Email, &user.Status, &user.Role)
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return &domain.User{
+		ID:         user.ID,
+		Username:   user.Username.String,
+		Email:      user.Email,
+		Status:     user.Status,
+		Password:   user.Password,
+		ProfilePic: user.ProfilePic.String,
+		Role:       user.Role,
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
+	}, nil
 }
 
 func (r *UserRepository) UpdateUser(user *domain.User) error {

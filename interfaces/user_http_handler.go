@@ -73,7 +73,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "email and password are required", http.StatusBadRequest)
 		return
 	}
-
+	
 	// Authenticate user
 	user, err := h.UserService.Authenticate(request.Email, request.Password)
 	if err != nil {
@@ -86,8 +86,9 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate JWT token
-	token, err := utils.GenerateJWT(int(user.ID))
+	token, err := utils.GenerateJWT(user.ID)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "failed to generate token", http.StatusInternalServerError)
 		return
 	}

@@ -1,10 +1,25 @@
 package domain
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 )
 
+type NullableUser struct {
+	ID         int
+	Username   sql.NullString `json:"username,omitempty"`
+	Password   string         `json:"password,omitempty"`
+	Email      string
+	Status     string         // "active", "inactive", "banned"
+	Role       string         // "user", "admin", "moderator"
+	FirstName  sql.NullString `json:"first_name,omitempty"`
+	LastName   sql.NullString `json:"last_name,omitempty"`
+	ProfilePic sql.NullString `json:"profile_pic,omitempty"` // URL to profile picture
+	Bio        sql.NullString `json:"bio,omitempty"`         // Short biography
+	CreatedAt  time.Time      // Account creation timestamp
+	UpdatedAt  time.Time      // Last update timestamp
+}
 type User struct {
 	ID         int
 	Username   string `json:"username,omitempty"`
