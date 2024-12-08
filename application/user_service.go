@@ -15,6 +15,7 @@ type UserServiceInterface interface {
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	FindByEmail(email string) (*domain.User, error)
 	GetUserByID(id int) (*domain.User, error)
+	GetAllUsers(limit, offset int, sort string) ([]*domain.User, error)
 }
 type UserService struct {
 	repo domain.UserRepository
@@ -108,4 +109,8 @@ func (s *UserService) FindByEmail(email string) (*domain.User, error) {
 
 func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 	return s.repo.GetUserByID(id)
+}
+
+func (s *UserService) GetAllUsers(limit, offset int, sort string) ([]*domain.User, error) {
+	return s.repo.GetAllUsers(limit, offset, sort)
 }

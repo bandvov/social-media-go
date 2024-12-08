@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/bandvov/social-media-go/domain"
 )
@@ -53,4 +54,41 @@ func (r *UserRepository) UpdateUser(user *domain.User) error {
 	_, err := r.db.Exec("UPDATE users SET email = $1, password = $2, status = $3 WHERE id = $4",
 		user.Email, user.Password, user.Status, user.ID)
 	return err
+}
+
+func (u *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.User, error) {
+	// Validate and set default sorting
+	order := "DESC"
+	if sort == "asc" {
+		order = "ASC"
+	}
+
+	query := fmt.Sprintf(`
+        SELECT id, username, email, status, role, created_at
+        FROM users
+        ORDER BY created_at %s
+        LIMIT $1 OFFSET $2
+    `, order)
+
+	rows, err := u.db.Query(query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		var user domain.User
+		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Status, &user.Role, &user.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

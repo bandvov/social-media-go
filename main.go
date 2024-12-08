@@ -67,6 +67,7 @@ func main() {
 	router.Handle("POST", "/user/login", interfaces.LoggerMiddleware(userHandler.Login))
 	router.Handle("POST", "/user/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
 	router.Handle("GET", "/user/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
+	router.Handle("GET", "/user/all", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
 	router.Handle("PUT", "/user/", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
 
 	router.Handle("POST", "/post", interfaces.LoggerMiddleware(postHandler.Create))
