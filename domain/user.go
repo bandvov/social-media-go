@@ -6,16 +6,16 @@ import (
 )
 
 type User struct {
-	ID         int64
-	Username   string `json:"username,omitempty"`
-	Password   string `json:"password,omitempty"`
+	ID         int
+	Username   string `json:"username"`
+	Password   string `json:"password"`
 	Email      string
 	Status     string    // "active", "inactive", "banned"
 	Role       string    // "user", "admin", "moderator"
-	FirstName  string    `json:"first_name,omitempty"`
-	LastName   string    `json:"last_name,omitempty"`
-	ProfilePic string    `json:"profile_pic,omitempty"` // URL to profile picture
-	Bio        string    `json:"bio,omitempty"`         // Short biography
+	FirstName  string    `json:"first_name"`
+	LastName   string    `json:"last_name"`
+	ProfilePic string    `json:"profile_pic"` // URL to profile picture
+	Bio        string    `json:"bio"`         // Short biography
 	CreatedAt  time.Time // Account creation timestamp
 	UpdatedAt  time.Time // Last update timestamp
 }

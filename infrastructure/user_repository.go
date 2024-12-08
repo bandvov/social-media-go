@@ -30,7 +30,7 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 	return user, nil
 }
 
-func (r *UserRepository) GetUserByID(id int64) (*domain.User, error) {
+func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	user := &domain.User{}
 	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE id = $1", id).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)

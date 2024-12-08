@@ -14,7 +14,7 @@ func NewPostRepository(db *sql.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
-func (r *PostRepository) CreatePost(post *domain.Post) error {
+func (r *PostRepository) Create(post *domain.Post) error {
 	_, err := r.db.Exec("INSERT INTO posts (author_id, content, visibility, tags, like_count, comment_count, share_count, pinned) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);",
 		post.AuthorID, post.Content, post.Visibility, post.Tags, post.LikeCount, post.CommentCount, post.ShareCount, post.Pinned)
 	return err

@@ -8,6 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type PostServiceInterface interface {
+	Create(context.Context, string, string) (*domain.Post, error)
+}
+
 type PostService struct {
 	postRepo domain.PostRepository
 }
@@ -16,7 +20,7 @@ func NewPostService(repo domain.PostRepository) *PostService {
 	return &PostService{postRepo: repo}
 }
 
-func (s *PostService) CreatePost(ctx context.Context, title, content string) (*domain.Post, error) {
+func (s *PostService) Create(ctx context.Context, title, content string) (*domain.Post, error) {
 	authorID, ok := ctx.Value("userID").(string)
 	if !ok || authorID == "" {
 		return nil, errors.New("unauthenticated")

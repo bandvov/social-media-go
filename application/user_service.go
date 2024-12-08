@@ -11,10 +11,10 @@ import (
 type UserServiceInterface interface {
 	Authenticate(email, password string) (*domain.User, error)
 	RegisterUser(user domain.CreateUserRequest) error
-	UpdateUserData(userID int64, email, password, firstName, lastName, bio, profilePic string) error
-	ChangeUserRole(userID int64, newRole string, isAdmin bool) error
+	UpdateUserData(userID int, email, password, firstName, lastName, bio, profilePic string) error
+	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	FindByEmail(email string) (*domain.User, error)
-	GetUserByID(id int64) (*domain.User, error)
+	GetUserByID(id int) (*domain.User, error)
 }
 type UserService struct {
 	repo domain.UserRepository
@@ -44,7 +44,7 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	// Retrieve user by email
 	user, err := s.repo.GetUserByEmail(email)
 	if err != nil {
-		return nil, errors.New("invalid email or password")
+		return nil, err
 	}
 
 	// Compare passwords
@@ -56,7 +56,7 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	return user, nil
 }
 
-func (s *UserService) UpdateUserData(userID int64, email, password, firstName, lastName, bio, profilePic string) error {
+func (s *UserService) UpdateUserData(userID int, email, password string, firstName, lastName, bio, profilePic string) error {
 	user, err := s.repo.GetUserByID(userID)
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (s *UserService) UpdateUserData(userID int64, email, password, firstName, l
 	return s.repo.UpdateUser(user)
 }
 
-func (s *UserService) ChangeUserRole(userID int64, newRole string, isAdmin bool) error {
+func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error {
 	user, err := s.repo.GetUserByID(userID)
 	if err != nil {
 		return err
@@ -101,20 +101,11 @@ func (s *UserService) ChangeUserRole(userID int64, newRole string, isAdmin bool)
 
 	return user.ChangeRole(newRole, isAdmin)
 }
-func (s *UserService) FindByEmail(email string) (*domain.User, error) {
-	user, err := s.repo.GetUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
 
-	return user, nil
+func (s *UserService) FindByEmail(email string) (*domain.User, error) {
+	return s.repo.GetUserByEmail(email)
 }
 
-func (s *UserService) GetUserByID(id int64) (*domain.User, error) {
-	user, err := s.repo.GetUserByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+func (s *UserService) GetUserByID(id int) (*domain.User, error) {
+	return s.repo.GetUserByID(id)
 }

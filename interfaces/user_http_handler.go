@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,27 +14,27 @@ import (
 	"github.com/bandvov/social-media-go/utils"
 )
 
-type HTTPHandler struct {
+type UserHTTPHandler struct {
 	UserService application.UserServiceInterface
 }
 
-func NewHTTPHandler(userService application.UserServiceInterface) *HTTPHandler {
-	return &HTTPHandler{UserService: userService}
+func NewUserHTTPHandler(userService application.UserServiceInterface) *UserHTTPHandler {
+	return &UserHTTPHandler{UserService: userService}
 }
 
-func parseUserIDFromPath(path string) (int64, error) {
+func parseUserIDFromPath(path string) (int, error) {
 	segments := strings.Split(strings.Trim(path, "/"), "/")
 	if len(segments) < 2 {
 		return 0, errors.New("invalid URL")
 	}
-	return strconv.ParseInt(segments[1], 10, 64)
+	userId, err := strconv.ParseInt(segments[1], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return int(userId), nil
 }
 
-func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var newUser domain.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
@@ -60,7 +61,7 @@ func (h *HTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "user registered successfully"})
 }
 
-func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var request domain.CreateUserRequest
 
 	// Parse and validate the request body
@@ -76,12 +77,16 @@ func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Authenticate user
 	user, err := h.UserService.Authenticate(request.Email, request.Password)
 	if err != nil {
-		http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		if err == sql.ErrNoRows {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	// Generate JWT token
-	token, err := utils.GenerateJWT(int(user.ID), user.Username)
+	token, err := utils.GenerateJWT(int(user.ID))
 	if err != nil {
 		http.Error(w, "failed to generate token", http.StatusInternalServerError)
 		return
@@ -100,7 +105,7 @@ func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *HTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -113,12 +118,13 @@ func (h *HTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
+		UserName   string `json:"username"`
 		Email      string `json:"email"`
 		Password   string `json:"password"`
-		FirstName  string `json:"first_name"`
-		LastName   string `json:"last_name"`
+		FirstName  string `json:"firstName"`
+		LastName   string `json:"lastName"`
 		Bio        string `json:"bio"`
-		ProfilePic string `json:"profile_pic"`
+		ProfilePic string `json:"profilePic"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -149,7 +155,7 @@ func (h *HTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "user updated successfully"})
 }
 
-func (h *HTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
+func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -186,25 +192,18 @@ func (h *HTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "user role changed successfully"})
 }
 
-func (h *HTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-	// Extract token from Authorization header
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" || len(authHeader) < 7 || authHeader[:7] != "Bearer " {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 
-	tokenString := authHeader[7:]
-	userID, err := utils.ValidateJWT(tokenString)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return
-	}
-
+	userID := r.Context().Value("userID").(int)
+	fmt.Printf("type: %t, value: %v ", userID)
 	// Fetch user profile from service
 	user, err := h.UserService.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 

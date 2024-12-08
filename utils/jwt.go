@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -13,13 +14,12 @@ var JWTSecretKey []byte
 
 // Claims defines the custom claims structure.
 type Claims struct {
-	UserID   int    `json:"user_id"`
-	Username string `json:"username"`
+	UserID int `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
 // GenerateJWT generates a new JWT token for a user.
-func GenerateJWT(userID int, username string) (string, error) {
+func GenerateJWT(userID int) (string, error) {
 	if JWTSecretKey == nil {
 		jwtSecret := os.Getenv("JWT_SECRET")
 		if jwtSecret == "" {
@@ -29,21 +29,32 @@ func GenerateJWT(userID int, username string) (string, error) {
 	}
 
 	claims := &Claims{
-		UserID:   userID,
-		Username: username,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(*&jwt.SigningMethodES256, claims)
 	return token.SignedString(JWTSecretKey)
 }
 
 // ParseJWT validates a JWT token and extracts claims.
 func ParseJWT(tokenStr string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	if JWTSecretKey == nil {
+		jwtSecret := os.Getenv("JWT_SECRET")
+		if jwtSecret == "" {
+			log.Fatal("JWT_SECRET_KEY is not set in the environment")
+		}
+		JWTSecretKey = []byte(jwtSecret)
+	}
+
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// Check if the signing method is HMAC
+		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return JWTSecretKey, nil
 	})
 
@@ -59,12 +70,20 @@ func ParseJWT(tokenStr string) (*Claims, error) {
 }
 
 // ValidateJWT validates a JWT token and returns the user ID
-func ValidateJWT(tokenString string) (int64, error) {
+func ValidateJWT(tokenString string) (int, error) {
+	if JWTSecretKey == nil {
+		jwtSecret := os.Getenv("JWT_SECRET")
+		if jwtSecret == "" {
+			log.Fatal("JWT_SECRET_KEY is not set in the environment")
+		}
+		JWTSecretKey = []byte(jwtSecret)
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
 		}
-		return token, nil
+		return JWTSecretKey, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -76,10 +95,10 @@ func ValidateJWT(tokenString string) (int64, error) {
 		return 0, errors.New("invalid token claims")
 	}
 
-	userID, ok := claims["user_id"].(int64)
+	userID, ok := claims["user_id"].(float64)
 	if !ok {
 		return 0, errors.New("invalid user ID in token")
 	}
-
-	return userID, nil
+	
+	return int(userID), nil
 }

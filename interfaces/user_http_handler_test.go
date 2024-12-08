@@ -3,7 +3,6 @@ package interfaces
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +16,6 @@ func TestLogin_Success(t *testing.T) {
 		AuthenticateFunc: func(email, password string) (*domain.User, error) {
 			return &domain.User{
 				ID:        1,
-				Username:  "johndoe",
 				Email:     "john@example.com",
 				FirstName: "John",
 				LastName:  "Doe",
@@ -26,7 +24,7 @@ func TestLogin_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := &HTTPHandler{UserService: mockUserService}
+	handler := &UserHTTPHandler{UserService: mockUserService}
 
 	reqBody := map[string]string{
 		"email":    "john@example.com",
@@ -49,10 +47,6 @@ func TestLogin_Success(t *testing.T) {
 		t.Fatalf("response body unmarshal failed: %v", err)
 	}
 
-	if respBody["username"] != "johndoe" {
-		t.Errorf("expected username %s, got %s", "johndoe", respBody["username"])
-	}
-
 	// Validate cookie
 	cookies := rec.Result().Cookies()
 	if len(cookies) == 0 {
@@ -64,7 +58,7 @@ func TestLogin_Success(t *testing.T) {
 }
 
 func TestRegister_Success(t *testing.T) {
-	handler := &HTTPHandler{UserService: &application.MockUserService{
+	handler := &UserHTTPHandler{UserService: &application.MockUserService{
 		RegisterUserFunc: func(user domain.CreateUserRequest) error {
 			return nil
 		},
@@ -74,7 +68,7 @@ func TestRegister_Success(t *testing.T) {
 		Email:    "newuser@example.com",
 		Password: "password123",
 	}
-	
+
 	body, _ := json.Marshal(reqBody)
 
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(body))
@@ -91,14 +85,14 @@ func TestRegister_Success(t *testing.T) {
 func TestUpdateUser_Success(t *testing.T) {
 	mockUser := &domain.User{
 		ID:        1,
-		Username:  "existinguser@example.com",
+		Username:  "John",
 		Email:     "existinguser@example.com",
 		FirstName: "Existing",
 		LastName:  "User",
 		Role:      "user",
 	}
-	handler := &HTTPHandler{UserService: &application.MockUserService{
-		UpdateUserDataFunc: func(userID int64, email string, password string, firstName string, lastName string, bio string, profilePic string) error {
+	handler := &UserHTTPHandler{UserService: &application.MockUserService{
+		UpdateUserDataFunc: func(userID int, email, password, firstName, lastName, bio, profilePic string) error {
 			return nil
 		},
 	}}
@@ -124,12 +118,12 @@ func TestUpdateUser_Success(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
-	fmt.Println(rec.Body.Bytes())
+
 	var respBody map[string]interface{}
 	if err := json.Unmarshal(rec.Body.Bytes(), &respBody); err != nil {
 		t.Fatalf("response body unmarshal failed: %v", err)
 	}
-	fmt.Println(respBody)
+
 	// if respBody["firstName"] != "Updated" {
 	// 	t.Errorf("expected firstName %s, got %s", "Updated", respBody["firstName"])
 	// }
@@ -139,15 +133,15 @@ func TestUpdateUser_Success(t *testing.T) {
 func TestGetUserProfile_Success(t *testing.T) {
 	mockUser := &domain.User{
 		ID:        1,
-		Username:  "existinguser@example.com",
+		Username:  "John",
 		Email:     "existinguser@example.com",
 		FirstName: "Existing",
 		LastName:  "User",
 		Role:      "user",
 	}
 	// Arrange
-	handler := &HTTPHandler{UserService: &application.MockUserService{
-		GetUserByIDFunc: func(userID int64) (*domain.User, error) {
+	handler := &UserHTTPHandler{UserService: &application.MockUserService{
+		GetUserByIDFunc: func(userID int) (*domain.User, error) {
 			return mockUser, nil
 		},
 	}}

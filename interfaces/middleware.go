@@ -37,7 +37,7 @@ func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Middleware to extract userID from cookie and add to context
-func (h *HTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Extract the cookie
 		cookie, err := r.Cookie("access_token")
@@ -48,19 +48,22 @@ func (h *HTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		// Parse userID from cookie
 		var token string
-		_, err = fmt.Sscanf(cookie.Value, "%d", &token)
+		_, err = fmt.Sscanf(cookie.Value, "%s", &token)
 		if err != nil {
 			http.Error(w, "Invalid access token", http.StatusBadRequest)
 			return
 		}
 
 		userID, err := utils.ValidateJWT(token)
+
 		if err != nil {
+			fmt.Println(err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+		
 		// Retrieve user from the database
-		user, err := h.UserService.GetUserByID(int64(userID))
+		user, err := h.UserService.GetUserByID(userID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
@@ -78,7 +81,7 @@ func (h *HTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Middleware to extract userID from cookie and add to context
-func (h *HTTPHandler) IsAdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func (h *UserHTTPHandler) IsAdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Retrieve userID and isAdmin from context
 		isAdmin := r.Context().Value(isAdminKey).(bool)

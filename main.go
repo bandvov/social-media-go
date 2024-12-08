@@ -38,15 +38,18 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
 	// Initialize PostgreSQL repository
-	repo := infrastructure.NewUserRepository(db)
+	userRepo := infrastructure.NewUserRepository(db)
 
 	// Initialize service
-	userService := application.NewUserService(repo)
+	userService := application.NewUserService(userRepo)
 
 	// Initialize HTTP handler
-	handler := interfaces.NewHTTPHandler(userService)
+	userHandler := interfaces.NewUserHTTPHandler(userService)
+
+	postRepo := infrastructure.NewPostRepository(db)
+	postService := application.NewPostService(postRepo)
+	postHandler := interfaces.NewPostHTTPHandler(postService)
 
 	// Create a custom router
 	router := utils.NewRouter()
@@ -60,10 +63,13 @@ func main() {
 	// seeds.Seed(db, "./seeds/seed_media_urls.sql")
 
 	// Define routes
-	router.Handle("POST", "/register", interfaces.LoggerMiddleware(handler.RegisterUser))
-	router.Handle("PUT", "/user/", interfaces.LoggerMiddleware(handler.AuthMiddleware(handler.UpdateUser)))
-	router.Handle("POST", "/user/role", interfaces.LoggerMiddleware(handler.AuthMiddleware(handler.ChangeUserRole)))
-	router.Handle("POST", "/login", interfaces.LoggerMiddleware(handler.Login))
+	router.Handle("POST", "/user/register", interfaces.LoggerMiddleware(userHandler.RegisterUser))
+	router.Handle("POST", "/user/login", interfaces.LoggerMiddleware(userHandler.Login))
+	router.Handle("POST", "/user/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
+	router.Handle("GET", "/user/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
+	router.Handle("PUT", "/user/", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
+
+	router.Handle("POST", "/post", interfaces.LoggerMiddleware(postHandler.Create))
 
 	// Start server
 	log.Println("Server is running on :8080")
