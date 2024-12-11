@@ -33,17 +33,28 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	var user domain.NullableUser
-	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE id = $1", id).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
+	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at  FROM users WHERE id = $1", id).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
+
+	var username, ProfilePic string
+
+	if user.Username.Valid {
+		username = user.Username.String
+	}
+
+	if user.ProfilePic.Valid {
+		username = user.ProfilePic.String
+	}
+
 	return &domain.User{
 		ID:         user.ID,
-		Username:   user.Username.String,
+		Username:   username,
 		Email:      user.Email,
-		Password:   user.Status,
-		ProfilePic: user.ProfilePic.String,
+		Password:   user.Password,
+		ProfilePic: ProfilePic,
 		Status:     user.Status,
 		Role:       user.Role,
 		CreatedAt:  user.CreatedAt,
@@ -51,19 +62,31 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	}, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
+	fmt.Println("GetUserByEmail", email)
 	var user domain.NullableUser
-	err := r.db.QueryRow("SELECT id,  password, email, status, role FROM users WHERE email = $1", email).
-		Scan(&user.ID, &user.Password, &user.Email, &user.Status, &user.Role)
+	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1", email).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
+
+	var username, ProfilePic string
+
+	if user.Username.Valid {
+		username = user.Username.String
+	}
+
+	if user.ProfilePic.Valid {
+		username = user.ProfilePic.String
+	}
+
 	return &domain.User{
 		ID:         user.ID,
-		Username:   user.Username.String,
+		Username:   username,
 		Email:      user.Email,
-		Status:     user.Status,
 		Password:   user.Password,
-		ProfilePic: user.ProfilePic.String,
+		ProfilePic: ProfilePic,
+		Status:     user.Status,
 		Role:       user.Role,
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,

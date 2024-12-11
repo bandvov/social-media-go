@@ -73,7 +73,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "email and password are required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Authenticate user
 	user, err := h.UserService.Authenticate(request.Email, request.Password)
 	if err != nil {
@@ -196,7 +196,7 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.Context().Value("userID").(int)
-	fmt.Printf("type: %t, value: %v ", userID)
+
 	// Fetch user profile from service
 	user, err := h.UserService.GetUserByID(userID)
 	if err != nil {
