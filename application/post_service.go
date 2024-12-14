@@ -5,7 +5,7 @@ import (
 )
 
 type PostServiceInterface interface {
-	Create(post *domain.Post) error
+	Create(post *domain.CreatePostRequest) error
 	Delete(id int) error
 }
 
@@ -17,7 +17,7 @@ func NewPostService(repo domain.PostRepository) *PostService {
 	return &PostService{postRepo: repo}
 }
 
-func (s *PostService) Create(post *domain.Post) error {
+func (s *PostService) Create(post *domain.CreatePostRequest) error {
 	return s.postRepo.Create(post)
 }
 

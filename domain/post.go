@@ -3,6 +3,7 @@ package domain
 import "time"
 
 type CreatePostRequest struct {
+	AuthorID   int       `json:"author_id"` // ID of the user who created the post
 	Content    string    `json:"content"`
 	Pinned     bool      `json:"pinned,omitempty"`
 	Tags       string    `json:"tags,omitempty"`

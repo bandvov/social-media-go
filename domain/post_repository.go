@@ -1,7 +1,7 @@
 package domain
 
 type PostRepository interface {
-	Create(post *Post) error
+	Create(post *CreatePostRequest) error
 	// GetByID(id string) (*Post, error)
 	// Update(post *Post) error
 	Delete(id int) error

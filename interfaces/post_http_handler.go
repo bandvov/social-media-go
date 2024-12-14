@@ -24,7 +24,7 @@ func (p *PostHTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newPost domain.Post
+	var newPost domain.CreatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
