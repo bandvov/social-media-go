@@ -19,3 +19,8 @@ func (r *PostRepository) Create(post *domain.Post) error {
 		post.AuthorID, post.Content, post.Visibility, post.Tags, post.LikeCount, post.CommentCount, post.ShareCount, post.Pinned)
 	return err
 }
+
+func (r *PostRepository) Delete(id int) error {
+	_, err := r.db.Exec("DELETE from posts WHERE id = $1;", id)
+	return err
+}
