@@ -32,65 +32,25 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 }
 
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
-	var user domain.NullableUser
+	var user domain.User
 	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at  FROM users WHERE id = $1", id).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	var username, profilePic string
-
-	if user.Username.Valid {
-		username = user.Username.String
-	}
-
-	if user.ProfilePic.Valid {
-		profilePic = user.ProfilePic.String
-	}
-
-	return &domain.User{
-		ID:         user.ID,
-		Username:   username,
-		Email:      user.Email,
-		Password:   user.Password,
-		ProfilePic: profilePic,
-		Status:     user.Status,
-		Role:       user.Role,
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}, nil
+	return &user, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	fmt.Println("GetUserByEmail", email)
-	var user domain.NullableUser
+	var user domain.User
 	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1", email).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	var username, ProfilePic string
-
-	if user.Username.Valid {
-		username = user.Username.String
-	}
-
-	if user.ProfilePic.Valid {
-		username = user.ProfilePic.String
-	}
-
-	return &domain.User{
-		ID:         user.ID,
-		Username:   username,
-		Email:      user.Email,
-		Password:   user.Password,
-		ProfilePic: ProfilePic,
-		Status:     user.Status,
-		Role:       user.Role,
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}, nil
+	return &user, nil
 }
 
 func (r *UserRepository) UpdateUser(user *domain.User) error {
