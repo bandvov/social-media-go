@@ -77,7 +77,7 @@ func main() {
 	router.Handle("GET", "/user/all", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
 	router.Handle("PUT", "/user/", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
 
-	router.Handle("POST", "/post", interfaces.LoggerMiddleware(postHandler.Create))
+	router.Handle("POST", "/post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Create)))
 
 	// Start server
 	log.Printf("Server is running on %v", PORT)

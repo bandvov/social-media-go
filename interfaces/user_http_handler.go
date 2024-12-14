@@ -194,9 +194,11 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("here5")
-	fmt.Println(r.Context())
-	userId, _ := r.Context().Value(userIDKey).(interface{}).(int)
+	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userId == 0 {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
 
 	// Fetch user profile from service
 	user, err := h.UserService.GetUserByID(userId)
