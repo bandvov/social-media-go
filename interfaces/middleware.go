@@ -65,7 +65,6 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 		// Retrieve user from the database
 		user, err := h.UserService.GetUserByID(userID)
 		if err != nil {
-			
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
@@ -75,7 +74,6 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 		// Add userID and isAdmin to context
 		ctx := context.WithValue(r.Context(), userIDKey, user.ID)
 		ctx = context.WithValue(ctx, isAdminKey, isAdmin)
-
 		// Call the next handler with updated context
 		next(w, r.WithContext(ctx))
 	}

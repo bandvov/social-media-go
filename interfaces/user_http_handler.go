@@ -194,11 +194,12 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-
-	userID := r.Context().Value("userID").(int)
+	fmt.Println("here5")
+	fmt.Println(r.Context())
+	userId, _ := r.Context().Value(userIDKey).(interface{}).(int)
 
 	// Fetch user profile from service
-	user, err := h.UserService.GetUserByID(userID)
+	user, err := h.UserService.GetUserByID(userId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "User not found", http.StatusNotFound)

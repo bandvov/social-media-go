@@ -14,7 +14,14 @@ import (
 	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
 )
 
+var PORT = ":8080"
+
 func main() {
+	port := os.Getenv("PORT")
+	if port != "" {
+		PORT = fmt.Sprintf(":%v", port)
+	}
+
 	pgUser := os.Getenv("POSTGRES_USER")
 	if pgUser == "" {
 		log.Fatal("POSTGRES_USER is not set in the environment")
@@ -73,6 +80,6 @@ func main() {
 	router.Handle("POST", "/post", interfaces.LoggerMiddleware(postHandler.Create))
 
 	// Start server
-	log.Println("Server is running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Printf("Server is running on %v", PORT)
+	log.Fatal(http.ListenAndServe(PORT, router))
 }

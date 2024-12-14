@@ -39,14 +39,14 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 		return nil, err
 	}
 
-	var username, ProfilePic string
+	var username, profilePic string
 
 	if user.Username.Valid {
 		username = user.Username.String
 	}
 
 	if user.ProfilePic.Valid {
-		username = user.ProfilePic.String
+		profilePic = user.ProfilePic.String
 	}
 
 	return &domain.User{
@@ -54,7 +54,7 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 		Username:   username,
 		Email:      user.Email,
 		Password:   user.Password,
-		ProfilePic: ProfilePic,
+		ProfilePic: profilePic,
 		Status:     user.Status,
 		Role:       user.Role,
 		CreatedAt:  user.CreatedAt,
@@ -107,7 +107,7 @@ func (u *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.
 	}
 
 	query := fmt.Sprintf(`
-        SELECT id, username, email, status, role, created_at
+        SELECT id, username, email, status, role, profile_pic, created_at
         FROM users
         ORDER BY created_at %s
         LIMIT $1 OFFSET $2
@@ -122,7 +122,7 @@ func (u *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.
 	var users []*domain.User
 	for rows.Next() {
 		var user domain.User
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Status, &user.Role, &user.CreatedAt)
+		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
