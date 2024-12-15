@@ -20,6 +20,11 @@ func (r *PostRepository) Create(post *domain.CreatePostRequest) error {
 	return err
 }
 
+func (r *PostRepository) Update(post *domain.Post) error {
+	_, err := r.db.Exec("UPDATE posts SET content = $1, visibility = $2, pinned = $3, tags = $4 WHERE id = $5",
+		post.Content, post.Visibility, post.Pinned, post.Tags)
+	return err
+}
 func (r *PostRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE from posts WHERE id = $1;", id)
 	return err

@@ -3,7 +3,6 @@ package interfaces
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
@@ -47,16 +46,24 @@ func (p *PostHTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Query().Get("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
-		return
-	}
-	err = p.PostService.Delete(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+
 	json.NewEncoder(w).Encode(map[string]string{"message": "post deleted successfully"})
+}
+
+func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
+
+	var post *domain.CreatePostRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	err := p.PostService.Update(&domain.Post{
+		Content: post.Content, Visibility: post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
+	})
+	if err != nil {
+		http.Error(w, "error updating post: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"message": "post updated successfully"})
 }

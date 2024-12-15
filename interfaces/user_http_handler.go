@@ -122,10 +122,10 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		UserName   string `json:"username"`
 		Email      string `json:"email"`
 		Password   string `json:"password"`
-		FirstName  string `json:"firstName"`
-		LastName   string `json:"lastName"`
+		FirstName  string `json:"first_name"`
+		LastName   string `json:"last_name"`
 		Bio        string `json:"bio"`
-		ProfilePic string `json:"profilePic"`
+		ProfilePic string `json:"profile_pic"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -152,7 +152,6 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("here")
 	json.NewEncoder(w).Encode(map[string]string{"message": "user updated successfully"})
 }
 

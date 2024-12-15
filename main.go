@@ -79,6 +79,7 @@ func main() {
 
 	router.Handle("POST", "/post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Create)))
 	router.Handle("DELETE", "/post/delete", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Delete)))
+	router.Handle("PUT", "/post/update", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Update)))
 
 	// Start server
 	log.Printf("Server is running on %v", PORT)
