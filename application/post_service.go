@@ -8,6 +8,7 @@ type PostServiceInterface interface {
 	Create(post *domain.CreatePostRequest) error
 	Delete(id int) error
 	Update(post *domain.Post) error
+	GetByID(id int) (*domain.Post, error)
 }
 
 type PostService struct {
@@ -25,6 +26,11 @@ func (s *PostService) Create(post *domain.CreatePostRequest) error {
 func (s *PostService) Delete(id int) error {
 	return s.Delete(id)
 }
+
 func (s *PostService) Update(post *domain.Post) error {
 	return s.Update(post)
+}
+
+func (s *PostService) GetByID(id int) (*domain.Post, error) {
+	return s.GetByID(id)
 }

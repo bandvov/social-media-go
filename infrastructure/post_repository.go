@@ -29,3 +29,14 @@ func (r *PostRepository) Delete(id int) error {
 	_, err := r.db.Exec("DELETE from posts WHERE id = $1;", id)
 	return err
 }
+
+func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
+	var post domain.Post
+	err := r.db.QueryRow("SELECT *  FROM users WHERE id = $1", id).
+		Scan(&post)
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}

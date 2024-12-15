@@ -70,16 +70,16 @@ func main() {
 	// seeds.Seed(db, "./seeds/seed_media_urls.sql")
 
 	// Define routes
-	router.Handle("POST", "/user/register", interfaces.LoggerMiddleware(userHandler.RegisterUser))
-	router.Handle("POST", "/user/login", interfaces.LoggerMiddleware(userHandler.Login))
-	router.Handle("POST", "/user/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
-	router.Handle("GET", "/user/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
-	router.Handle("GET", "/user/all", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
-	router.Handle("PUT", "/user/", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
+	router.HandleFunc("GET /user", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
+	router.HandleFunc("POST /user", interfaces.LoggerMiddleware(userHandler.RegisterUser))
+	router.HandleFunc("DELETE /user/", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
+	router.HandleFunc("POST /user/login", interfaces.LoggerMiddleware(userHandler.Login))
+	router.HandleFunc("PUT /user/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
+	router.HandleFunc("GET /user/all", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
 
-	router.Handle("POST", "/post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Create)))
-	router.Handle("DELETE", "/post/delete", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Delete)))
-	router.Handle("PUT", "/post/update", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Update)))
+	router.HandleFunc("POST /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Create)))
+	router.HandleFunc("DELETE /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Delete)))
+	router.HandleFunc("PUT /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Update)))
 
 	// Start server
 	log.Printf("Server is running on %v", PORT)

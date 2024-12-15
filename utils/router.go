@@ -15,16 +15,8 @@ func NewRouter() *Router {
 		mux: http.NewServeMux(),
 	}
 }
-
-// Handle registers a handler for a specific method and path.
-func (r *Router) Handle(method string, path string, handler http.HandlerFunc) {
-	r.mux.HandleFunc(path, func(w http.ResponseWriter, req *http.Request) {
-		if req.Method != method {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		handler(w, req)
-	})
+func (r *Router) HandleFunc(pattern string, handler func(w http.ResponseWriter, req *http.Request)) {
+	r.mux.HandleFunc(pattern, handler)
 }
 
 // ServeHTTP makes Router implement http.Handler.
