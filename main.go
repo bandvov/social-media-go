@@ -10,7 +10,6 @@ import (
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/infrastructure"
 	"github.com/bandvov/social-media-go/interfaces"
-	"github.com/bandvov/social-media-go/seeds"
 	"github.com/bandvov/social-media-go/utils"
 	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
 )
@@ -65,12 +64,14 @@ func main() {
 	// seeds.Seed(db, "./migrations/create_users_table.sql")
 	// seeds.Seed(db, "./migrations/create_posts_table.sql")
 	// seeds.Seed(db, "./migrations/media_urls_create_table.sql")
-	seeds.Seed(db, "./migrations/create_reactions_table.sql")
+	// seeds.Seed(db, "./migrations/create_reactions_table.sql")
+	// seeds.Seed(db, "./migrations/create_reaction_types.table.sql")
 
 	// seeds.Seed(db, "./seeds/seed_users.sql")
 	// seeds.Seed(db, "./seeds/seed_posts.sql")
 	// seeds.Seed(db, "./seeds/seed_media_urls.sql")
-	seeds.Seed(db, "./seeds/seed_reactions.sql")
+	// seeds.Seed(db, "./seeds/seed_reaction_types.sql")
+	// seeds.Seed(db, "./seeds/seed_reactions.sql")
 
 	// Define routes
 	router.HandleFunc("GET /user", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))

@@ -1,12 +1,12 @@
 CREATE TABLE reactions (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,            
-    reactable_type VARCHAR(50) NOT NULL, 
-    reactable_id INT NOT NULL,        
-    reaction_type VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    entity_id INT NOT NULL,        
+    reaction_type_id INT NOT NULL REFERENCES reaction_types(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE (user_id, entity_id) -- Ensure one reaction per user per entity
 );
 
 
