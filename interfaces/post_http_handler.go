@@ -52,6 +52,13 @@ func (p *PostHTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	
+	postId, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	var post *domain.CreatePostRequest
 
@@ -59,9 +66,11 @@ func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	err := p.PostService.UpdatePost(&domain.Post{
+
+	err = p.PostService.UpdatePost(postId, &domain.Post{
 		Content: post.Content, Visibility: post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
 	})
+
 	if err != nil {
 		http.Error(w, "error updating post: "+err.Error(), http.StatusInternalServerError)
 		return

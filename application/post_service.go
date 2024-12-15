@@ -7,7 +7,7 @@ import (
 type PostServiceInterface interface {
 	CreatePost(post *domain.CreatePostRequest) error
 	DeletePost(id int) error
-	UpdatePost(post *domain.Post) error
+	UpdatePost(id int, post *domain.Post) error
 	GetPostByID(id int) (*domain.Post, error)
 }
 
@@ -27,8 +27,8 @@ func (s *PostService) DeletePost(id int) error {
 	return s.postRepo.Delete(id)
 }
 
-func (s *PostService) UpdatePost(post *domain.Post) error {
-	return s.postRepo.Update(post)
+func (s *PostService) UpdatePost(id int, post *domain.Post) error {
+	return s.postRepo.Update(id, post)
 }
 
 func (s *PostService) GetPostByID(id int) (*domain.Post, error) {

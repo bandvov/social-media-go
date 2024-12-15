@@ -20,9 +20,9 @@ func (r *PostRepository) Create(post *domain.CreatePostRequest) error {
 	return err
 }
 
-func (r *PostRepository) Update(post *domain.Post) error {
+func (r *PostRepository) Update(postId int, post *domain.Post) error {
 	_, err := r.db.Exec("UPDATE posts SET content = $1, visibility = $2, pinned = $3, tags = $4 WHERE id = $5",
-		post.Content, post.Visibility, post.Pinned, post.Tags)
+		post.Content, post.Visibility, post.Pinned, post.Tags, postId)
 	return err
 }
 func (r *PostRepository) Delete(id int) error {
