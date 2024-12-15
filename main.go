@@ -77,9 +77,10 @@ func main() {
 	router.HandleFunc("PUT /user/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
 	router.HandleFunc("GET /user/all", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
 
+	router.HandleFunc("GET /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Get)))
 	router.HandleFunc("POST /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Create)))
-	router.HandleFunc("DELETE /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Delete)))
 	router.HandleFunc("PUT /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Update)))
+	router.HandleFunc("DELETE /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Delete)))
 
 	// Start server
 	log.Printf("Server is running on %v", PORT)

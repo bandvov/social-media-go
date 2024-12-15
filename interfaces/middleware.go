@@ -20,7 +20,7 @@ const (
 func AdminOnlyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Assuming admin status is part of context
-		isAdmin := r.Context().Value("is_admin").(bool)
+		isAdmin := r.Context().Value("isAdmin").(bool)
 		if !isAdmin {
 			http.Error(w, "forbidden: admin access required", http.StatusForbidden)
 			return

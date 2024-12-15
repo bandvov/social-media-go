@@ -3,6 +3,7 @@ package interfaces
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
@@ -35,7 +36,7 @@ func (p *PostHTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	newPost.AuthorID = authorID
 
-	err := p.PostService.Create(&newPost)
+	err := p.PostService.CreatePost(&newPost)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -58,7 +59,7 @@ func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	err := p.PostService.Update(&domain.Post{
+	err := p.PostService.UpdatePost(&domain.Post{
 		Content: post.Content, Visibility: post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
 	})
 	if err != nil {
@@ -66,4 +67,35 @@ func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]string{"message": "post updated successfully"})
+}
+
+func (p *PostHTTPHandler) Get(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userID == 0 {
+		http.Error(w, "unauthenticated", http.StatusBadRequest)
+		return
+	}
+
+	isAdmin := r.Context().Value(isAdminKey).(bool)
+
+	id := r.URL.Query().Get("id")
+	postId, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	post, err := p.PostService.GetPostByID(postId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if !isAdmin || (post.Visibility == domain.Private && post.AuthorID != userID) {
+		http.Error(w, "Access forbidden", http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(post)
 }

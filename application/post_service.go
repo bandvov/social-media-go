@@ -5,10 +5,10 @@ import (
 )
 
 type PostServiceInterface interface {
-	Create(post *domain.CreatePostRequest) error
-	Delete(id int) error
-	Update(post *domain.Post) error
-	GetByID(id int) (*domain.Post, error)
+	CreatePost(post *domain.CreatePostRequest) error
+	DeletePost(id int) error
+	UpdatePost(post *domain.Post) error
+	GetPostByID(id int) (*domain.Post, error)
 }
 
 type PostService struct {
@@ -19,18 +19,18 @@ func NewPostService(repo domain.PostRepository) *PostService {
 	return &PostService{postRepo: repo}
 }
 
-func (s *PostService) Create(post *domain.CreatePostRequest) error {
+func (s *PostService) CreatePost(post *domain.CreatePostRequest) error {
 	return s.postRepo.Create(post)
 }
 
-func (s *PostService) Delete(id int) error {
-	return s.Delete(id)
+func (s *PostService) DeletePost(id int) error {
+	return s.postRepo.Delete(id)
 }
 
-func (s *PostService) Update(post *domain.Post) error {
-	return s.Update(post)
+func (s *PostService) UpdatePost(post *domain.Post) error {
+	return s.postRepo.Update(post)
 }
 
-func (s *PostService) GetByID(id int) (*domain.Post, error) {
-	return s.GetByID(id)
+func (s *PostService) GetPostByID(id int) (*domain.Post, error) {
+	return s.postRepo.GetByID(id)
 }

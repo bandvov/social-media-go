@@ -181,7 +181,7 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	isAdmin := r.Context().Value("is_admin").(bool)
+	isAdmin := r.Context().Value("isAdmin").(bool)
 
 	err = h.UserService.ChangeUserRole(userID, req.NewRole, isAdmin)
 	if err != nil {
