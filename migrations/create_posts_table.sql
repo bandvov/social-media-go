@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.posts
     like_count INT DEFAULT 0,
     comment_count INT DEFAULT 0,
     share_count INT DEFAULT 0,
-    visibility VARCHAR(20) DEFAULT 'public',
+    visibility INT DEFAULT 0,
     tags VARCHAR(255),
     pinned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
