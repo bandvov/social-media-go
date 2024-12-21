@@ -1,5 +1,5 @@
-CREATE TABLE reactions (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS public.reactions
+(   id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,            
     entity_id INT NOT NULL,        
     reaction_type_id INT NOT NULL REFERENCES reaction_types(id) ON DELETE CASCADE,

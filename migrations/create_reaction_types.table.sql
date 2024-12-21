@@ -1,4 +1,4 @@
-CREATE TABLE reaction_types (
+CREATE TABLE IF NOT EXISTS public.reaction_types (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL 
 );
