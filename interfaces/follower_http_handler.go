@@ -19,11 +19,12 @@ func NewFollowerHandler(service *application.FollowerService) *FollowerHandler {
 
 func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	// Parse the URL parameters to get the follower and followee IDs
-	followerID, err := strconv.Atoi(r.URL.Query().Get("follower_id"))
-	if err != nil {
-		http.Error(w, "Invalid follower ID", http.StatusBadRequest)
+	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userID == 0 {
+		http.Error(w, "unauthenticated", http.StatusBadRequest)
 		return
 	}
+
 	followeeID, err := strconv.Atoi(r.URL.Query().Get("followee_id"))
 	if err != nil {
 		http.Error(w, "Invalid followee ID", http.StatusBadRequest)
@@ -31,7 +32,7 @@ func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the service to add the follower
-	err = h.service.AddFollower(followerID, followeeID)
+	err = h.service.AddFollower(userID, followeeID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -44,11 +45,12 @@ func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 
 func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
 	// Parse the URL parameters to get the follower and followee IDs
-	followerID, err := strconv.Atoi(r.URL.Query().Get("follower_id"))
-	if err != nil {
-		http.Error(w, "Invalid follower ID", http.StatusBadRequest)
+	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userID == 0 {
+		http.Error(w, "unauthenticated", http.StatusBadRequest)
 		return
 	}
+
 	followeeID, err := strconv.Atoi(r.URL.Query().Get("followee_id"))
 	if err != nil {
 		http.Error(w, "Invalid followee ID", http.StatusBadRequest)
@@ -56,7 +58,7 @@ func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Call the service to remove the follower
-	err = h.service.RemoveFollower(followerID, followeeID)
+	err = h.service.RemoveFollower(userID, followeeID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
