@@ -13,14 +13,14 @@ type CreatePostRequest struct {
 }
 
 type Post struct {
-	ID         string         `json:"id,omitempty"`
-	AuthorID   int            `json:"author_id,omitempty"` // ID of the user who created the post
-	Content    string         `json:"content,omitempty"`
-	Pinned     bool           `json:"pinned,omitempty"`
-	Tags       string         `json:"tags,omitempty"`
-	Visibility PostVisibility `json:"visibility,omitempty"`
-	CreatedAt  time.Time      `json:"created_at,omitempty"`
-	UpdatedAt  time.Time      `json:"updated_at,omitempty"`
+	ID         string          `json:"id,omitempty"`
+	AuthorID   int             `json:"author_id,omitempty"` // ID of the user who created the post
+	Content    string          `json:"content,omitempty"`
+	Pinned     bool            `json:"pinned,omitempty"`
+	Tags       string          `json:"tags,omitempty"`
+	Visibility *PostVisibility `json:"visibility,omitempty"`
+	CreatedAt  time.Time       `json:"created_at,omitempty"`
+	UpdatedAt  time.Time       `json:"updated_at,omitempty"`
 }
 
 // PostVisibility represents the visibility of a post
@@ -31,6 +31,7 @@ const (
 	Public   PostVisibility = iota // Public visibility
 	Private                        // Private visibility
 	Unlisted                       // Unlisted visibility
+	Friends                        // Friends visibility
 )
 
 func (v PostVisibility) String() string {
@@ -39,9 +40,18 @@ func (v PostVisibility) String() string {
 		return "Public"
 	case Private:
 		return "Private"
+	case Friends:
+		return "Friends"
 	case Unlisted:
 		return "Unlisted"
 	default:
 		return "Unknown"
 	}
+}
+
+type PostSearchOptions struct {
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	Sort   string `json:"sort"`
+	Search string `json:"search"`
 }

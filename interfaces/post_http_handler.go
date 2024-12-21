@@ -53,7 +53,7 @@ func (p *PostHTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
-	
+
 	postId, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -68,7 +68,7 @@ func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = p.PostService.UpdatePost(postId, &domain.Post{
-		Content: post.Content, Visibility: post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
+		Content: post.Content, Visibility: &post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
 	})
 
 	if err != nil {
@@ -100,7 +100,7 @@ func (p *PostHTTPHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isAdmin || (post.Visibility == domain.Private && post.AuthorID != userID) {
+	if !isAdmin || (*post.Visibility == domain.Private && post.AuthorID != userID) {
 		http.Error(w, "Access forbidden", http.StatusForbidden)
 		return
 	}
