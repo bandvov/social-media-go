@@ -58,6 +58,10 @@ func main() {
 	postService := application.NewPostService(postRepo)
 	postHandler := interfaces.NewPostHTTPHandler(postService)
 
+	followerRepo := infrastructure.NewFollowerRepository(db)
+	Followerservice := application.NewFollowerService(followerRepo)
+	followerHandler := interfaces.NewFollowerHandler(Followerservice)
+
 	// Create a custom router
 	router := utils.NewRouter()
 
@@ -85,6 +89,10 @@ func main() {
 	router.HandleFunc("POST /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Create)))
 	router.HandleFunc("PUT /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Update)))
 	router.HandleFunc("DELETE /post", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.Delete)))
+
+	http.HandleFunc("POST /follower", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.AddFollower)))
+	http.HandleFunc("DELETE /follower", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.RemoveFollower)))
+	http.HandleFunc("GET /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
 
 	// Start server
 	log.Printf("Server is running on %v", PORT)
