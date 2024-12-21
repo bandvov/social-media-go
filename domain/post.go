@@ -28,10 +28,10 @@ type PostVisibility int
 
 const (
 	// Visibility constants
-	Public   PostVisibility = iota // Public visibility
-	Private                        // Private visibility
-	Unlisted                       // Unlisted visibility
-	Friends                        // Friends visibility
+	Public    PostVisibility = iota // Public visibility
+	Private                         // Private visibility
+	Unlisted                        // Unlisted visibility
+	Followers                       // Followers visibility
 )
 
 func (v PostVisibility) String() string {
@@ -40,8 +40,8 @@ func (v PostVisibility) String() string {
 		return "Public"
 	case Private:
 		return "Private"
-	case Friends:
-		return "Friends"
+	case Followers:
+		return "Followers"
 	case Unlisted:
 		return "Unlisted"
 	default:

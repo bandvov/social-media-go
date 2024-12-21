@@ -52,11 +52,10 @@ func (p *PostHTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-
-	postId, err := strconv.Atoi(id)
+	id := r.PathValue("id")
+	postID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +66,7 @@ func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.PostService.UpdatePost(postId, &domain.Post{
+	err = p.PostService.UpdatePost(postID, &domain.Post{
 		Content: post.Content, Visibility: &post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
 	})
 
@@ -87,14 +86,14 @@ func (p *PostHTTPHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	isAdmin := r.Context().Value(isAdminKey).(bool)
 
-	id := r.URL.Query().Get("id")
-	postId, err := strconv.Atoi(id)
+	id := r.PathValue("id")
+	postID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}
 
-	post, err := p.PostService.GetPostByID(postId)
+	post, err := p.PostService.GetPostByID(postID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

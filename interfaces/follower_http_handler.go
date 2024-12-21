@@ -25,9 +25,10 @@ func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	followeeID, err := strconv.Atoi(r.URL.Query().Get("followee_id"))
+	id := r.PathValue("id")
+	followeeID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid followee ID", http.StatusBadRequest)
+		http.Error(w, "invalid follower ID", http.StatusBadRequest)
 		return
 	}
 
@@ -51,9 +52,10 @@ func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	followeeID, err := strconv.Atoi(r.URL.Query().Get("followee_id"))
+	id := r.PathValue("id")
+	followeeID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid followee ID", http.StatusBadRequest)
+		http.Error(w, "invalid follower ID", http.StatusBadRequest)
 		return
 	}
 

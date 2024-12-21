@@ -112,7 +112,8 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := parseUserIDFromPath(r.URL.Path)
+	id := r.PathValue("id")
+	userID, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
@@ -160,8 +161,8 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	userID, err := parseUserIDFromPath(strings.TrimSuffix(r.URL.Path, "/role"))
+	id := r.PathValue("id")
+	userID, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
@@ -209,7 +210,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-
+	user.Password = ""
 	// Respond with user profile data
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
