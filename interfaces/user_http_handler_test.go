@@ -92,7 +92,7 @@ func TestUpdateUser_Success(t *testing.T) {
 		Role:      "user",
 	}
 	handler := &UserHTTPHandler{UserService: &application.MockUserService{
-		UpdateUserDataFunc: func(userID int, email, password, firstName, lastName, bio, profilePic string) error {
+		UpdateUserDataFunc: func(user domain.User) error {
 			return nil
 		},
 	}}

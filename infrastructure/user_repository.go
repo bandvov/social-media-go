@@ -2,7 +2,9 @@ package infrastructure
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bandvov/social-media-go/domain"
 )
@@ -54,8 +56,11 @@ func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 }
 
 func (r *UserRepository) UpdateUser(user *domain.User) error {
-	_, err := r.db.Exec("UPDATE users SET email = $1, password = $2, status = $3 WHERE id = $4",
-		user.Email, user.Password, user.Status, user.ID)
+	query, err := r.buildUpdateQuery(user)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec(query)
 	return err
 }
 
@@ -94,4 +99,45 @@ func (u *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.
 	}
 
 	return users, nil
+}
+
+func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {
+	var setClauses []string
+
+	if user.FirstName != "" {
+		setClauses = append(setClauses, fmt.Sprintf("first_name = '%s'", user.FirstName))
+	}
+	if user.Email != "" {
+		setClauses = append(setClauses, fmt.Sprintf("email = '%s'", user.Email))
+	}
+	if user.LastName != "" {
+		setClauses = append(setClauses, fmt.Sprintf("last_name = '%s'", user.LastName))
+	}
+	if user.Bio != "" {
+		setClauses = append(setClauses, fmt.Sprintf("bio = '%s'", user.Bio))
+	}
+	if user.ProfilePic != "" {
+		setClauses = append(setClauses, fmt.Sprintf("profile_pic = '%s'", user.ProfilePic))
+	}
+	if user.Password != "" {
+		setClauses = append(setClauses, fmt.Sprintf("password = '%s'", user.Password))
+	}
+	if user.Status != "" {
+		setClauses = append(setClauses, fmt.Sprintf("status = '%s'", user.Status))
+	}
+	if user.Role != "" {
+		setClauses = append(setClauses, fmt.Sprintf("role = '%s'", user.Role))
+	}
+	if user.Username != "" {
+		setClauses = append(setClauses, fmt.Sprintf("username = '%s'", user.Username))
+	}
+
+	if len(setClauses) == 0 {
+		return "", errors.New("No fields to update")
+	}
+
+	setClause := strings.Join(setClauses, ", ")
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = %d;", setClause, user.ID)
+	fmt.Println("query: ", query)
+	return query, nil
 }

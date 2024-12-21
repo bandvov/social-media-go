@@ -12,7 +12,7 @@ import (
 type UserServiceInterface interface {
 	Authenticate(email, password string) (*domain.User, error)
 	RegisterUser(user domain.CreateUserRequest) error
-	UpdateUserData(userID int, email, password, firstName, lastName, bio, profilePic string) error
+	UpdateUserData(domain.User) error
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	FindByEmail(email string) (*domain.User, error)
 	GetUserByID(id int) (*domain.User, error)
@@ -59,38 +59,49 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	return user, nil
 }
 
-func (s *UserService) UpdateUserData(userID int, email, password string, firstName, lastName, bio, profilePic string) error {
-	user, err := s.repo.GetUserByID(userID)
+func (s *UserService) UpdateUserData(userData domain.User) error {
+	user, err := s.repo.GetUserByID(userData.ID)
 	if err != nil {
 		return err
 	}
 
-	if email != "" {
-		user.UpdateEmail(email)
+	if userData.Email != "" {
+		user.UpdateEmail(userData.Email)
 	}
 
-	if password != "" {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if userData.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
 		user.UpdatePassword(string(hashedPassword))
 	}
 
-	if firstName != "" {
-		user.FirstName = firstName
+	if userData.FirstName != "" {
+		user.FirstName = userData.FirstName
 	}
 
-	if lastName != "" {
-		user.LastName = lastName
+	if userData.LastName != "" {
+		user.LastName = userData.LastName
 	}
 
-	if bio != "" {
-		user.Bio = bio
+	if userData.Bio != "" {
+		user.Bio = userData.Bio
 	}
 
-	if profilePic != "" {
-		user.ProfilePic = profilePic
+	if userData.ProfilePic != "" {
+		user.ProfilePic = userData.ProfilePic
+	}
+
+	if userData.Username != "" {
+		user.Username = userData.Username
+	}
+	if userData.Role != "" {
+		user.Role = userData.Role
+	}
+
+	if userData.Status != "" {
+		user.Status = userData.Status
 	}
 
 	return s.repo.UpdateUser(user)

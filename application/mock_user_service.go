@@ -7,7 +7,7 @@ import (
 type MockUserService struct {
 	AuthenticateFunc   func(email, password string) (*domain.User, error)
 	RegisterUserFunc   func(user domain.CreateUserRequest) error
-	UpdateUserDataFunc func(userID int, email, password, firstName, lastName, bio, profilePic string) error
+	UpdateUserDataFunc func(user domain.User) error
 	ChangeUserRoleFunc func(userID int, newRole string, isAdmin bool) error
 	FindByEmailFunc    func(email string) (*domain.User, error)
 	GetUserByIDFunc    func(id int) (*domain.User, error)
@@ -24,8 +24,8 @@ func (m *MockUserService) ChangeUserRole(userID int, newRole string, isAdmin boo
 	return m.ChangeUserRoleFunc(userID, newRole, isAdmin)
 }
 
-func (m *MockUserService) UpdateUserData(userID int, email, password, firstName, lastName, bio, profilePic string) error {
-	return m.UpdateUserDataFunc(userID, email, password, firstName, lastName, bio, profilePic)
+func (m *MockUserService) UpdateUserData(user domain.User) error {
+	return m.UpdateUserDataFunc(user)
 }
 func (m *MockUserService) FindByEmail(email string) (*domain.User, error) {
 	return m.FindByEmailFunc(email)

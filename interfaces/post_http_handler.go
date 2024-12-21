@@ -17,7 +17,7 @@ func NewPostHTTPHandler(postService application.PostServiceInterface) *PostHTTPH
 	return &PostHTTPHandler{PostService: postService}
 }
 
-func (p *PostHTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	authorID, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || authorID == 0 {
 		http.Error(w, "unauthenticated", http.StatusBadRequest)
@@ -46,12 +46,12 @@ func (p *PostHTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})
 }
 
-func (p *PostHTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (p *PostHTTPHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]string{"message": "post deleted successfully"})
 }
 
-func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (p *PostHTTPHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	postID, err := strconv.Atoi(id)
 	if err != nil {
@@ -77,7 +77,7 @@ func (p *PostHTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "post updated successfully"})
 }
 
-func (p *PostHTTPHandler) Get(w http.ResponseWriter, r *http.Request) {
+func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userID == 0 {
 		http.Error(w, "unauthenticated", http.StatusBadRequest)

@@ -119,15 +119,8 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		UserName   string `json:"username"`
-		Email      string `json:"email"`
-		Password   string `json:"password"`
-		FirstName  string `json:"first_name"`
-		LastName   string `json:"last_name"`
-		Bio        string `json:"bio"`
-		ProfilePic string `json:"profile_pic"`
-	}
+	var req domain.User
+	req.ID = userID
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
@@ -148,7 +141,7 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = h.UserService.UpdateUserData(userID, req.Email, req.Password, req.FirstName, req.LastName, req.Bio, req.ProfilePic)
+	err = h.UserService.UpdateUserData(req)
 	if err != nil {
 		http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
 		return
