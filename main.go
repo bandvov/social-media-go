@@ -70,12 +70,14 @@ func main() {
 	// seeds.Seed(db, "./migrations/media_urls_create_table.sql")
 	// seeds.Seed(db, "./migrations/create_reactions_table.sql")
 	// seeds.Seed(db, "./migrations/create_reaction_types.table.sql")
+	// seeds.Seed(db, "./migrations/create_followers_table.sql")
 
 	// seeds.Seed(db, "./seeds/seed_users.sql")
 	// seeds.Seed(db, "./seeds/seed_posts.sql")
 	// seeds.Seed(db, "./seeds/seed_media_urls.sql")
 	// seeds.Seed(db, "./seeds/seed_reaction_types.sql")
 	// seeds.Seed(db, "./seeds/seed_reactions.sql")
+	// seeds.Seed(db, "./seeds/seed_followers.sql")
 
 	// Define routes
 	router.HandleFunc("GET /user", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
