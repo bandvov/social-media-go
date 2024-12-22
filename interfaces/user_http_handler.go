@@ -193,8 +193,22 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	isAdmin := r.Context().Value(isAdminKey).(bool)
+
+	id := r.PathValue("id")
+	userIDFromUrl, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	if !isAdmin || userId != userIDFromUrl {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
 	// Fetch user profile from service
-	user, err := h.UserService.GetUserByID(userId)
+	user, err := h.UserService.GetUserByID(userIDFromUrl)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "User not found", http.StatusNotFound)

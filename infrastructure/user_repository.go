@@ -35,8 +35,55 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	var user domain.User
-	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at  FROM users WHERE id = $1", id).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
+	err := r.db.QueryRow(`
+	WITH followers_agg AS (
+    SELECT
+        f.followee_id,
+        JSON_AGG(JSON_BUILD_OBJECT(
+            'id', f.follower_id,
+			'profile_pic',uf.profile_pic
+        )) AS followers
+    FROM followers f
+    LEFT JOIN users uf ON f.follower_id = uf.id
+    GROUP BY f.followee_id
+	),
+	followees_agg AS (
+		SELECT
+			fw.follower_id,
+			JSON_AGG(JSON_BUILD_OBJECT(
+				'id', fw.followee_id,
+				'profile_pic',uw.profile_pic
+			)) AS followees
+		FROM followers fw
+		LEFT JOIN users uw ON fw.followee_id = uw.id
+		GROUP BY fw.follower_id
+	),
+	post_counts AS (
+		SELECT
+			p.author_id,
+			COUNT(*) AS post_count
+		FROM posts p
+		GROUP BY p.author_id
+	)
+	SELECT
+		u.id,
+		u.username,
+		u.password,
+		u.email,
+		u.status,
+		u.role,
+		u.profile_pic,
+		u.created_at,
+		u.updated_at,
+		COALESCE(pc.post_count, 0) AS post_count,
+		COALESCE(fa.followers, '[]') AS followers,
+		COALESCE(fe.followees, '[]') AS followees
+	FROM users u
+	LEFT JOIN followers_agg fa ON u.id = fa.followee_id
+	LEFT JOIN followees_agg fe ON u.id = fe.follower_id
+	LEFT JOIN post_counts pc ON u.id = pc.author_id
+	WHERE u.id = $1;`, id).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.Followers, &user.Followeees)
 	if err != nil {
 		return nil, err
 	}
