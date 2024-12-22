@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type CreatePostRequest struct {
 	AuthorID   int            `json:"author_id,omitempty"` // ID of the user who created the post
@@ -21,6 +24,7 @@ type Post struct {
 	Visibility *PostVisibility `json:"visibility,omitempty"`
 	CreatedAt  time.Time       `json:"created_at,omitempty"`
 	UpdatedAt  time.Time       `json:"updated_at,omitempty"`
+	Reactions  json.RawMessage `json:"reactions,omitempty"`
 }
 
 // PostVisibility represents the visibility of a post

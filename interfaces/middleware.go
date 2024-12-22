@@ -40,7 +40,6 @@ func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Extract the cookie
-		fmt.Println("here")
 		cookie, err := r.Cookie("access_token")
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -56,7 +55,6 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 		}
 
 		userID, err := utils.ValidateJWT(token)
-		fmt.Println("here1")
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -64,13 +62,11 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 
 		// Retrieve user from the database
 		user, err := h.UserService.GetUserByID(userID)
-		fmt.Println(err)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
 
-		fmt.Printf("here2,%+v\n", user)
 		isAdmin := user.Role == "admin"
 
 		// Add userID and isAdmin to context

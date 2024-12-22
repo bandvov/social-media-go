@@ -32,11 +32,82 @@ func (r *PostRepository) Delete(id int) error {
 
 func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
 	var post domain.Post
-	err := r.db.QueryRow("SELECT id, author_id, content, pinned, visibility, tags, created_at, updated_at  FROM posts WHERE id = $1", id).
-		Scan(&post.ID, &post.AuthorID, &post.Content, &post.Pinned, &post.Visibility, &post.Tags, &post.CreatedAt, &post.UpdatedAt)
+	err := r.db.QueryRow(`
+	SELECT 
+	p.id,
+	p.author_id, 
+	p.content, 
+	p.pinned, 
+	p.visibility, 
+	p.tags, 
+	p.created_at, 
+	p.updated_at,
+    json_agg(
+        json_build_object(
+            'id', r.id,
+            'type', rt.name,
+            'user', json_build_object(
+                'id', u.id,
+                'profile_pic', u.profile_pic
+            )
+        )
+    ) AS reactions
+	FROM posts p
+	LEFT JOIN reactions r ON p.id = r.entity_id
+	LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
+	LEFT JOIN users u ON r.user_id = u.id
+	WHERE p.id = $1
+	GROUP BY p.id
+	ORDER BY p.id;`, id).
+		Scan(&post.ID, &post.AuthorID, &post.Content, &post.Pinned, &post.Visibility, &post.Tags, &post.CreatedAt, &post.UpdatedAt, &post.Reactions)
 	if err != nil {
 		return nil, err
 	}
 
 	return &post, nil
+}
+
+func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
+	rows, err := r.db.Query(`	
+	SELECT 
+	p.id,
+	p.author_id, 
+	p.content, 
+	p.pinned, 
+	p.visibility, 
+	p.tags, 
+	p.created_at, 
+	p.updated_at,
+    json_agg(
+        json_build_object(
+            'id', r.id,
+            'type', rt.name,
+            'user', json_build_object(
+                'id', u.id,
+                'profile_pic', u.profile_pic
+            )
+        )
+    ) AS reactions
+	FROM posts p
+	LEFT JOIN reactions r ON p.id = r.entity_id
+	LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
+	LEFT JOIN users u ON r.user_id = u.id
+	WHERE user_id = $1
+	GROUP BY p.id
+	ORDER BY p.id;`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []domain.Post
+	for rows.Next() {
+		var post domain.Post
+		if err := rows.Scan(&post.ID, &post.AuthorID, &post.Content, &post.Pinned, &post.Visibility, &post.Tags, &post.CreatedAt, &post.UpdatedAt, &post.Reactions); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, nil
 }

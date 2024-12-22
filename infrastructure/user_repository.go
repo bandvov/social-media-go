@@ -91,7 +91,6 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	return &user, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
-	fmt.Println("GetUserByEmail", email)
 	var user domain.User
 	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1", email).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
@@ -185,6 +184,5 @@ func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {
 
 	setClause := strings.Join(setClauses, ", ")
 	query := fmt.Sprintf("UPDATE users SET %s WHERE id = %d;", setClause, user.ID)
-	fmt.Println("query: ", query)
 	return query, nil
 }

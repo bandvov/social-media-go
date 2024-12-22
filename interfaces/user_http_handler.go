@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -88,7 +87,6 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Generate JWT token
 	token, err := utils.GenerateJWT(user.ID)
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, "failed to generate token", http.StatusInternalServerError)
 		return
 	}

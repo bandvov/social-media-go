@@ -2,7 +2,6 @@ package application
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/bandvov/social-media-go/domain"
 	"golang.org/x/crypto/bcrypt"
@@ -43,7 +42,6 @@ func (s *UserService) RegisterUser(u domain.CreateUserRequest) error {
 }
 
 func (s *UserService) Authenticate(email, password string) (*domain.User, error) {
-	fmt.Println("here1")
 	// Retrieve user by email
 	user, err := s.repo.GetUserByEmail(email)
 	if err != nil {

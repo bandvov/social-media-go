@@ -1,7 +1,10 @@
 package interfaces
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -106,4 +109,27 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
+}
+
+func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	userID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := h.PostService.GetPostsByUser(userID)
+	if err != nil {
+		fmt.Println(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "No posts", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "could not retrieve posts", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(posts)
 }
