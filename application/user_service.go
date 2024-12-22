@@ -108,12 +108,10 @@ func (s *UserService) UpdateUserData(userData domain.User) error {
 }
 
 func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error {
-	user, err := s.repo.GetUserByID(userID)
-	if err != nil {
-		return err
-	}
-
-	return user.ChangeRole(newRole, isAdmin)
+	return s.repo.UpdateUser(&domain.User{
+		ID:   userID,
+		Role: newRole,
+	})
 }
 
 func (s *UserService) FindByEmail(email string) (*domain.User, error) {

@@ -150,10 +150,6 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
@@ -162,7 +158,7 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req struct {
-		NewRole string `json:"new_role"`
+		Role string `json:"role"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -170,14 +166,19 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := ValidateRole(req.NewRole); err != nil {
+	if err := ValidateRole(req.Role); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	isAdmin := r.Context().Value("isAdmin").(bool)
+	isAdmin := r.Context().Value(isAdminKey).(bool)
 
-	err = h.UserService.ChangeUserRole(userID, req.NewRole, isAdmin)
+	if !isAdmin {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	err = h.UserService.ChangeUserRole(userID, req.Role, isAdmin)
 	if err != nil {
 		http.Error(w, "error changing user role: "+err.Error(), http.StatusInternalServerError)
 		return

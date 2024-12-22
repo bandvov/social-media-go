@@ -52,10 +52,3 @@ func (u *User) ChangeStatus(newStatus string, isAdmin bool) error {
 	return nil
 }
 
-func (u *User) ChangeRole(newRole string, isAdmin bool) error {
-	if !isAdmin {
-		return errors.New("only admin can change roles")
-	}
-	u.Role = newRole
-	return nil
-}
