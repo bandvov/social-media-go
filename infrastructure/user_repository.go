@@ -18,14 +18,28 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(user *domain.User) error {
-	_, err := r.db.Exec("INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)",
-		user.Password, user.Email, user.Status, user.Role)
+	// Prepare the statement
+	stmt, err := r.db.Prepare("INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)")
+	if err != nil {
+		return fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(user.Password, user.Email, user.Status, user.Role)
 	return err
 }
 
 func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error) {
 	user := &domain.User{}
-	err := r.db.QueryRow("SELECT id, username, password, email, status, role FROM users WHERE username = $1", username).
+
+	// Prepare the statement
+	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role FROM users WHERE username = $1")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(username).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
 	if err != nil {
 		return nil, err
@@ -35,7 +49,9 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	var user domain.User
-	err := r.db.QueryRow(`
+
+	// Prepare the statement
+	stmt, err := r.db.Prepare(`
 	WITH followers_agg AS (
     SELECT
         f.followee_id,
@@ -82,7 +98,13 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	LEFT JOIN followers_agg fa ON u.id = fa.followee_id
 	LEFT JOIN followees_agg fe ON u.id = fe.follower_id
 	LEFT JOIN post_counts pc ON u.id = pc.author_id
-	WHERE u.id = $1;`, id).
+	WHERE u.id = $1;`)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(id).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.Followers, &user.Followeees)
 	if err != nil {
 		return nil, err
@@ -92,7 +114,15 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.QueryRow("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1", email).
+
+	// Prepare the statement
+	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(email).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -106,11 +136,19 @@ func (r *UserRepository) UpdateUser(user *domain.User) error {
 	if err != nil {
 		return err
 	}
-	_, err = r.db.Exec(query)
+
+	// Prepare the statement
+	stmt, err := r.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(query)
 	return err
 }
 
-func (u *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.User, error) {
+func (r *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.User, error) {
 	// Validate and set default sorting
 	order := "DESC"
 	if sort == "asc" {
@@ -124,7 +162,14 @@ func (u *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.
         LIMIT $1 OFFSET $2
     `, order)
 
-	rows, err := u.db.Query(query, limit, offset)
+	// Prepare the statement
+	stmt, err := r.db.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
