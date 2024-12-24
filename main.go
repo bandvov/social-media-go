@@ -66,6 +66,10 @@ func main() {
 	tagService := application.NewTagService(tagRepo)
 	tagHandler := interfaces.NewTagHandler(tagService)
 
+	commentRepo := infrastructure.NewPostgresCommentRepository(db)
+	commentService := application.NewCommentService(commentRepo)
+	commentHandler := interfaces.NewCommentHandler(commentService)
+
 	// Create a custom router
 	router := utils.NewRouter()
 
@@ -107,6 +111,9 @@ func main() {
 
 	http.HandleFunc("GET /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.GetTags)))
 	http.HandleFunc("POST /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.CreateTag)))
+
+	http.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
+	http.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
 	// This in mocked
 	http.HandleFunc("DELETE /tags{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
 	// Start server
