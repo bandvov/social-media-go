@@ -62,6 +62,10 @@ func main() {
 	Followerservice := application.NewFollowerService(followerRepo)
 	followerHandler := interfaces.NewFollowerHandler(Followerservice)
 
+	tagRepo := infrastructure.NewPostgresTagRepository(db)
+	tagService := application.NewTagService(tagRepo)
+	tagHandler := interfaces.NewTagHandler(tagService)
+
 	// Create a custom router
 	router := utils.NewRouter()
 
@@ -92,12 +96,17 @@ func main() {
 	router.HandleFunc("GET /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPost)))
 	router.HandleFunc("POST /posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.CreatePost)))
 	router.HandleFunc("PUT /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.UpdatePost)))
+	// this is mocked. Implement soft delete. make visibility = none
 	router.HandleFunc("DELETE /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.DeletePost)))
 
 	http.HandleFunc("POST /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.AddFollower)))
 	http.HandleFunc("DELETE /followers/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.RemoveFollower)))
 	http.HandleFunc("GET /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
 
+	http.HandleFunc("GET /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.GetTags)))
+	http.HandleFunc("POST /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.CreateTag)))
+	// This in mocked
+	http.HandleFunc("DELETE /tags{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
 	// Start server
 	log.Printf("Server is running on %v", PORT)
 	log.Fatal(http.ListenAndServe(PORT, router))
