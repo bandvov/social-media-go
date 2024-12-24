@@ -11,8 +11,6 @@ type CreatePostRequest struct {
 	Pinned     bool           `json:"pinned,omitempty"`
 	Tags       string         `json:"tags,omitempty"`
 	Visibility PostVisibility `json:"visibility,omitempty"`
-	CreatedAt  time.Time      `json:"created_at,omitempty"`
-	UpdatedAt  time.Time      `json:"updated_at,omitempty"`
 }
 
 type Post struct {

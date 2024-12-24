@@ -62,7 +62,7 @@ func main() {
 	Followerservice := application.NewFollowerService(followerRepo)
 	followerHandler := interfaces.NewFollowerHandler(Followerservice)
 
-	tagRepo := infrastructure.NewPostgresTagRepository(db)
+	tagRepo := infrastructure.NewTagRepository(db)
 	tagService := application.NewTagService(tagRepo)
 	tagHandler := interfaces.NewTagHandler(tagService)
 
@@ -75,6 +75,7 @@ func main() {
 	// seeds.Seed(db, "./migrations/create_reactions_table.sql")
 	// seeds.Seed(db, "./migrations/create_reaction_types.table.sql")
 	// seeds.Seed(db, "./migrations/create_followers_table.sql")
+	// seeds.Seed(db, "./migrations/create_tags_table.sql")
 
 	// seeds.Seed(db, "./seeds/seed_users.sql")
 	// seeds.Seed(db, "./seeds/seed_posts.sql")
@@ -82,6 +83,7 @@ func main() {
 	// seeds.Seed(db, "./seeds/seed_reaction_types.sql")
 	// seeds.Seed(db, "./seeds/seed_reactions.sql")
 	// seeds.Seed(db, "./seeds/seed_followers.sql")
+	// seeds.Seed(db, "./seeds/seed_tags.sql")
 
 	// Define routes
 	router.HandleFunc("GET /users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
