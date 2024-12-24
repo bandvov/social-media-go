@@ -17,6 +17,7 @@ func (s *CommentService) AddComment(entityID int, content string, authorID int) 
 		EntityID: entityID,
 		Content:  content,
 		AuthorID: authorID,
+		Status: domain.Active,
 	}
 	return s.commentRepo.AddComment(comment)
 }

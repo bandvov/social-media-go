@@ -80,6 +80,7 @@ func main() {
 	// seeds.Seed(db, "./migrations/create_reaction_types.table.sql")
 	// seeds.Seed(db, "./migrations/create_followers_table.sql")
 	// seeds.Seed(db, "./migrations/create_tags_table.sql")
+	// seeds.Seed(db, "./migrations/create_comments_table.sql")
 
 	// seeds.Seed(db, "./seeds/seed_users.sql")
 	// seeds.Seed(db, "./seeds/seed_posts.sql")
@@ -88,6 +89,7 @@ func main() {
 	// seeds.Seed(db, "./seeds/seed_reactions.sql")
 	// seeds.Seed(db, "./seeds/seed_followers.sql")
 	// seeds.Seed(db, "./seeds/seed_tags.sql")
+	// seeds.Seed(db, "./seeds/seed_comments.sql")
 
 	// Define routes
 	router.HandleFunc("GET /users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))

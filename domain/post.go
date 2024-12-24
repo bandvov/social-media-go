@@ -34,6 +34,7 @@ const (
 	Private                         // Private visibility
 	Unlisted                        // Unlisted visibility
 	Followers                       // Followers visibility
+	Hidden                          // Hidden visibility
 )
 
 func (v PostVisibility) String() string {
