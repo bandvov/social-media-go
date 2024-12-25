@@ -87,7 +87,25 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
                 'profile_pic', u.profile_pic
             )
         )
-    ) AS reactions
+    ) AS reactions,
+	 json_agg(
+        json_build_object(
+            'id', c.id,
+            'author_id', c.author_id,
+            'content', c.content,
+            'replies', (
+                SELECT json_agg(
+                    json_build_object(
+                        'id', nc.id,
+                        'author_id', nc.author_id,
+                        'content', nc.content
+                    )
+                )
+                FROM comments nc
+                WHERE nc.entity_id = c.id
+            )
+        )
+    ) AS comments 
 	FROM posts p
 	LEFT JOIN reactions r ON p.id = r.entity_id
 	LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id

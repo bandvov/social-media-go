@@ -51,4 +51,3 @@ func (u *User) ChangeStatus(newStatus string, isAdmin bool) error {
 	u.Status = newStatus
 	return nil
 }
-

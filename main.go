@@ -76,8 +76,8 @@ func main() {
 	// seeds.Seed(db, "./migrations/create_users_table.sql")
 	// seeds.Seed(db, "./migrations/create_posts_table.sql")
 	// seeds.Seed(db, "./migrations/media_urls_create_table.sql")
-	// seeds.Seed(db, "./migrations/create_reactions_table.sql")
 	// seeds.Seed(db, "./migrations/create_reaction_types.table.sql")
+	// seeds.Seed(db, "./migrations/create_reactions_table.sql")
 	// seeds.Seed(db, "./migrations/create_followers_table.sql")
 	// seeds.Seed(db, "./migrations/create_tags_table.sql")
 	// seeds.Seed(db, "./migrations/create_comments_table.sql")
@@ -113,11 +113,11 @@ func main() {
 
 	http.HandleFunc("GET /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.GetTags)))
 	http.HandleFunc("POST /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.CreateTag)))
+	http.HandleFunc("DELETE /tags/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
 
 	http.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
 	http.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
 	// This in mocked
-	http.HandleFunc("DELETE /tags{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
 	// Start server
 	log.Printf("Server is running on %v", PORT)
 	log.Fatal(http.ListenAndServe(PORT, router))
