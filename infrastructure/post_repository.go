@@ -57,7 +57,7 @@ LEFT JOIN
 LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
 LEFT JOIN users ru ON ru.id = r.user_id
 WHERE 
-    p.author_id = $1 -- Replace with the user ID you want to query
+    p.id = $1 -- Replace with the user ID you want to query
 GROUP BY p.id
 ORDER BY p.id;
 `, id).
@@ -72,49 +72,33 @@ ORDER BY p.id;
 func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	rows, err := r.db.Query(`	
 	SELECT 
-	p.id,
-	p.author_id, 
-	p.content, 
-	p.pinned, 
-	p.visibility,
-	p.created_at, 
-	p.updated_at,
-    json_agg(
-        json_build_object(
-            'id', r.id,
-            'type', rt.name,
-            'user', json_build_object(
-                'id', u.id,
-                'profile_pic', u.profile_pic
+    p.id AS post_id,
+    p.author_id,
+    p.content,
+    p.visibility,
+    p.pinned,
+    COALESCE(
+        json_agg(
+            json_build_object(
+				'reaction_id', r.id,
+                'reacting_user_id', r.user_id,
+                'reaction_type_id', r.reaction_type_id,
+				'reacting_user_profile_pic', ru.profile_pic
             )
-        )
-    ) AS reactions,
-	 json_agg(
-        json_build_object(
-            'id', c.id,
-            'author_id', c.author_id,
-            'content', c.content,
-            'replies', (
-                SELECT json_agg(
-                    json_build_object(
-                        'id', nc.id,
-                        'author_id', nc.author_id,
-                        'content', nc.content
-                    )
-                )
-                FROM comments nc
-                WHERE nc.entity_id = c.id AND c.entity_type = 'comment'
-            )
-        )
-    ) AS comments 
-	FROM posts p
-	LEFT JOIN reactions r ON p.id = r.entity_id
+        ) FILTER (WHERE r.user_id IS NOT NULL),
+        '[]'
+    ) AS reactions
+	FROM 
+		posts p
+	LEFT JOIN 
+		reactions r ON p.id = r.entity_id
 	LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
-	LEFT JOIN users u ON r.user_id = u.id
-	LEFT JOIN comments c ON p.id = c.entity_id AND c.entity_type = 'post'
-	WHERE user_id = $1
+	LEFT JOIN users ru ON ru.id = r.user_id
+	WHERE 
+		p.author_id = $1 -- Replace with the user ID you want to query
 	GROUP BY p.id
-	ORDER BY p.id;`, userID)
+	ORDER BY p.id;
+	`, userID)
 	if err != nil {
 		return nil, err
 	}
