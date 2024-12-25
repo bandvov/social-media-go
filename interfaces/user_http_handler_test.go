@@ -12,13 +12,15 @@ import (
 )
 
 func TestLogin_Success(t *testing.T) {
+	f := "John"
+	l := "Doe"
 	mockUserService := &application.MockUserService{
 		AuthenticateFunc: func(email, password string) (*domain.User, error) {
 			return &domain.User{
 				ID:        1,
 				Email:     "john@example.com",
-				FirstName: "John",
-				LastName:  "Doe",
+				FirstName: &f,
+				LastName:  &l,
 				Role:      "user",
 				Password:  "hashedpassword",
 			}, nil
@@ -83,12 +85,15 @@ func TestRegister_Success(t *testing.T) {
 }
 
 func TestUpdateUser_Success(t *testing.T) {
+	f := "Existing"
+	l := "User"
+	u := "John"
 	mockUser := &domain.User{
 		ID:        1,
-		Username:  "John",
+		Username:  &u,
 		Email:     "existinguser@example.com",
-		FirstName: "Existing",
-		LastName:  "User",
+		FirstName: &f,
+		LastName:  &l,
 		Role:      "user",
 	}
 	handler := &UserHTTPHandler{UserService: &application.MockUserService{
@@ -131,12 +136,15 @@ func TestUpdateUser_Success(t *testing.T) {
 
 // TestGetUserProfile_Success tests retrieving the user profile with valid authorization
 func TestGetUserProfile_Success(t *testing.T) {
+	f := "Existing"
+	l := "User"
+	u := "John"
 	mockUser := &domain.User{
 		ID:        1,
-		Username:  "John",
+		Username:  &u,
 		Email:     "existinguser@example.com",
-		FirstName: "Existing",
-		LastName:  "User",
+		FirstName: &f,
+		LastName:  &l,
 		Role:      "user",
 	}
 	// Arrange
