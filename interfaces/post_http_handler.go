@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -100,12 +101,13 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println("here")
 	if !isAdmin || (*post.Visibility == domain.Private && post.AuthorID != userID) {
+		fmt.Println("here1")
 		http.Error(w, "Access forbidden", http.StatusForbidden)
 		return
 	}
-
+	fmt.Println("here2")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
 }

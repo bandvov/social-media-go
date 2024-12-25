@@ -23,7 +23,7 @@ type Post struct {
 	CreatedAt  time.Time       `json:"created_at,omitempty"`
 	UpdatedAt  time.Time       `json:"updated_at,omitempty"`
 	Reactions  json.RawMessage `json:"reactions,omitempty"`
-	Comments   []Comment       `json:"comments,omitempty"`
+	Comments   json.RawMessage `json:"comments,omitempty"`
 }
 
 // PostVisibility represents the visibility of a post
