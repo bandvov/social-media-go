@@ -75,23 +75,23 @@ func (s *UserService) UpdateUserData(userData domain.User) error {
 		user.UpdatePassword(string(hashedPassword))
 	}
 
-	if userData.FirstName != "" {
+	if userData.FirstName != nil {
 		user.FirstName = userData.FirstName
 	}
 
-	if userData.LastName != "" {
+	if userData.LastName != nil {
 		user.LastName = userData.LastName
 	}
 
-	if userData.Bio != "" {
+	if userData.Bio != nil {
 		user.Bio = userData.Bio
 	}
 
-	if userData.ProfilePic != "" {
+	if userData.ProfilePic != nil {
 		user.ProfilePic = userData.ProfilePic
 	}
 
-	if userData.Username != "" {
+	if userData.Username != nil {
 		user.Username = userData.Username
 	}
 	if userData.Role != "" {

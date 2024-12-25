@@ -195,20 +195,20 @@ func (r *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.
 func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {
 	var setClauses []string
 
-	if user.FirstName != "" {
-		setClauses = append(setClauses, fmt.Sprintf("first_name = '%s'", user.FirstName))
+	if user.FirstName != nil {
+		setClauses = append(setClauses, fmt.Sprintf("first_name = '%s'", *user.FirstName))
 	}
 	if user.Email != "" {
 		setClauses = append(setClauses, fmt.Sprintf("email = '%s'", user.Email))
 	}
-	if user.LastName != "" {
-		setClauses = append(setClauses, fmt.Sprintf("last_name = '%s'", user.LastName))
+	if user.LastName != nil {
+		setClauses = append(setClauses, fmt.Sprintf("last_name = '%s'", *user.LastName))
 	}
-	if user.Bio != "" {
-		setClauses = append(setClauses, fmt.Sprintf("bio = '%s'", user.Bio))
+	if user.Bio != nil {
+		setClauses = append(setClauses, fmt.Sprintf("bio = '%s'", *user.Bio))
 	}
-	if user.ProfilePic != "" {
-		setClauses = append(setClauses, fmt.Sprintf("profile_pic = '%s'", user.ProfilePic))
+	if user.ProfilePic != nil {
+		setClauses = append(setClauses, fmt.Sprintf("profile_pic = '%s'", *user.ProfilePic))
 	}
 	if user.Password != "" {
 		setClauses = append(setClauses, fmt.Sprintf("password = '%s'", user.Password))
@@ -219,8 +219,8 @@ func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {
 	if user.Role != "" {
 		setClauses = append(setClauses, fmt.Sprintf("role = '%s'", user.Role))
 	}
-	if user.Username != "" {
-		setClauses = append(setClauses, fmt.Sprintf("username = '%s'", user.Username))
+	if user.Username != nil {
+		setClauses = append(setClauses, fmt.Sprintf("username = '%s'", *user.Username))
 	}
 
 	if len(setClauses) == 0 {

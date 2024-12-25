@@ -1,9 +1,11 @@
 package interfaces
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -192,7 +194,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	isAdmin := r.Context().Value(isAdminKey).(bool)
+	isAdmin := h.IsAdmin(r.Context())
 
 	id := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(id)
@@ -200,8 +202,11 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println(isAdmin)
+	fmt.Println(userId != userIDFromUrl)
+	fmt.Printf("here%t,%t\n", userId, userIDFromUrl)
 	if !isAdmin || userId != userIDFromUrl {
+		fmt.Println("here1")
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
@@ -217,6 +222,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user.Password = ""
+	fmt.Println("here2")
 	// Respond with user profile data
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
@@ -250,4 +256,8 @@ func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
+}
+
+func (h *UserHTTPHandler) IsAdmin(ctx context.Context) bool {
+	return ctx.Value(isAdminKey).(bool)
 }
