@@ -4,7 +4,6 @@ import "github.com/bandvov/social-media-go/domain"
 
 // TagServiceInterface defines methods for tags-related operations.
 type TagServiceInterface interface {
-
 	CreateTag(name string) (*domain.Tag, error)
 	GetAllTags() ([]*domain.Tag, error)
 	DeleteTag(id int) error

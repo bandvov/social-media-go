@@ -6,6 +6,13 @@ import (
 	"github.com/bandvov/social-media-go/domain"
 )
 
+// FollowerServiceInterface defines methods for tags-related operations.
+type FollowerServiceInterface interface {
+	AddFollower(followerID, followeeID int) error
+	RemoveFollower(followerID, followeeID int) error
+	GetFollowers(userID int) ([]domain.User, error)
+}
+
 type FollowerService struct {
 	repo domain.FollowerRepository
 }

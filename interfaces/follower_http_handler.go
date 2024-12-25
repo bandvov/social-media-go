@@ -10,10 +10,10 @@ import (
 )
 
 type FollowerHandler struct {
-	service *application.FollowerService
+	service application.FollowerServiceInterface
 }
 
-func NewFollowerHandler(service *application.FollowerService) *FollowerHandler {
+func NewFollowerHandler(service application.FollowerServiceInterface) *FollowerHandler {
 	return &FollowerHandler{service: service}
 }
 
