@@ -74,8 +74,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	p.author_id, 
 	p.content, 
 	p.pinned, 
-	p.visibility, 
-	p.tags, 
+	p.visibility,
 	p.created_at, 
 	p.updated_at,
     json_agg(
@@ -102,7 +101,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
                     )
                 )
                 FROM comments nc
-                WHERE nc.entity_id = c.id
+                WHERE nc.entity_id = c.id AND c.entity_type = 'comment'
             )
         )
     ) AS comments 
@@ -110,6 +109,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	LEFT JOIN reactions r ON p.id = r.entity_id
 	LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
 	LEFT JOIN users u ON r.user_id = u.id
+	LEFT JOIN comments c ON p.id = c.entity_id AND c.entity_type = 'post'
 	WHERE user_id = $1
 	GROUP BY p.id
 	ORDER BY p.id;`, userID)
