@@ -247,8 +247,10 @@ func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	if sort != "asc" && sort != "desc" {
 		sort = "desc" // Default sort
 	}
+	search := query.Get("search")
+	orderBy := query.Get("order_by")
 
-	users, err := h.UserService.GetAllUsers(limit, offset, sort)
+	users, err := h.UserService.GetAllUsers(limit, offset, sort,orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

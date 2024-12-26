@@ -13,9 +13,8 @@ type UserServiceInterface interface {
 	RegisterUser(user domain.CreateUserRequest) error
 	UpdateUserData(domain.User) error
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
-	FindByEmail(email string) (*domain.User, error)
 	GetUserByID(id int) (*domain.User, error)
-	GetAllUsers(limit, offset int, sort string) ([]*domain.User, error)
+	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
 type UserService struct {
 	repo domain.UserRepository
@@ -112,14 +111,10 @@ func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) e
 	})
 }
 
-func (s *UserService) FindByEmail(email string) (*domain.User, error) {
-	return s.repo.GetUserByEmail(email)
-}
-
 func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 	return s.repo.GetUserByID(id)
 }
 
-func (s *UserService) GetAllUsers(limit, offset int, sort string) ([]*domain.User, error) {
-	return s.repo.GetAllUsers(limit, offset, sort)
+func (s *UserService) GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error) {
+	return s.repo.GetAllUsers(limit, offset, sort, orderBy, search)
 }

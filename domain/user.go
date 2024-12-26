@@ -29,13 +29,6 @@ type CreateUserRequest struct {
 	Email    string `json:"email"`
 }
 
-type UserSearchOptions struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Sort   string `json:"sort"`
-	Search string `json:"search"`
-}
-
 func (u *User) UpdateEmail(newEmail string) {
 	u.Email = newEmail
 }

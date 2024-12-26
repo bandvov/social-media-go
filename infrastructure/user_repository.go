@@ -148,19 +148,22 @@ func (r *UserRepository) UpdateUser(user *domain.User) error {
 	return err
 }
 
-func (r *UserRepository) GetAllUsers(limit, offset int, sort string) ([]*domain.User, error) {
+func (r *UserRepository) GetAllUsers(limit, offset int, sort string, orderBy string, search string) ([]*domain.User, error) {
 	// Validate and set default sorting
-	order := "DESC"
-	if sort == "asc" {
-		order = "ASC"
+	if sort == "desc" {
+		sort = "DESC"
 	}
-
-	query := fmt.Sprintf(`
-        SELECT id, username, email, status, role, profile_pic, created_at
-        FROM users
-        ORDER BY created_at %s
+	if sort == "asc" {
+		sort = "ASC"
+	}
+	baseQuery := `SELECT id, username, email, status, role, profile_pic, created_at FROM users`
+	if search != "" {
+		baseQuery += " AND email ILIKE " + "%" + search + "%"
+	}
+	query := fmt.Sprintf(`        
+        ORDER BY %s %s
         LIMIT $1 OFFSET $2
-    `, order)
+    `, orderBy, sort)
 
 	// Prepare the statement
 	stmt, err := r.db.Prepare(query)

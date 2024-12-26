@@ -6,5 +6,5 @@ type UserRepository interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
 	UpdateUser(user *User) error
-	GetAllUsers(limit, offset int, sort string) ([]*User, error)
+	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*User, error)
 }
