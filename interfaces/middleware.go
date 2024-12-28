@@ -54,14 +54,14 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			return
 		}
 
-		userID, err := utils.ValidateJWT(token)
+		claims, err := utils.ValidateJWT(token)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		// Retrieve user from the database
-		user, err := h.UserService.GetUserByID(userID)
+		user, err := h.UserService.GetUserByID(claims.UserID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return

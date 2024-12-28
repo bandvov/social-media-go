@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var JWTSecretKey []byte
+var (
+	JWTSecretKey []byte
+	once         sync.Once
+)
 
 // Claims defines the custom claims structure.
 type Claims struct {
@@ -18,17 +22,23 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// loadSecret initializes the JWT secret key from the environment only once.
+func loadSecret() {
+	once.Do(func() {
+		if JWTSecretKey == nil {
+			jwtSecret := os.Getenv("JWT_SECRET")
+			if jwtSecret == "" {
+				log.Fatal("JWT_SECRET is not set in the environment")
+			}
+			JWTSecretKey = []byte(jwtSecret)
+		}
+	})
+}
+
 // GenerateJWT generates a new JWT token for a user.
 func GenerateJWT(userID int) (string, error) {
-	if JWTSecretKey == nil {
-		jwtSecret := os.Getenv("JWT_SECRET")
-		if jwtSecret == "" {
-			log.Fatal("JWT_SECRET_KEY is not set in the environment")
-		}
-		JWTSecretKey = []byte(jwtSecret)
-	}
-
-	claims := &Claims{
+	loadSecret()
+	claims := Claims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -40,18 +50,12 @@ func GenerateJWT(userID int) (string, error) {
 	return token.SignedString(JWTSecretKey)
 }
 
-// ParseJWT validates a JWT token and extracts claims.
-func ParseJWT(tokenStr string) (*Claims, error) {
-	if JWTSecretKey == nil {
-		jwtSecret := os.Getenv("JWT_SECRET")
-		if jwtSecret == "" {
-			log.Fatal("JWT_SECRET_KEY is not set in the environment")
-		}
-		JWTSecretKey = []byte(jwtSecret)
-	}
+// ValidateJWT validates a JWT token and returns the user claims.
+func ValidateJWT(tokenString string) (*Claims, error) {
+	loadSecret()
 
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Check if the signing method is HMAC
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the signing method is HMAC.
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -62,43 +66,10 @@ func ParseJWT(tokenStr string) (*Claims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, jwt.ErrInvalidKey
-}
-
-// ValidateJWT validates a JWT token and returns the user ID
-func ValidateJWT(tokenString string) (int, error) {
-	if JWTSecretKey == nil {
-		jwtSecret := os.Getenv("JWT_SECRET")
-		if jwtSecret == "" {
-			log.Fatal("JWT_SECRET_KEY is not set in the environment")
-		}
-		JWTSecretKey = []byte(jwtSecret)
-	}
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid signing method")
-		}
-		return JWTSecretKey, nil
-	})
-
-	if err != nil || !token.Valid {
-		return 0, errors.New("invalid token")
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return 0, errors.New("invalid token claims")
+		return nil, errors.New("invalid token")
 	}
 
-	userID, ok := claims["user_id"].(float64)
-	if !ok {
-		return 0, errors.New("invalid user ID in token")
-	}
-
-	return int(userID), nil
+	return claims, nil
 }
