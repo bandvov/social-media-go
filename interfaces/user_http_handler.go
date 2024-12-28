@@ -207,8 +207,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-	if !isAdmin || userId != userIDFromUrl {
-		fmt.Println("here1")
+	if !(isAdmin || userId == userIDFromUrl) {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
