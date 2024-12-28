@@ -13,6 +13,7 @@ import (
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
 	"github.com/bandvov/social-media-go/utils"
+	"github.com/lib/pq"
 )
 
 type UserHTTPHandler struct {
@@ -38,7 +39,7 @@ func parseUserIDFromPath(path string) (int, error) {
 func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var newUser domain.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
 
@@ -54,6 +55,10 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.UserService.RegisterUser(newUser)
 	if err != nil {
+		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+			http.Error(w, "error registering user: user already exists", http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "error registering user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -67,7 +72,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Parse and validate the request body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
 	if request.Email == "" || request.Password == "" {
@@ -115,7 +120,7 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		http.Error(w, "{\"message\": \"invalid user ID\"}", http.StatusBadRequest)
 		return
 	}
 
@@ -123,7 +128,7 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	req.ID = userID
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
 
@@ -153,7 +158,7 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", struct{ message string }{message: "invalid user ID"}), http.StatusBadRequest)
 		return
 	}
 
@@ -202,9 +207,6 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(isAdmin)
-	fmt.Println(userId != userIDFromUrl)
-	fmt.Printf("here%t,%t\n", userId, userIDFromUrl)
 	if !isAdmin || userId != userIDFromUrl {
 		fmt.Println("here1")
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -250,7 +252,7 @@ func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	search := query.Get("search")
 	orderBy := query.Get("order_by")
 
-	users, err := h.UserService.GetAllUsers(limit, offset, sort,orderBy, search)
+	users, err := h.UserService.GetAllUsers(limit, offset, sort, orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
