@@ -144,7 +144,7 @@ func (r *UserRepository) UpdateUser(user *domain.User) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(query)
+	_, err = stmt.Exec()
 	return err
 }
 

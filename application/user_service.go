@@ -57,10 +57,13 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 }
 
 func (s *UserService) UpdateUserData(userData domain.User) error {
-	user, err := s.repo.GetUserByID(userData.ID)
+	_, err := s.repo.GetUserByID(userData.ID)
 	if err != nil {
 		return err
 	}
+	
+	user := &domain.User{}
+	user.ID = userData.ID
 
 	if userData.Email != "" {
 		user.UpdateEmail(userData.Email)
