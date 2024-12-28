@@ -148,22 +148,27 @@ func (r *UserRepository) UpdateUser(user *domain.User) error {
 	return err
 }
 
-func (r *UserRepository) GetAllUsers(limit, offset int, sort string, orderBy string, search string) ([]*domain.User, error) {
+func (r *UserRepository) GetAllUsers(limit, offset int, sort string, orderBy string, searchTerm string) ([]*domain.User, error) {
 	// Validate and set default sorting
-	if sort == "desc" {
+	if sort == "" || sort == "desc" {
 		sort = "DESC"
 	}
 	if sort == "asc" {
 		sort = "ASC"
 	}
-	baseQuery := `SELECT id, username, email, status, role, profile_pic, created_at FROM users`
-	if search != "" {
-		baseQuery += " AND email ILIKE " + "%" + search + "%"
+	if orderBy == "" {
+		orderBy = "created_at"
 	}
-	query := fmt.Sprintf(`        
-        ORDER BY %s %s
-        LIMIT $1 OFFSET $2
-    `, orderBy, sort)
+	if limit == 0 {
+		limit = 24
+	}
+
+	query := `SELECT id, username, email, status, role, profile_pic, created_at FROM users`
+	if searchTerm != "" {
+		query += fmt.Sprintf("\nWHERE position('%v' IN email) > 0 \n OR position('%v' IN id) > 0 \n", searchTerm, searchTerm)
+	}
+
+	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $1 OFFSET $2", orderBy, sort)
 
 	// Prepare the statement
 	stmt, err := r.db.Prepare(query)
@@ -172,7 +177,7 @@ func (r *UserRepository) GetAllUsers(limit, offset int, sort string, orderBy str
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(query, limit, offset)
+	rows, err := stmt.Query(limit, offset)
 	if err != nil {
 		return nil, err
 	}
