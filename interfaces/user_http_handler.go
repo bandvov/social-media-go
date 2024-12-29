@@ -42,7 +42,6 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
-
 	if err := ValidateEmail(newUser.Email); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -55,6 +54,7 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.UserService.RegisterUser(newUser)
 	if err != nil {
+		fmt.Println("err: ", err)
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
 			http.Error(w, "error registering user: user already exists", http.StatusBadRequest)
 			return
@@ -63,6 +63,7 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("here3")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "user registered successfully"})
 }

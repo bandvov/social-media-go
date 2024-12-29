@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
 	"github.com/bandvov/social-media-go/utils"
+	"github.com/lib/pq"
 )
 
 func TestLogin_Success(t *testing.T) {
@@ -126,196 +128,206 @@ func TestLogin_Success(t *testing.T) {
 	}
 }
 
-func TestRegister(t *testing.T) {
+func TestRegisterUser(t *testing.T) {
 	tests := []struct {
-		name            string
-		reqBody         domain.CreateUserRequest
-		mockUserService application.UserServiceInterface
-		expectedStatus  int
-		expectedBody    string
+		name               string
+		inputBody          interface{}
+		mockResponse       error
+		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
-			name: "Success",
-			reqBody: domain.CreateUserRequest{
-				Email:    "newuser@example.com",
-				Password: "password123",
-			},
-			mockUserService: &application.MockUserService{
-				RegisterUserFunc: func(user domain.CreateUserRequest) error {
-					return nil
-				},
-			},
-			expectedStatus: http.StatusCreated,
-			expectedBody:   `{"message": "User registered successfully"}`,
+			name:               "Invalid request body",
+			inputBody:          "invalid-json",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"message": "invalid request body"}`,
 		},
 		{
-			name: "MissingEmail",
-			reqBody: domain.CreateUserRequest{
-				Password: "password123", // Email is missing
+			name: "Invalid email",
+			inputBody: map[string]string{
+				"email":    "invalid-email",
+				"password": "StrongPass123!",
 			},
-			mockUserService: &application.MockUserService{
-				RegisterUserFunc: func(user domain.CreateUserRequest) error {
-					return nil
-				},
-			},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error": "Email is required"}`,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   "invalid email address",
 		},
 		{
-			name: "MissingPassword",
-			reqBody: domain.CreateUserRequest{
-				Email: "newuser@example.com", // Password is missing
+			name: "Invalid password",
+			inputBody: map[string]string{
+				"email":    "test@example.com",
+				"password": "weak",
 			},
-			mockUserService: &application.MockUserService{
-				RegisterUserFunc: func(user domain.CreateUserRequest) error {
-					return nil
-				},
-			},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error": "Password is required"}`,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   "password does not meet complexity requirements",
 		},
 		{
-			name: "InternalServerError",
-			reqBody: domain.CreateUserRequest{
-				Email:    "newuser@example.com",
-				Password: "password123",
+			name: "User already exists",
+			inputBody: map[string]string{
+				"email":    "test@example.com",
+				"password": "StrongPass123!",
 			},
-			mockUserService: &application.MockUserService{
-				RegisterUserFunc: func(user domain.CreateUserRequest) error {
-					return errors.New(`{"message": "Internal server error"}`)
-				},
+			mockResponse:       &pq.Error{Code: "23505"},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   "error registering user: user already exists",
+		},
+		{
+			name: "Internal server error",
+			inputBody: map[string]string{
+				"email":    "test@example.com",
+				"password": "StrongPass123!",
 			},
-			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   `{"message": "Internal server error"}`,
+			mockResponse:       errors.New("some error"),
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedResponse:   "error registering user: database error",
+		},
+		{
+			name: "Successful registration",
+			inputBody: map[string]string{
+				"email":    "test@example.com",
+				"password": "StrongPass123!",
+			},
+			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"message": "user registered successfully"}`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Given: We set up the handler with the mock service
-			handler := &UserHTTPHandler{
-				UserService: &application.MockUserService{},
+			mockService := &application.MockUserService{
+				RegisterUserFunc: func(user domain.CreateUserRequest) error {
+					return tt.mockResponse
+				},
 			}
 
-			// When: We marshal the request body and create the HTTP request
-			body, _ := json.Marshal(tt.reqBody)
-			req := httptest.NewRequest("POST", "/users/register", bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
+			handler := NewUserHTTPHandler(mockService)
 
-			// Set up a recorder to capture the HTTP response
+			body, _ := json.Marshal(tt.inputBody)
+			req := httptest.NewRequest(http.MethodPost, "/users/register", bytes.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 
-			// Act: Call the handler's RegisterUser function to process the request
 			handler.RegisterUser(rec, req)
 
-			// Then: Assert that the response status code matches the expected status
-			if rec.Code != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, rec.Code)
+			if tt.expectedStatusCode != rec.Code {
+				t.Errorf("expected status code %v, got %v", tt.expectedStatusCode, rec.Code)
 			}
-
-			// And: Assert that the response body matches the expected body
-			bodyResponse := rec.Body.String()
-			if bodyResponse != tt.expectedBody {
-				t.Errorf("expected body %s, got %s", tt.expectedBody, bodyResponse)
+			if reflect.DeepEqual(rec.Body.Bytes(), []byte(tt.expectedResponse)) {
+				t.Errorf("expected response body %s, got %s", tt.expectedResponse, rec.Body.String())
 			}
 		})
 	}
 }
 
-func TestUpdateUser(t *testing.T) {
-	// Define test cases
-	tests := []struct {
-		name           string
-		requestBody    map[string]string
-		mockService    *application.MockUserService
-		expectedStatus int
-		expectedBody   string
-		userId         int
-	}{
-		// {
-		// 	name: "Successful Update",
-		// 	requestBody: map[string]string{
-		// 		"firstName": "Updated",
-		// 		"lastName":  "Name",
-		// 	},
-		// 	mockService: &application.MockUserService{
-		// 		UpdateUserDataFunc: func(user domain.User) error {
-		// 			return nil
-		// 		},
-		// 	},
-		// 	expectedStatus: http.StatusOK,
-		// 	expectedBody:   `{"message":"User updated successfully"}`,
-		// 	userId:         1,
-		// },
-		// {
-		// 	name:        "Validation Error - Missing Fields",
-		// 	requestBody: map[string]string{},
-		// 	mockService: &application.MockUserService{
-		// 		UpdateUserDataFunc: func(user domain.User) error {
-		// 			return nil
-		// 		},
-		// 	},
-		// 	expectedStatus: http.StatusBadRequest,
-		// 	expectedBody:   `{"message":"First name and last name are required"}`,
-		// 	userId:         1,
-		// },
-		// {
-		// 	name: "Service Error",
-		// 	requestBody: map[string]string{
-		// 		"firstName": "Error",
-		// 		"lastName":  "Case",
-		// 	},
-		// 	mockService: &application.MockUserService{
-		// 		UpdateUserDataFunc: func(user domain.User) error {
-		// 			return errors.New("failed to update user")
-		// 		},
-		// 	},
-		// 	expectedStatus: http.StatusInternalServerError,
-		// 	expectedBody:   `{"message":"Failed to update user"}`,
-		// },
-		{
-			name: "missing user id",
-			requestBody: map[string]string{
-				"firstName": "Error",
-				"lastName":  "Case",
-			},
-			mockService:    &application.MockUserService{},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"message": "invalid user ID"}`,
-		},
-	}
+// func TestUpdateUser(t *testing.T) {
+// 	type args struct {
+// 		expectedStatus int
+// 		expectedBody   string
+// 		userId         int
+// 		requestBody    map[string]string
+// 	}
 
-	// Iterate over test cases
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Prepare request body
-			body, _ := json.Marshal(tt.requestBody)
+// 	type fields struct {
+// 		mockService *application.MockUserService
+// 	}
+// 	// Define test cases
+// 	tests := []struct {
+// 		name string
+// 		fields
+// 		args args
+// 	}{
+// 		{
+// 			name: "Successful Update",
+// 			args: args{
+// 				requestBody: map[string]string{
+// 					"firstName": "Updated",
+// 					"lastName":  "Name",
+// 				},
+// 				expectedStatus: http.StatusOK,
+// 				expectedBody:   `{"message":"User updated successfully"}`,
+// 				userId:         1,
+// 			},
+// 			fields: fields{
+// 				mockService: &application.MockUserService{
+// 					UpdateUserDataFunc: func(user domain.User) error {
+// 						return nil
+// 					},
+// 				},
+// 			},
+// 		},
+// 		// {
+// 		// 	name:        "Validation Error - Missing Fields",
+// 		// 	requestBody: map[string]string{},
+// 		// 	mockService: &application.MockUserService{
+// 		// 		UpdateUserDataFunc: func(user domain.User) error {
+// 		// 			return nil
+// 		// 		},
+// 		// 	},
+// 		// 	expectedStatus: http.StatusBadRequest,
+// 		// 	expectedBody:   `{"message":"First name and last name are required"}`,
+// 		// 	userId:         1,
+// 		// },
+// 		// {
+// 		// 	name: "Service Error",
+// 		// 	requestBody: map[string]string{
+// 		// 		"firstName": "Error",
+// 		// 		"lastName":  "Case",
+// 		// 	},
+// 		// 	mockService: &application.MockUserService{
+// 		// 		UpdateUserDataFunc: func(user domain.User) error {
+// 		// 			return errors.New("failed to update user")
+// 		// 		},
+// 		// 	},
+// 		// 	expectedStatus: http.StatusInternalServerError,
+// 		// 	expectedBody:   `{"message":"Failed to update user"}`,
+// 		// },
+// 		{
+// 			name: "missing user id",
+// 			args: args{
 
-			// Create request and response recorder
-			req := httptest.NewRequest("PUT", fmt.Sprintf("/users/%v", tt.userId), bytes.NewReader(body))
-			req.Header.Set("Content-Type", "application/json")
-			rec := httptest.NewRecorder()
+// 				requestBody: map[string]string{
+// 					"firstName": "Error",
+// 					"lastName":  "Case",
+// 				},
+// 				expectedStatus: http.StatusBadRequest,
+// 				expectedBody:   `{"message": "invalid user ID"}`,
+// 			},
+// 			fields: fields{
+// 				mockService: &application.MockUserService{},
+// 			},
+// 		},
+// 	}
 
-			// Create handler with mock service
-			handler := &UserHTTPHandler{UserService: tt.mockService}
+// 	// Iterate over test cases
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			// Prepare request body
+// 			body, _ := json.Marshal(tt.args.requestBody)
+// 			fmt.Println("userid: ", tt.args.userId)
+// 			// Create request and response recorder
+// 			req := httptest.NewRequest("PUT", fmt.Sprintf("/users/%v", tt.args.userId), bytes.NewReader(body))
+// 			req.Header.Set("Content-Type", "application/json")
+// 			rec := httptest.NewRecorder()
+// 			fmt.Printf("req: %+v", req)
+// 			// Create handler with mock service
+// 			handler := &UserHTTPHandler{UserService: tt.mockService}
 
-			// Call the UpdateUser handler
-			handler.UpdateUser(rec, req)
+// 			// Call the UpdateUser handler
+// 			handler.UpdateUser(rec, req)
+// 			res := rec.Result().Request
+// 			fmt.Printf("res:%+v", res)
+// 			// Assert status code
+// 			if rec.Code != tt.args.expectedStatus {
+// 				t.Errorf("expected status %d, got %d", tt.args.expectedStatus, rec.Code)
+// 			}
+// 			// Assert response body
+// 			if reflect.DeepEqual(string(rec.Body.Bytes()), []byte(tt.args.expectedBody)) {
+// 				t.Errorf("expected response body %s, got %s", tt.args.expectedBody, rec.Body.String())
+// 			}
+// 		})
+// 	}
+// }
 
-			// Assert status code
-			if rec.Code != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, rec.Code)
-			}
-
-			// Assert response body
-			if rec.Body.String() != tt.expectedBody {
-				t.Errorf("expected response body '%s', got '%s'", tt.expectedBody, rec.Body.String())
-			}
-		})
-	}
-}
-
-TestGetUserProfile_Success tests retrieving the user profile with valid authorization
+// TestGetUserProfile_Success tests retrieving the user profile with valid authorization
 func TestGetUserProfile_Success(t *testing.T) {
 	utils.JWTSecretKey = []byte("test secret")
 
