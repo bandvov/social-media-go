@@ -35,11 +35,16 @@ func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error {
 
 func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
 	query := `
-	SELECT u.id, u.email, u.profile_pic 
-	FROM users u 
-	JOIN followers f 
-	ON u.id = f.follower_id 
-	WHERE f.followee_id = $1`
+	SELECT 
+		f.follower_id,
+		JSON_AGG(JSON_BUILD_OBJECT(
+			'id', f.followee_id,
+			'profile_pic',uf.profile_pic
+		)) AS followers
+	FROM followers f
+	LEFT JOIN users uf ON f.follower_id = uf.id
+	WHERE f.followee_id = 1
+	GROUP BY f.follower_id;`
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followers: %v", err)
@@ -59,11 +64,16 @@ func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
 
 func (r *FollowerRepository) GetFollowees(userID int) ([]domain.User, error) {
 	query := `
-	SELECT u.id, u.email, u.profile_pic 
-	FROM users u 
-	JOIN followers f 
-	ON u.id = f.followee_id 
-	WHERE f.follower_id = $1`
+	SELECT 
+		f.followee_id,
+		JSON_AGG(JSON_BUILD_OBJECT(
+			'id', f.follower_id,
+			'profile_pic',uf.profile_pic
+		)) AS followers
+	FROM followers f
+	LEFT JOIN users uf ON f.follower_id = uf.id
+	WHERE f.follower_id = 1
+	GROUP BY f.followee_id;`
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followees: %v", err)

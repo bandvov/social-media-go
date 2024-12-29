@@ -20,8 +20,8 @@ type User struct {
 	CreatedAt  time.Time       `json:"created_at"`            // Account creation timestamp
 	UpdatedAt  time.Time       `json:"updated_at"`            // Last update timestamp
 	PostsCount int             `json:"posts_count"`
-	Followers  json.RawMessage `json:"followers"`
-	Followeees json.RawMessage `json:"followees"`
+	Followers  json.RawMessage `json:"followers,omitempty"`
+	Followeees json.RawMessage `json:"followees,omitempty"`
 }
 
 type CreateUserRequest struct {
