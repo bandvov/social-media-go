@@ -3,6 +3,6 @@ package domain
 type FollowerRepository interface {
 	AddFollower(follower *Follower) error
 	RemoveFollower(follower *Follower) error
-	GetFollowers(userID int) ([]User, error)
-	GetFollowees(userID int) ([]User, error)
+	GetFollowers(userID, limit, offset int, sort, orderBy, search string) ([]User, error)
+	GetFollowees(userID, limit, offset int, sort, orderBy, search string) ([]User, error)
 }

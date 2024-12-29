@@ -10,8 +10,8 @@ import (
 type FollowerServiceInterface interface {
 	AddFollower(followerID, followeeID int) error
 	RemoveFollower(followerID, followeeID int) error
-	GetFollowers(userID int) ([]domain.User, error)
-	GetFollowees(userID int) ([]domain.User, error)
+	GetFollowers(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
+	GetFollowees(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
 }
 
 type FollowerService struct {
@@ -40,11 +40,11 @@ func (s *FollowerService) RemoveFollower(followerID, followeeID int) error {
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowerService) GetFollowers(userID int) ([]domain.User, error) {
-	return s.repo.GetFollowers(userID)
+func (s *FollowerService) GetFollowers(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error) {
+	return s.repo.GetFollowers(userID, limit, offset, sort, orderBy, search)
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowerService) GetFollowees(userID int) ([]domain.User, error) {
-	return s.repo.GetFollowees(userID)
+func (s *FollowerService) GetFollowees(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error) {
+	return s.repo.GetFollowees(userID, limit, offset, sort, orderBy, search)
 }

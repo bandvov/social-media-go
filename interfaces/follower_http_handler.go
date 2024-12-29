@@ -79,8 +79,29 @@ func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := r.URL.Query()
+
+	// Parse `limit` and `offset` with default values
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10 // Default limit
+	}
+
+	offset, err := strconv.Atoi(query.Get("offset"))
+	if err != nil || offset < 0 {
+		offset = 0 // Default offset
+	}
+
+	// Parse `sort` with default value
+	sort := query.Get("sort")
+	if sort != "asc" && sort != "desc" {
+		sort = "desc" // Default sort
+	}
+	search := query.Get("search")
+	orderBy := query.Get("order_by")
+
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userIDFromUrl)
+	followers, err := h.service.GetFollowers(userIDFromUrl, limit, offset, sort, orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,8 +118,29 @@ func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := r.URL.Query()
+
+	// Parse `limit` and `offset` with default values
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10 // Default limit
+	}
+
+	offset, err := strconv.Atoi(query.Get("offset"))
+	if err != nil || offset < 0 {
+		offset = 0 // Default offset
+	}
+
+	// Parse `sort` with default value
+	sort := query.Get("sort")
+	if sort != "asc" && sort != "desc" {
+		sort = "desc" // Default sort
+	}
+	search := query.Get("search")
+	orderBy := query.Get("order_by")
+
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userIDFromUrl)
+	followers, err := h.service.GetFollowers(userIDFromUrl, limit, offset, sort, orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

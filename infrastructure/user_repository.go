@@ -91,7 +91,7 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	defer stmt.Close()
 
 	err = stmt.QueryRow(id).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.Followers, &user.Followeees)
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowerCount, &user.FolloweeeCount)
 	if err != nil {
 		return nil, err
 	}

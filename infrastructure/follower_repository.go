@@ -33,7 +33,21 @@ func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error {
 	return nil
 }
 
-func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
+func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+	// Validate and set default sorting
+	if sort == "" || sort == "desc" {
+		sort = "DESC"
+	}
+	if sort == "asc" {
+		sort = "ASC"
+	}
+	if orderBy == "" {
+		orderBy = "created_at"
+	}
+	if limit == 0 {
+		limit = 24
+	}
+
 	query := `
 	SELECT 
 		f.follower_id,
@@ -43,9 +57,16 @@ func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
 		)) AS followers
 	FROM followers f
 	LEFT JOIN users uf ON f.follower_id = uf.id
-	WHERE f.followee_id = 1
+	WHERE f.followee_id = $1
 	GROUP BY f.follower_id;`
-	rows, err := r.db.Query(query, userID)
+
+	if searchTerm != "" {
+		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
+	}
+
+	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $2 OFFSET $3", orderBy, sort)
+
+	rows, err := r.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followers: %v", err)
 	}
@@ -62,7 +83,21 @@ func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
 	return users, nil
 }
 
-func (r *FollowerRepository) GetFollowees(userID int) ([]domain.User, error) {
+func (r *FollowerRepository) GetFollowees(userID int, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+	// Validate and set default sorting
+	if sort == "" || sort == "desc" {
+		sort = "DESC"
+	}
+	if sort == "asc" {
+		sort = "ASC"
+	}
+	if orderBy == "" {
+		orderBy = "created_at"
+	}
+	if limit == 0 {
+		limit = 24
+	}
+
 	query := `
 	SELECT 
 		f.followee_id,
@@ -72,9 +107,16 @@ func (r *FollowerRepository) GetFollowees(userID int) ([]domain.User, error) {
 		)) AS followers
 	FROM followers f
 	LEFT JOIN users uf ON f.follower_id = uf.id
-	WHERE f.follower_id = 1
+	WHERE f.follower_id = $1
 	GROUP BY f.followee_id;`
-	rows, err := r.db.Query(query, userID)
+
+	if searchTerm != "" {
+		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
+	}
+
+	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $2 OFFSET $3", orderBy, sort)
+
+	rows, err := r.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followees: %v", err)
 	}

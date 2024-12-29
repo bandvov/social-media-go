@@ -223,7 +223,6 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user.Password = ""
-	fmt.Println("here2")
 	// Respond with user profile data
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
