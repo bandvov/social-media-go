@@ -51,35 +51,22 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	var user domain.User
 
 	// Prepare the statement
-	stmt, err := r.db.Prepare(`
-	WITH followers_agg AS (
-    SELECT
-        f.followee_id,
-        JSON_AGG(JSON_BUILD_OBJECT(
-            'id', f.follower_id,
-			'profile_pic',uf.profile_pic
-        )) AS followers
-    FROM followers f
-    LEFT JOIN users uf ON f.follower_id = uf.id
-    GROUP BY f.followee_id
-	),
-	followees_agg AS (
-		SELECT
-			fw.follower_id,
-			JSON_AGG(JSON_BUILD_OBJECT(
-				'id', fw.followee_id,
-				'profile_pic',uw.profile_pic
-			)) AS followees
-		FROM followers fw
-		LEFT JOIN users uw ON fw.followee_id = uw.id
-		GROUP BY fw.follower_id
-	),
+	stmt, err := r.db.Prepare(`	
+	WITH 
 	post_counts AS (
 		SELECT
 			p.author_id,
 			COUNT(*) AS post_count
 		FROM posts p
 		GROUP BY p.author_id
+	),
+	follower_stats AS (
+    SELECT
+        f.followee_id,
+        COUNT(f.follower_id) AS follower_count,
+        COUNT(DISTINCT f.follower_id) FILTER (WHERE f.followee_id IS NOT NULL) AS followee_count
+    FROM followers f
+    GROUP BY f.followee_id
 	)
 	SELECT
 		u.id,
@@ -92,12 +79,11 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 		u.created_at,
 		u.updated_at,
 		COALESCE(pc.post_count, 0) AS post_count,
-		COALESCE(fa.followers, '[]') AS followers,
-		COALESCE(fe.followees, '[]') AS followees
+		COALESCE(fs.follower_count, 0) AS follower_count,
+		COALESCE(fs.followee_count, 0) AS followee_count
 	FROM users u
-	LEFT JOIN followers_agg fa ON u.id = fa.followee_id
-	LEFT JOIN followees_agg fe ON u.id = fe.follower_id
 	LEFT JOIN post_counts pc ON u.id = pc.author_id
+	LEFT JOIN follower_stats fs ON u.id = fs.followee_id
 	WHERE u.id = $1;`)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
