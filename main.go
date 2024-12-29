@@ -100,6 +100,8 @@ func main() {
 	router.HandleFunc("GET /users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
 
 	router.HandleFunc("GET /users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
+	router.HandleFunc("GET /users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
+	router.HandleFunc("GET /users/{id}/followees", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowees)))
 
 	router.HandleFunc("GET /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPost)))
 	router.HandleFunc("POST /posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.CreatePost)))
@@ -109,7 +111,6 @@ func main() {
 
 	http.HandleFunc("POST /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.AddFollower)))
 	http.HandleFunc("DELETE /followers/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.RemoveFollower)))
-	http.HandleFunc("GET /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
 
 	http.HandleFunc("GET /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.GetTags)))
 	http.HandleFunc("POST /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.CreateTag)))

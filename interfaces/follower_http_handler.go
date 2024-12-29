@@ -72,27 +72,38 @@ func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
-	// Parse the URL parameters to get the user ID
-	userID, err := strconv.Atoi(r.URL.Query().Get("user_id"))
+	id := r.PathValue("id")
+	userIDFromUrl, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
 
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userID)
+	followers, err := h.service.GetFollowers(userIDFromUrl)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Marshal the followers into JSON and send as response
-	response, err := json.Marshal(followers)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(followers)
+}
+func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	userIDFromUrl, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Failed to marshal followers", http.StatusInternalServerError)
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Call the service to get followers
+	followers, err := h.service.GetFollowers(userIDFromUrl)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	json.NewEncoder(w).Encode(followers)
 }

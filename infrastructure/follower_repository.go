@@ -35,7 +35,7 @@ func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error {
 
 func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
 	query := `
-	SELECT u.id, u.name 
+	SELECT u.id, u.email, u.profile_pic 
 	FROM users u 
 	JOIN followers f 
 	ON u.id = f.follower_id 
@@ -49,7 +49,31 @@ func (r *FollowerRepository) GetFollowers(userID int) ([]domain.User, error) {
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Email); err != nil {
+		if err := rows.Scan(&user.ID, &user.Email, &user.ProfilePic); err != nil {
+			return nil, fmt.Errorf("failed to scan user: %v", err)
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (r *FollowerRepository) GetFollowees(userID int) ([]domain.User, error) {
+	query := `
+	SELECT u.id, u.email, u.profile_pic 
+	FROM users u 
+	JOIN followers f 
+	ON u.id = f.followee_id 
+	WHERE f.follower_id = $1`
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get followees: %v", err)
+	}
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		var user domain.User
+		if err := rows.Scan(&user.ID, &user.Email, &user.ProfilePic); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
 		users = append(users, user)
