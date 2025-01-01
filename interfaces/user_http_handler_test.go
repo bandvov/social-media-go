@@ -3,6 +3,7 @@ package interfaces
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -319,49 +320,117 @@ func TestUpdateUser(t *testing.T) {
 	}
 }
 
-// TestGetUserProfile_Success tests retrieving the user profile with valid authorization
-func TestGetUserProfile_Success(t *testing.T) {
+func TestGetUserProfile(t *testing.T) {
 	utils.JWTSecretKey = []byte("test secret")
-
 	f := "Existing"
 	l := "User"
 	u := "John"
 	mockUser := &domain.User{
 		ID:        1,
 		Username:  &u,
-		Email:     "existinguser@example.com",
 		FirstName: &f,
 		LastName:  &l,
-		Role:      "user",
 	}
-	// Arrange
-	handler := &UserHTTPHandler{UserService: &application.MockUserService{
-		GetUserByIDFunc: func(userID int) (*domain.User, error) {
-			return mockUser, nil
+
+	tests := []struct {
+		name                string
+		userIDInContext     int
+		userIDFromURL       string
+		expectedStatusCode  int
+		mockGetUserByIDFunc func(id int) (*domain.User, error)
+		expectedBody        interface{}
+	}{
+		{
+			name:               "Unauthorized - missing user ID in context",
+			userIDInContext:    0,
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusForbidden,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return nil, nil
+			},
+			expectedBody: "Unauthorized\n",
 		},
-	}}
+		{
+			name:               "Unauthorized - user ID mismatch",
+			userIDInContext:    2,
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusForbidden,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return nil, nil
+			},
+			expectedBody: "Unauthorized\n",
+		},
+		{
+			name:               "User not found",
+			userIDInContext:    1, // Matches userIDFromURL
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusNotFound,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return nil, sql.ErrNoRows
+			},
+			expectedBody: "User not found\n",
+		},
 
-	req := httptest.NewRequest("GET", "/users/1/profile", nil)
-	req.Header.Set("Authorization", "Bearer valid-jwt-token")
-	ctx := context.WithValue(req.Context(), userIDKey, 1)
-	ctx = context.WithValue(ctx, isAdminKey, true)
-	req = req.WithContext(ctx)
-	rec := httptest.NewRecorder()
-
-	// Act
-	handler.GetUserProfile(rec, req)
-
-	// Assert
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
+		{
+			name:               "Internal server error",
+			userIDInContext:    1,
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusInternalServerError,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return nil, errors.New("some internal error")
+			},
+			expectedBody: "Internal server error\n",
+		},
+		{
+			name:               "Successful user profile retrieval",
+			userIDInContext:    1,
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusOK,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return mockUser, nil
+			},
+			expectedBody: func() string {
+				data, _ := json.Marshal(mockUser)
+				return string(data) + "\n" // Add newline to match actual response
+			}(),
+		},
 	}
 
-	var respBody map[string]interface{}
-	if err := json.Unmarshal(rec.Body.Bytes(), &respBody); err != nil {
-		t.Fatalf("response body unmarshal failed: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up the mock service
+			mockService := &application.MockUserService{
+				GetUserByIDFunc: tt.mockGetUserByIDFunc,
+			}
 
-	if respBody["email"] != "user1@example.com" {
-		t.Errorf("expected email %s, got %s", "user1@example.com", respBody["email"])
+			// Create handler with mock service
+			handler := NewUserHTTPHandler(mockService)
+
+			// Create the request
+			req := httptest.NewRequest(http.MethodGet, "/users/{id}/profile", nil)
+			req = req.WithContext(context.WithValue(context.Background(), userIDKey, tt.userIDInContext))
+			req = req.WithContext(context.WithValue(req.Context(), isAdminKey, false))
+			req.SetPathValue("id", tt.userIDFromURL)
+
+			// Create a ResponseRecorder to capture the response
+			r := httptest.NewRecorder()
+
+			// Call the handler
+			handler.GetUserProfile(r, req)
+
+			res := r.Result()
+			defer res.Body.Close()
+
+			// Check the status code
+			if res.StatusCode != tt.expectedStatusCode {
+				t.Errorf("expected status code %d, got %d", tt.expectedStatusCode, res.StatusCode)
+			}
+
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(res.Body)
+			if buf.String() != tt.expectedBody {
+				t.Errorf("expected body %q, got %q", tt.expectedBody, buf.String())
+			}
+		})
 	}
 }
