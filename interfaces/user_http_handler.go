@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
@@ -22,18 +21,6 @@ type UserHTTPHandler struct {
 
 func NewUserHTTPHandler(userService application.UserServiceInterface) *UserHTTPHandler {
 	return &UserHTTPHandler{UserService: userService}
-}
-
-func parseUserIDFromPath(path string) (int, error) {
-	segments := strings.Split(strings.Trim(path, "/"), "/")
-	if len(segments) < 2 {
-		return 0, errors.New("invalid URL")
-	}
-	userId, err := strconv.ParseInt(segments[1], 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return int(userId), nil
 }
 
 func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -194,12 +181,13 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("here")
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
-
+	fmt.Println("here2")
 	isAdmin := h.IsAdmin(r.Context())
 
 	id := r.PathValue("id")
@@ -208,12 +196,14 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
+	fmt.Printf("%v|%v", userId, userIDFromUrl)
+	fmt.Printf("is equal%v", userId == userIDFromUrl)
 	if !(isAdmin || userId == userIDFromUrl) {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
-	// Fetch user profile from service
+	// Ensure user lookup happens after authorization checks
 	user, err := h.UserService.GetUserByID(userIDFromUrl)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
