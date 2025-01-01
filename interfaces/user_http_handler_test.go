@@ -3,7 +3,6 @@ package interfaces
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -337,12 +336,14 @@ func TestGetUserProfile(t *testing.T) {
 		userIDInContext     int
 		userIDFromURL       string
 		expectedStatusCode  int
+		isAdmin             bool
 		mockGetUserByIDFunc func(id int) (*domain.User, error)
 		expectedBody        interface{}
 	}{
 		{
 			name:               "Unauthorized - missing user ID in context",
 			userIDInContext:    0,
+			isAdmin:            false,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusForbidden,
 			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
@@ -352,6 +353,7 @@ func TestGetUserProfile(t *testing.T) {
 		},
 		{
 			name:               "Unauthorized - user ID mismatch",
+			isAdmin:            false,
 			userIDInContext:    2,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusForbidden,
@@ -361,18 +363,45 @@ func TestGetUserProfile(t *testing.T) {
 			expectedBody: "Unauthorized\n",
 		},
 		{
-			name:               "User not found",
-			userIDInContext:    1, // Matches userIDFromURL
+			name:               "Unauthorized - user ID mismatch",
+			isAdmin:            false,
+			userIDInContext:    2,
 			userIDFromURL:      "1",
-			expectedStatusCode: http.StatusNotFound,
+			expectedStatusCode: http.StatusForbidden,
 			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
-				return nil, sql.ErrNoRows
+				return nil, nil
 			},
-			expectedBody: "User not found\n",
+			expectedBody: "Unauthorized\n",
+		},
+		{
+			name:               "User is admin",
+			isAdmin:            true,
+			userIDInContext:    111, // Matches userIDFromURL
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusOK,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return mockUser, nil
+			},
+			expectedBody: func() string {
+				data, _ := json.Marshal(mockUser)
+				return string(data) + "\n" // Add newline to match actual response
+			}(),
+		},
+		{
+			name:               "User is not admin",
+			isAdmin:            false,
+			userIDInContext:    111, // Matches userIDFromURL
+			userIDFromURL:      "1",
+			expectedStatusCode: http.StatusForbidden,
+			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+				return nil, nil
+			},
+			expectedBody: "Unauthorized\n",
 		},
 
 		{
 			name:               "Internal server error",
+			isAdmin:            false,
 			userIDInContext:    1,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusInternalServerError,
@@ -383,6 +412,7 @@ func TestGetUserProfile(t *testing.T) {
 		},
 		{
 			name:               "Successful user profile retrieval",
+			isAdmin:            false,
 			userIDInContext:    1,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusOK,
@@ -409,7 +439,7 @@ func TestGetUserProfile(t *testing.T) {
 			// Create the request
 			req := httptest.NewRequest(http.MethodGet, "/users/{id}/profile", nil)
 			req = req.WithContext(context.WithValue(context.Background(), userIDKey, tt.userIDInContext))
-			req = req.WithContext(context.WithValue(req.Context(), isAdminKey, false))
+			req = req.WithContext(context.WithValue(req.Context(), isAdminKey, tt.isAdmin))
 			req.SetPathValue("id", tt.userIDFromURL)
 
 			// Create a ResponseRecorder to capture the response

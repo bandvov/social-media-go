@@ -1,0 +1,2426 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>application: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/bandvov/social-media-go/application/comment_service.go (0.0%)</option>
+				
+				<option value="file1">github.com/bandvov/social-media-go/application/follower_service.go (0.0%)</option>
+				
+				<option value="file2">github.com/bandvov/social-media-go/application/mock_post_service.go (0.0%)</option>
+				
+				<option value="file3">github.com/bandvov/social-media-go/application/mock_user_service.go (0.0%)</option>
+				
+				<option value="file4">github.com/bandvov/social-media-go/application/post_service.go (0.0%)</option>
+				
+				<option value="file5">github.com/bandvov/social-media-go/application/tag_service.go (0.0%)</option>
+				
+				<option value="file6">github.com/bandvov/social-media-go/application/user_service.go (11.6%)</option>
+				
+				<option value="file7">github.com/bandvov/social-media-go/domain/comment.go (0.0%)</option>
+				
+				<option value="file8">github.com/bandvov/social-media-go/domain/follower.go (0.0%)</option>
+				
+				<option value="file9">github.com/bandvov/social-media-go/domain/post.go (0.0%)</option>
+				
+				<option value="file10">github.com/bandvov/social-media-go/domain/tag.go (0.0%)</option>
+				
+				<option value="file11">github.com/bandvov/social-media-go/domain/user.go (0.0%)</option>
+				
+				<option value="file12">github.com/bandvov/social-media-go/infrastructure/comment_repository.go (0.0%)</option>
+				
+				<option value="file13">github.com/bandvov/social-media-go/infrastructure/follower_repository.go (0.0%)</option>
+				
+				<option value="file14">github.com/bandvov/social-media-go/infrastructure/mock_user_repository.go (11.1%)</option>
+				
+				<option value="file15">github.com/bandvov/social-media-go/infrastructure/post_repository.go (0.0%)</option>
+				
+				<option value="file16">github.com/bandvov/social-media-go/infrastructure/tag_repository.go (0.0%)</option>
+				
+				<option value="file17">github.com/bandvov/social-media-go/infrastructure/user_repository.go (0.0%)</option>
+				
+				<option value="file18">github.com/bandvov/social-media-go/interfaces/comment_http_handler.go (0.0%)</option>
+				
+				<option value="file19">github.com/bandvov/social-media-go/interfaces/follower_http_handler.go (0.0%)</option>
+				
+				<option value="file20">github.com/bandvov/social-media-go/interfaces/middleware.go (0.0%)</option>
+				
+				<option value="file21">github.com/bandvov/social-media-go/interfaces/post_http_handler.go (0.0%)</option>
+				
+				<option value="file22">github.com/bandvov/social-media-go/interfaces/tag_http_handler.go (0.0%)</option>
+				
+				<option value="file23">github.com/bandvov/social-media-go/interfaces/user_http_handler.go (60.3%)</option>
+				
+				<option value="file24">github.com/bandvov/social-media-go/interfaces/validation.go (63.6%)</option>
+				
+				<option value="file25">github.com/bandvov/social-media-go/main.go (0.0%)</option>
+				
+				<option value="file26">github.com/bandvov/social-media-go/seeds/seed.go (0.0%)</option>
+				
+				<option value="file27">github.com/bandvov/social-media-go/utils/jwt.go (28.6%)</option>
+				
+				<option value="file28">github.com/bandvov/social-media-go/utils/router.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package application
+
+import "github.com/bandvov/social-media-go/domain"
+
+// CommentServiceInterface defines methods for tags-related operations.
+type CommentServiceInterface interface {
+        AddComment(entityID int, content string, authorID int) error
+        GetComments(entityID int) ([]domain.Comment, error)
+}
+type CommentService struct {
+        commentRepo domain.CommentRepository
+}
+
+func NewCommentService(repo domain.CommentRepository) *CommentService <span class="cov0" title="0">{
+        return &amp;CommentService{
+                commentRepo: repo,
+        }
+}</span>
+
+func (s *CommentService) AddComment(entityID int, content string, authorID int) error <span class="cov0" title="0">{
+        comment := domain.Comment{
+                EntityID: entityID,
+                Content:  content,
+                AuthorID: authorID,
+                Status:   domain.Active,
+        }
+        return s.commentRepo.AddComment(comment)
+}</span>
+
+func (s *CommentService) GetComments(entityID int) ([]domain.Comment, error) <span class="cov0" title="0">{
+        return s.commentRepo.GetCommentsByEntityID(entityID)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package application
+
+import (
+        "errors"
+
+        "github.com/bandvov/social-media-go/domain"
+)
+
+// FollowerServiceInterface defines methods for tags-related operations.
+type FollowerServiceInterface interface {
+        AddFollower(followerID, followeeID int) error
+        RemoveFollower(followerID, followeeID int) error
+        GetFollowers(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
+        GetFollowees(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
+}
+
+type FollowerService struct {
+        repo domain.FollowerRepository
+}
+
+func NewFollowerService(repo domain.FollowerRepository) *FollowerService <span class="cov0" title="0">{
+        return &amp;FollowerService{repo: repo}
+}</span>
+
+// AddFollower adds a follower for a given user
+func (s *FollowerService) AddFollower(followerID, followeeID int) error <span class="cov0" title="0">{
+        // Business logic to prevent self-following
+        if followerID == followeeID </span><span class="cov0" title="0">{
+                return errors.New("user cannot follow themselves")
+        }</span>
+
+        <span class="cov0" title="0">follower := domain.NewFollower(followerID, followeeID)
+        return s.repo.AddFollower(follower)</span>
+}
+
+// RemoveFollower removes a follower from a given user
+func (s *FollowerService) RemoveFollower(followerID, followeeID int) error <span class="cov0" title="0">{
+        follower := domain.NewFollower(followerID, followeeID)
+        return s.repo.RemoveFollower(follower)
+}</span>
+
+// GetFollowers retrieves all followers for a user
+func (s *FollowerService) GetFollowers(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error) <span class="cov0" title="0">{
+        return s.repo.GetFollowers(userID, limit, offset, sort, orderBy, search)
+}</span>
+
+// GetFollowers retrieves all followers for a user
+func (s *FollowerService) GetFollowees(userID, limit, offset int, sort, orderBy, search string) ([]domain.User, error) <span class="cov0" title="0">{
+        return s.repo.GetFollowees(userID, limit, offset, sort, orderBy, search)
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package application
+
+import "github.com/bandvov/social-media-go/domain"
+
+type MockPostService struct {
+        CreatePostFunc   func(post *domain.CreatePostRequest) error
+        DeletePostFunc   func(id int) error
+        UpdatePostFunc   func(id int, post *domain.Post) error
+        GetPostByIDFunc  func(id int) (*domain.Post, error)
+        FindByUserIDFunc func(userID int) ([]domain.Post, error)
+}
+
+func (s *MockPostService) CreatePost(post *domain.CreatePostRequest) error <span class="cov0" title="0">{
+        return s.CreatePostFunc(post)
+}</span>
+
+func (s *MockPostService) DeletePost(id int) error <span class="cov0" title="0">{
+        return s.DeletePostFunc(id)
+}</span>
+
+func (s *MockPostService) UpdatePost(id int, post *domain.Post) error <span class="cov0" title="0">{
+        return s.UpdatePostFunc(id, post)
+}</span>
+
+func (s *MockPostService) GetPostByID(id int) (*domain.Post, error) <span class="cov0" title="0">{
+        return s.GetPostByIDFunc(id)
+}</span>
+
+func (s *MockPostService) GetPostsByUser(userID int) ([]domain.Post, error) <span class="cov0" title="0">{
+        return s.FindByUserIDFunc(userID)
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package application
+
+import (
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type MockUserService struct {
+        AuthenticateFunc   func(email, password string) (*domain.User, error)
+        RegisterUserFunc   func(user domain.CreateUserRequest) error
+        UpdateUserDataFunc func(user domain.User) error
+        ChangeUserRoleFunc func(userID int, newRole string, isAdmin bool) error
+        FindByEmailFunc    func(email string) (*domain.User, error)
+        GetUserByIDFunc    func(id int) (*domain.User, error)
+        GetAllUsersFunc    func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
+}
+
+func (m *MockUserService) Authenticate(email, password string) (*domain.User, error) <span class="cov0" title="0">{
+        return m.AuthenticateFunc(email, password)
+}</span>
+func (m *MockUserService) RegisterUser(user domain.CreateUserRequest) error <span class="cov0" title="0">{
+        return m.RegisterUserFunc(user)
+}</span>
+func (m *MockUserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error <span class="cov0" title="0">{
+        return m.ChangeUserRoleFunc(userID, newRole, isAdmin)
+}</span>
+
+func (m *MockUserService) UpdateUserData(user domain.User) error <span class="cov0" title="0">{
+        return m.UpdateUserDataFunc(user)
+}</span>
+func (m *MockUserService) FindByEmail(email string) (*domain.User, error) <span class="cov0" title="0">{
+        return m.FindByEmailFunc(email)
+}</span>
+func (m *MockUserService) GetUserByID(id int) (*domain.User, error) <span class="cov0" title="0">{
+        return m.GetUserByIDFunc(id)
+}</span>
+
+func (m *MockUserService) GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error) <span class="cov0" title="0">{
+        return m.GetAllUsersFunc(limit, offset, sort, orderBy, search)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package application
+
+import (
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type PostServiceInterface interface {
+        CreatePost(post *domain.CreatePostRequest) error
+        DeletePost(id int) error
+        UpdatePost(id int, post *domain.Post) error
+        GetPostByID(id int) (*domain.Post, error)
+        GetPostsByUser(userID int) ([]domain.Post, error)
+}
+
+type PostService struct {
+        postRepo domain.PostRepository
+}
+
+func NewPostService(repo domain.PostRepository) *PostService <span class="cov0" title="0">{
+        return &amp;PostService{postRepo: repo}
+}</span>
+
+func (s *PostService) CreatePost(post *domain.CreatePostRequest) error <span class="cov0" title="0">{
+        return s.postRepo.Create(post)
+}</span>
+
+func (s *PostService) DeletePost(id int) error <span class="cov0" title="0">{
+        return s.postRepo.Delete(id)
+}</span>
+
+func (s *PostService) UpdatePost(id int, post *domain.Post) error <span class="cov0" title="0">{
+        return s.postRepo.Update(id, post)
+}</span>
+
+func (s *PostService) GetPostByID(id int) (*domain.Post, error) <span class="cov0" title="0">{
+        return s.postRepo.GetByID(id)
+}</span>
+
+func (s *PostService) GetPostsByUser(userID int) ([]domain.Post, error) <span class="cov0" title="0">{
+        return s.postRepo.FindByUserID(userID)
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package application
+
+import "github.com/bandvov/social-media-go/domain"
+
+// TagServiceInterface defines methods for tags-related operations.
+type TagServiceInterface interface {
+        CreateTag(name string) (*domain.Tag, error)
+        GetAllTags() ([]*domain.Tag, error)
+        DeleteTag(id int) error
+        
+}
+
+// TagService provides use case methods for managing tags.
+type TagService struct {
+        repo domain.TagRepository
+}
+
+// NewTagService creates a new TagService.
+func NewTagService(repository domain.TagRepository) *TagService <span class="cov0" title="0">{
+        return &amp;TagService{repo: repository}
+}</span>
+
+// CreateTag validates and creates a new tag.
+func (s *TagService) CreateTag(name string) (*domain.Tag, error) <span class="cov0" title="0">{
+        tag := &amp;domain.Tag{
+                Name: name,
+        }
+
+        if err := tag.Validate(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">if err := s.repo.Create(tag); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return tag, nil</span>
+}
+
+// GetAllTags retrieves all tags.
+func (s *TagService) GetAllTags() ([]*domain.Tag, error) <span class="cov0" title="0">{
+        return s.repo.FindAll()
+}</span>
+
+// DeleteTag removes tag from the table.
+func (s *TagService) DeleteTag(id int) error <span class="cov0" title="0">{
+        return s.repo.Delete(id)
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package application
+
+import (
+        "errors"
+
+        "github.com/bandvov/social-media-go/domain"
+        "golang.org/x/crypto/bcrypt"
+)
+
+// UserServiceInterface defines methods for user-related operations.
+type UserServiceInterface interface {
+        Authenticate(email, password string) (*domain.User, error)
+        RegisterUser(user domain.CreateUserRequest) error
+        UpdateUserData(domain.User) error
+        ChangeUserRole(userID int, newRole string, isAdmin bool) error
+        GetUserByID(id int) (*domain.User, error)
+        GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
+}
+type UserService struct {
+        repo domain.UserRepository
+}
+
+func NewUserService(repo domain.UserRepository) *UserService <span class="cov8" title="1">{
+        return &amp;UserService{repo: repo}
+}</span>
+
+func (s *UserService) RegisterUser(u domain.CreateUserRequest) error <span class="cov8" title="1">{
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">user := &amp;domain.User{
+                Password: string(hashedPassword),
+                Email:    u.Email,
+                Status:   "active",
+                Role:     "user",
+        }
+
+        return s.repo.CreateUser(user)</span>
+}
+
+func (s *UserService) Authenticate(email, password string) (*domain.User, error) <span class="cov0" title="0">{
+        // Retrieve user by email
+        user, err := s.repo.GetUserByEmail(email)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // Compare passwords
+        <span class="cov0" title="0">if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil </span><span class="cov0" title="0">{
+                return nil, errors.New("invalid email or password")
+        }</span>
+        <span class="cov0" title="0">user.Password = ""
+
+        return user, nil</span>
+}
+
+func (s *UserService) UpdateUserData(userData domain.User) error <span class="cov0" title="0">{
+        _, err := s.repo.GetUserByID(userData.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov0" title="0">user := &amp;domain.User{}
+        user.ID = userData.ID
+
+        if userData.Email != "" </span><span class="cov0" title="0">{
+                user.UpdateEmail(userData.Email)
+        }</span>
+
+        <span class="cov0" title="0">if userData.Password != "" </span><span class="cov0" title="0">{
+                hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov0" title="0">user.UpdatePassword(string(hashedPassword))</span>
+        }
+
+        <span class="cov0" title="0">if userData.FirstName != nil </span><span class="cov0" title="0">{
+                user.FirstName = userData.FirstName
+        }</span>
+
+        <span class="cov0" title="0">if userData.LastName != nil </span><span class="cov0" title="0">{
+                user.LastName = userData.LastName
+        }</span>
+
+        <span class="cov0" title="0">if userData.Bio != nil </span><span class="cov0" title="0">{
+                user.Bio = userData.Bio
+        }</span>
+
+        <span class="cov0" title="0">if userData.ProfilePic != nil </span><span class="cov0" title="0">{
+                user.ProfilePic = userData.ProfilePic
+        }</span>
+
+        <span class="cov0" title="0">if userData.Username != nil </span><span class="cov0" title="0">{
+                user.Username = userData.Username
+        }</span>
+        <span class="cov0" title="0">if userData.Role != "" </span><span class="cov0" title="0">{
+                user.Role = userData.Role
+        }</span>
+
+        <span class="cov0" title="0">if userData.Status != "" </span><span class="cov0" title="0">{
+                user.Status = userData.Status
+        }</span>
+
+        <span class="cov0" title="0">return s.repo.UpdateUser(user)</span>
+}
+
+func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error <span class="cov0" title="0">{
+        return s.repo.UpdateUser(&amp;domain.User{
+                ID:   userID,
+                Role: newRole,
+        })
+}</span>
+
+func (s *UserService) GetUserByID(id int) (*domain.User, error) <span class="cov0" title="0">{
+        return s.repo.GetUserByID(id)
+}</span>
+
+func (s *UserService) GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error) <span class="cov0" title="0">{
+        return s.repo.GetAllUsers(limit, offset, sort, orderBy, search)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package domain
+
+import "time"
+
+// PostVisibility represents the visibility of a post
+type CommentStatus int
+
+const (
+        // Visibility constants
+        Active  CommentStatus = iota // status = "active"
+        Flagged                      // status = "flagged"
+        Deleted                      // status = "deleted"
+)
+
+func (c CommentStatus) String() string <span class="cov0" title="0">{
+        switch c </span>{
+        case Active:<span class="cov0" title="0">
+                return "active"</span>
+        case Flagged:<span class="cov0" title="0">
+                return "flagged"</span>
+        case Deleted:<span class="cov0" title="0">
+                return "deleted"</span>
+        default:<span class="cov0" title="0">
+                return "Unknown"</span>
+        }
+}
+
+type Comment struct {
+        ID        int           `json:"id,omitempty"`
+        EntityID  int           `json:"entity_id,omitempty"`
+        Content   string        `json:"content,omitempty"`
+        AuthorID  int           `json:"author_id,omitempty"`
+        Status    CommentStatus `json:"status,omitempty"`
+        CreatedAt time.Time     `json:"created_at,omitempty"`
+        UpdatedAt time.Time     `json:"updated_at,omitempty"`
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package domain
+
+type Follower struct {
+        FollowerID int
+        FolloweeID int
+}
+
+func NewFollower(followerID, followeeID int) *Follower <span class="cov0" title="0">{
+        return &amp;Follower{
+                FollowerID: followerID,
+                FolloweeID: followeeID,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package domain
+
+import (
+        "encoding/json"
+        "time"
+)
+
+type CreatePostRequest struct {
+        AuthorID   int            `json:"author_id,omitempty"` // ID of the user who created the post
+        Content    string         `json:"content,omitempty"`
+        Pinned     bool           `json:"pinned,omitempty"`
+        Tags       string         `json:"tags,omitempty"`
+        Visibility PostVisibility `json:"visibility,omitempty"`
+}
+
+type Post struct {
+        ID         string          `json:"id,omitempty"`
+        AuthorID   int             `json:"author_id,omitempty"` // ID of the user who created the post
+        Content    string          `json:"content,omitempty"`
+        Pinned     bool            `json:"pinned,omitempty"`
+        Tags       string          `json:"tags,omitempty"`
+        Visibility *PostVisibility `json:"visibility,omitempty"`
+        CreatedAt  time.Time       `json:"created_at,omitempty"`
+        UpdatedAt  time.Time       `json:"updated_at,omitempty"`
+        Reactions  json.RawMessage `json:"reactions,omitempty"`
+        Comments   json.RawMessage `json:"comments,omitempty"`
+}
+
+// PostVisibility represents the visibility of a post
+type PostVisibility int
+
+const (
+        // Visibility constants
+        Public    PostVisibility = iota // Public visibility
+        Private                         // Private visibility
+        Unlisted                        // Unlisted visibility
+        Followers                       // Followers visibility
+        Hidden                          // Hidden visibility
+)
+
+func (v PostVisibility) String() string <span class="cov0" title="0">{
+        switch v </span>{
+        case Public:<span class="cov0" title="0">
+                return "Public"</span>
+        case Private:<span class="cov0" title="0">
+                return "Private"</span>
+        case Followers:<span class="cov0" title="0">
+                return "Followers"</span>
+        case Unlisted:<span class="cov0" title="0">
+                return "Unlisted"</span>
+        default:<span class="cov0" title="0">
+                return "Unknown"</span>
+        }
+}
+
+type PostSearchOptions struct {
+        Limit  int    `json:"limit"`
+        Offset int    `json:"offset"`
+        Sort   string `json:"sort"`
+        Search string `json:"search"`
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package domain
+
+import "errors"
+
+// Tag represents the domain model for a tag.
+type Tag struct {
+        ID   int
+        Name string
+}
+
+// Validate checks if the tag is valid.
+func (t *Tag) Validate() error <span class="cov0" title="0">{
+        if t.Name == "" </span><span class="cov0" title="0">{
+                return errors.New("tag name cannot be empty")
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package domain
+
+import (
+        "errors"
+        "time"
+)
+
+type User struct {
+        ID             int       `json:"id"`
+        Username       *string   `json:"username,omitempty"`
+        Password       string    `json:"password,omitempty"`
+        Email          string    `json:"email"`
+        Status         string    `json:"status"` // "active", "inactive", "banned"
+        Role           string    `json:"role"`   // "user", "admin", "moderator"
+        FirstName      *string   `json:"first_name,omitempty"`
+        LastName       *string   `json:"last_name,omitempty"`
+        ProfilePic     *string   `json:"profile_pic,omitempty"` // URL to profile picture
+        Bio            *string   `json:"bio,omitempty"`         // Short biography
+        CreatedAt      time.Time `json:"created_at"`            // Account creation timestamp
+        UpdatedAt      time.Time `json:"updated_at"`            // Last update timestamp
+        PostsCount     int       `json:"posts_count"`
+        FollowerCount  int       `json:"follower_count,omitempty"`
+        FolloweeeCount int       `json:"followee_count,omitempty"`
+}
+
+type CreateUserRequest struct {
+        Password string `json:"password"`
+        Email    string `json:"email"`
+}
+
+func (u *User) UpdateEmail(newEmail string) <span class="cov0" title="0">{
+        u.Email = newEmail
+}</span>
+
+func (u *User) UpdatePassword(newPassword string) <span class="cov0" title="0">{
+        u.Password = newPassword
+}</span>
+
+func (u *User) ChangeStatus(newStatus string, isAdmin bool) error <span class="cov0" title="0">{
+        if !isAdmin </span><span class="cov0" title="0">{
+                return errors.New("only admin can change status")
+        }</span>
+        <span class="cov0" title="0">u.Status = newStatus
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package infrastructure
+
+import (
+        "database/sql"
+
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type PostgresCommentRepository struct {
+        db *sql.DB
+}
+
+func NewPostgresCommentRepository(db *sql.DB) *PostgresCommentRepository <span class="cov0" title="0">{
+        return &amp;PostgresCommentRepository{db: db}
+}</span>
+
+func (r *PostgresCommentRepository) AddComment(comment domain.Comment) error <span class="cov0" title="0">{
+        _, err := r.db.Exec(
+                "INSERT INTO comments (id, entity_id, content, author_id) VALUES ($1, $2, $3, $4)",
+                comment.ID, comment.EntityID, comment.Content, comment.AuthorID,
+        )
+        return err
+}</span>
+
+func (r *PostgresCommentRepository) GetCommentsByEntityID(entityID int) ([]domain.Comment, error) <span class="cov0" title="0">{
+        rows, err := r.db.Query("SELECT id, entity_id, content, author_id FROM comments WHERE post_id = $1", entityID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var comments []domain.Comment
+        for rows.Next() </span><span class="cov0" title="0">{
+                var comment domain.Comment
+                if err := rows.Scan(&amp;comment.ID, &amp;comment.EntityID, &amp;comment.Content, &amp;comment.AuthorID); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">comments = append(comments, comment)</span>
+        }
+        <span class="cov0" title="0">return comments, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package infrastructure
+
+import (
+        "database/sql"
+        "fmt"
+
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type FollowerRepository struct {
+        db *sql.DB
+}
+
+func NewFollowerRepository(db *sql.DB) *FollowerRepository <span class="cov0" title="0">{
+        return &amp;FollowerRepository{db: db}
+}</span>
+
+func (r *FollowerRepository) AddFollower(follower *domain.Follower) error <span class="cov0" title="0">{
+        query := "INSERT INTO followers (follower_id, followee_id) VALUES ($1, $2)"
+        _, err := r.db.Exec(query, follower.FollowerID, follower.FolloweeID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to add follower: %v", err)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error <span class="cov0" title="0">{
+        query := "DELETE FROM followers WHERE follower_id = $1 AND followee_id = $2"
+        _, err := r.db.Exec(query, follower.FollowerID, follower.FolloweeID)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to remove follower: %v", err)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) <span class="cov0" title="0">{
+        // Validate and set default sorting
+        if sort == "" || sort == "desc" </span><span class="cov0" title="0">{
+                sort = "DESC"
+        }</span>
+        <span class="cov0" title="0">if sort == "asc" </span><span class="cov0" title="0">{
+                sort = "ASC"
+        }</span>
+        <span class="cov0" title="0">if orderBy == "" </span><span class="cov0" title="0">{
+                orderBy = "created_at"
+        }</span>
+        <span class="cov0" title="0">if limit == 0 </span><span class="cov0" title="0">{
+                limit = 24
+        }</span>
+
+        <span class="cov0" title="0">query := `
+        SELECT 
+                f.follower_id,
+                JSON_AGG(JSON_BUILD_OBJECT(
+                        'id', f.followee_id,
+                        'profile_pic',uf.profile_pic
+                )) AS followers
+        FROM followers f
+        LEFT JOIN users uf ON f.follower_id = uf.id
+        WHERE f.followee_id = $1
+        GROUP BY f.follower_id;`
+
+        if searchTerm != "" </span><span class="cov0" title="0">{
+                query += fmt.Sprintf("\nWHERE position('%v' IN id) &gt; 0 \n", searchTerm)
+        }</span>
+
+        <span class="cov0" title="0">query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $2 OFFSET $3", orderBy, sort)
+
+        rows, err := r.db.Query(query, userID, limit, offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get followers: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var users []domain.User
+        for rows.Next() </span><span class="cov0" title="0">{
+                var user domain.User
+                if err := rows.Scan(&amp;user.ID, &amp;user.Email, &amp;user.ProfilePic); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan user: %v", err)
+                }</span>
+                <span class="cov0" title="0">users = append(users, user)</span>
+        }
+        <span class="cov0" title="0">return users, nil</span>
+}
+
+func (r *FollowerRepository) GetFollowees(userID int, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) <span class="cov0" title="0">{
+        // Validate and set default sorting
+        if sort == "" || sort == "desc" </span><span class="cov0" title="0">{
+                sort = "DESC"
+        }</span>
+        <span class="cov0" title="0">if sort == "asc" </span><span class="cov0" title="0">{
+                sort = "ASC"
+        }</span>
+        <span class="cov0" title="0">if orderBy == "" </span><span class="cov0" title="0">{
+                orderBy = "created_at"
+        }</span>
+        <span class="cov0" title="0">if limit == 0 </span><span class="cov0" title="0">{
+                limit = 24
+        }</span>
+
+        <span class="cov0" title="0">query := `
+        SELECT 
+                f.followee_id,
+                JSON_AGG(JSON_BUILD_OBJECT(
+                        'id', f.follower_id,
+                        'profile_pic',uf.profile_pic
+                )) AS followers
+        FROM followers f
+        LEFT JOIN users uf ON f.follower_id = uf.id
+        WHERE f.follower_id = $1
+        GROUP BY f.followee_id;`
+
+        if searchTerm != "" </span><span class="cov0" title="0">{
+                query += fmt.Sprintf("\nWHERE position('%v' IN id) &gt; 0 \n", searchTerm)
+        }</span>
+
+        <span class="cov0" title="0">query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $2 OFFSET $3", orderBy, sort)
+
+        rows, err := r.db.Query(query, userID, limit, offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get followees: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var users []domain.User
+        for rows.Next() </span><span class="cov0" title="0">{
+                var user domain.User
+                if err := rows.Scan(&amp;user.ID, &amp;user.Email, &amp;user.ProfilePic); err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan user: %v", err)
+                }</span>
+                <span class="cov0" title="0">users = append(users, user)</span>
+        }
+        <span class="cov0" title="0">return users, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package infrastructure
+
+import "github.com/bandvov/social-media-go/domain"
+
+type MockUserRepository struct {
+        CreateUserFunc        func(user *domain.User) error
+        GetUserByUsernameFunc func(username string) (*domain.User, error)
+        GetUserByEmailFunc    func(email string) (*domain.User, error)
+        GetUserByIDFunc       func(id int) (*domain.User, error)
+        UpdateUserFunc        func(user *domain.User) error
+        GetAllUsersFunc       func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
+}
+
+func (m *MockUserRepository) CreateUser(user *domain.User) error <span class="cov8" title="1">{
+        if m.CreateUserFunc != nil </span><span class="cov8" title="1">{
+                return m.CreateUserFunc(user)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (m *MockUserRepository) GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error) <span class="cov0" title="0">{
+        if m.GetAllUsersFunc != nil </span><span class="cov0" title="0">{
+                return m.GetAllUsersFunc(limit, offset, sort, orderBy, search)
+        }</span>
+        <span class="cov0" title="0">return nil, nil</span>
+}
+
+func (m *MockUserRepository) GetUserByEmail(email string) (*domain.User, error) <span class="cov0" title="0">{
+        if m.GetUserByEmailFunc != nil </span><span class="cov0" title="0">{
+                return m.GetUserByEmailFunc(email)
+        }</span>
+        <span class="cov0" title="0">return nil, nil</span>
+}
+
+func (m *MockUserRepository) GetUserByID(id int) (*domain.User, error) <span class="cov0" title="0">{
+        if m.GetUserByIDFunc != nil </span><span class="cov0" title="0">{
+                return m.GetUserByIDFunc(id)
+        }</span>
+        <span class="cov0" title="0">return nil, nil</span>
+}
+
+func (m *MockUserRepository) GetUserByUsername(username string) (*domain.User, error) <span class="cov0" title="0">{
+        if m.GetUserByUsernameFunc != nil </span><span class="cov0" title="0">{
+                return m.GetUserByUsernameFunc(username)
+        }</span>
+        <span class="cov0" title="0">return nil, nil</span>
+}
+
+func (m *MockUserRepository) UpdateUser(user *domain.User) error <span class="cov0" title="0">{
+        if m.UpdateUserFunc != nil </span><span class="cov0" title="0">{
+                return m.UpdateUserFunc(user)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package infrastructure
+
+import (
+        "database/sql"
+
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type PostRepository struct {
+        db *sql.DB
+}
+
+func NewPostRepository(db *sql.DB) *PostRepository <span class="cov0" title="0">{
+        return &amp;PostRepository{db: db}
+}</span>
+
+func (r *PostRepository) Create(post *domain.CreatePostRequest) error <span class="cov0" title="0">{
+        _, err := r.db.Exec("INSERT INTO posts (author_id, content, visibility, pinned) VALUES ($1, $2, $3, $4);",
+                post.AuthorID, post.Content, post.Visibility, post.Pinned)
+        return err
+}</span>
+
+func (r *PostRepository) Update(postId int, post *domain.Post) error <span class="cov0" title="0">{
+        _, err := r.db.Exec("UPDATE posts SET content = $1, visibility = $2, pinned = $3, WHERE id = $4",
+                post.Content, post.Visibility, post.Pinned, postId)
+        return err
+}</span>
+func (r *PostRepository) Delete(id int) error <span class="cov0" title="0">{
+        _, err := r.db.Exec("DELETE from posts WHERE id = $1;", id)
+        return err
+}</span>
+
+func (r *PostRepository) GetByID(id int) (*domain.Post, error) <span class="cov0" title="0">{
+        var post domain.Post
+        err := r.db.QueryRow(`
+        SELECT 
+    p.id AS post_id,
+    p.author_id,
+    p.content,
+    p.visibility,
+    p.pinned,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                                'reaction_id', r.id,
+                'reacting_user_id', r.user_id,
+                'reaction_type_id', r.reaction_type_id,
+                                'reacting_user_profile_pic', ru.profile_pic
+            )
+        ) FILTER (WHERE r.user_id IS NOT NULL),
+        '[]'
+    ) AS reactions
+FROM 
+    posts p
+LEFT JOIN 
+    reactions r ON p.id = r.entity_id
+LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
+LEFT JOIN users ru ON ru.id = r.user_id
+WHERE 
+    p.id = $1 -- Replace with the user ID you want to query
+GROUP BY p.id
+ORDER BY p.id;
+`, id).
+                Scan(&amp;post.ID, &amp;post.AuthorID, &amp;post.Content, &amp;post.Pinned, &amp;post.Visibility, &amp;post.CreatedAt, &amp;post.UpdatedAt, &amp;post.Reactions, &amp;post.Comments)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;post, nil</span>
+}
+
+func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) <span class="cov0" title="0">{
+        rows, err := r.db.Query(`        
+        SELECT 
+    p.id AS post_id,
+    p.author_id,
+    p.content,
+    p.visibility,
+    p.pinned,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                                'reaction_id', r.id,
+                'reacting_user_id', r.user_id,
+                'reaction_type_id', r.reaction_type_id,
+                                'reacting_user_profile_pic', ru.profile_pic
+            )
+        ) FILTER (WHERE r.user_id IS NOT NULL),
+        '[]'
+    ) AS reactions
+        FROM 
+                posts p
+        LEFT JOIN 
+                reactions r ON p.id = r.entity_id
+        LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
+        LEFT JOIN users ru ON ru.id = r.user_id
+        WHERE 
+                p.author_id = $1 -- Replace with the user ID you want to query
+        GROUP BY p.id
+        ORDER BY p.id;
+        `, userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var posts []domain.Post
+        for rows.Next() </span><span class="cov0" title="0">{
+                var post domain.Post
+                if err := rows.Scan(&amp;post.ID, &amp;post.AuthorID, &amp;post.Content, &amp;post.Pinned, &amp;post.Visibility, &amp;post.CreatedAt, &amp;post.UpdatedAt, &amp;post.Reactions, &amp;post.Comments); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">posts = append(posts, post)</span>
+        }
+
+        <span class="cov0" title="0">return posts, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package infrastructure
+
+import (
+        "database/sql"
+
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type TagRepository struct {
+        db *sql.DB
+}
+
+// NewTagRepository creates a new repository instance.
+func NewTagRepository(db *sql.DB) *TagRepository <span class="cov0" title="0">{
+        return &amp;TagRepository{db: db}
+}</span>
+
+func (r *TagRepository) Create(tag *domain.Tag) error <span class="cov0" title="0">{
+        _, err := r.db.Exec("INSERT INTO tags (id, name) VALUES ($1, $2)", tag.ID, tag.Name)
+        return err
+}</span>
+
+func (r *TagRepository) FindByID(id string) (*domain.Tag, error) <span class="cov0" title="0">{
+        row := r.db.QueryRow("SELECT id, name FROM tags WHERE id = $1", id)
+        tag := &amp;domain.Tag{}
+        if err := row.Scan(&amp;tag.ID, &amp;tag.Name); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return tag, nil</span>
+}
+
+func (r *TagRepository) FindAll() ([]*domain.Tag, error) <span class="cov0" title="0">{
+        rows, err := r.db.Query("SELECT id, name FROM tags")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var tags []*domain.Tag
+        for rows.Next() </span><span class="cov0" title="0">{
+                tag := &amp;domain.Tag{}
+                if err := rows.Scan(&amp;tag.ID, &amp;tag.Name); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">tags = append(tags, tag)</span>
+        }
+        <span class="cov0" title="0">return tags, nil</span>
+}
+
+func (r *TagRepository) Delete(id int) error <span class="cov0" title="0">{
+        _, err := r.db.Exec("DELETE FROM tags WHERE id = $1", id)
+        return err
+}</span>
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package infrastructure
+
+import (
+        "database/sql"
+        "errors"
+        "fmt"
+        "strings"
+
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type UserRepository struct {
+        db *sql.DB
+}
+
+func NewUserRepository(db *sql.DB) *UserRepository <span class="cov0" title="0">{
+        return &amp;UserRepository{db: db}
+}</span>
+
+func (r *UserRepository) CreateUser(user *domain.User) error <span class="cov0" title="0">{
+        // Prepare the statement
+        stmt, err := r.db.Prepare("INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)")
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("Failed to prepare statement: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer stmt.Close()
+
+        _, err = stmt.Exec(user.Password, user.Email, user.Status, user.Role)
+        return err</span>
+}
+
+func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error) <span class="cov0" title="0">{
+        user := &amp;domain.User{}
+
+        // Prepare the statement
+        stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role FROM users WHERE username = $1")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer stmt.Close()
+
+        err = stmt.QueryRow(username).
+                Scan(&amp;user.ID, &amp;user.Username, &amp;user.Password, &amp;user.Email, &amp;user.Status, &amp;user.Role)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return user, nil</span>
+}
+
+func (r *UserRepository) GetUserByID(id int) (*domain.User, error) <span class="cov0" title="0">{
+        var user domain.User
+
+        // Prepare the statement
+        stmt, err := r.db.Prepare(`        
+        WITH 
+        post_counts AS (
+                SELECT
+                        p.author_id,
+                        COUNT(*) AS post_count
+                FROM posts p
+                GROUP BY p.author_id
+        ),
+        follower_stats AS (
+    SELECT
+        f.followee_id,
+        COUNT(f.follower_id) AS follower_count,
+        COUNT(DISTINCT f.follower_id) FILTER (WHERE f.followee_id IS NOT NULL) AS followee_count
+    FROM followers f
+    GROUP BY f.followee_id
+        )
+        SELECT
+                u.id,
+                u.username,
+                u.password,
+                u.email,
+                u.status,
+                u.role,
+                u.profile_pic,
+                u.created_at,
+                u.updated_at,
+                COALESCE(pc.post_count, 0) AS post_count,
+                COALESCE(fs.follower_count, 0) AS follower_count,
+                COALESCE(fs.followee_count, 0) AS followee_count
+        FROM users u
+        LEFT JOIN post_counts pc ON u.id = pc.author_id
+        LEFT JOIN follower_stats fs ON u.id = fs.followee_id
+        WHERE u.id = $1;`)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer stmt.Close()
+
+        err = stmt.QueryRow(id).
+                Scan(&amp;user.ID, &amp;user.Username, &amp;user.Password, &amp;user.Email, &amp;user.Status, &amp;user.Role, &amp;user.ProfilePic, &amp;user.CreatedAt, &amp;user.UpdatedAt, &amp;user.PostsCount, &amp;user.FollowerCount, &amp;user.FolloweeeCount)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;user, nil</span>
+}
+func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) <span class="cov0" title="0">{
+        var user domain.User
+
+        // Prepare the statement
+        stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer stmt.Close()
+
+        err = stmt.QueryRow(email).
+                Scan(&amp;user.ID, &amp;user.Username, &amp;user.Password, &amp;user.Email, &amp;user.Status, &amp;user.Role, &amp;user.ProfilePic, &amp;user.CreatedAt, &amp;user.UpdatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;user, nil</span>
+}
+
+func (r *UserRepository) UpdateUser(user *domain.User) error <span class="cov0" title="0">{
+        query, err := r.buildUpdateQuery(user)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Prepare the statement
+        <span class="cov0" title="0">stmt, err := r.db.Prepare(query)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("Failed to prepare statement: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer stmt.Close()
+
+        _, err = stmt.Exec()
+        return err</span>
+}
+
+func (r *UserRepository) GetAllUsers(limit, offset int, sort string, orderBy string, searchTerm string) ([]*domain.User, error) <span class="cov0" title="0">{
+        // Validate and set default sorting
+        if sort == "" || sort == "desc" </span><span class="cov0" title="0">{
+                sort = "DESC"
+        }</span>
+        <span class="cov0" title="0">if sort == "asc" </span><span class="cov0" title="0">{
+                sort = "ASC"
+        }</span>
+        <span class="cov0" title="0">if orderBy == "" </span><span class="cov0" title="0">{
+                orderBy = "created_at"
+        }</span>
+        <span class="cov0" title="0">if limit == 0 </span><span class="cov0" title="0">{
+                limit = 24
+        }</span>
+
+        <span class="cov0" title="0">query := `SELECT id, username, email, status, role, profile_pic, created_at FROM users`
+        if searchTerm != "" </span><span class="cov0" title="0">{
+                query += fmt.Sprintf("\nWHERE position('%v' IN email) &gt; 0 \n OR position('%v' IN id) &gt; 0 \n", searchTerm, searchTerm)
+        }</span>
+
+        <span class="cov0" title="0">query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $1 OFFSET $2", orderBy, sort)
+
+        // Prepare the statement
+        stmt, err := r.db.Prepare(query)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+        }</span>
+        <span class="cov0" title="0">defer stmt.Close()
+
+        rows, err := stmt.Query(limit, offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var users []*domain.User
+        for rows.Next() </span><span class="cov0" title="0">{
+                var user domain.User
+                err := rows.Scan(&amp;user.ID, &amp;user.Username, &amp;user.Email, &amp;user.Status, &amp;user.Role, &amp;user.ProfilePic, &amp;user.CreatedAt)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">users = append(users, &amp;user)</span>
+        }
+
+        <span class="cov0" title="0">if err = rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return users, nil</span>
+}
+
+func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) <span class="cov0" title="0">{
+        var setClauses []string
+
+        if user.FirstName != nil </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("first_name = '%s'", *user.FirstName))
+        }</span>
+        <span class="cov0" title="0">if user.Email != "" </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("email = '%s'", user.Email))
+        }</span>
+        <span class="cov0" title="0">if user.LastName != nil </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("last_name = '%s'", *user.LastName))
+        }</span>
+        <span class="cov0" title="0">if user.Bio != nil </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("bio = '%s'", *user.Bio))
+        }</span>
+        <span class="cov0" title="0">if user.ProfilePic != nil </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("profile_pic = '%s'", *user.ProfilePic))
+        }</span>
+        <span class="cov0" title="0">if user.Password != "" </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("password = '%s'", user.Password))
+        }</span>
+        <span class="cov0" title="0">if user.Status != "" </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("status = '%s'", user.Status))
+        }</span>
+        <span class="cov0" title="0">if user.Role != "" </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("role = '%s'", user.Role))
+        }</span>
+        <span class="cov0" title="0">if user.Username != nil </span><span class="cov0" title="0">{
+                setClauses = append(setClauses, fmt.Sprintf("username = '%s'", *user.Username))
+        }</span>
+
+        <span class="cov0" title="0">if len(setClauses) == 0 </span><span class="cov0" title="0">{
+                return "", errors.New("No fields to update")
+        }</span>
+
+        <span class="cov0" title="0">setClause := strings.Join(setClauses, ", ")
+        query := fmt.Sprintf("UPDATE users SET %s WHERE id = %d;", setClause, user.ID)
+        return query, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package interfaces
+
+import (
+        "encoding/json"
+        "net/http"
+        "strconv"
+
+        "github.com/bandvov/social-media-go/application"
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type CommentHandler struct {
+        service *application.CommentService
+}
+
+func NewCommentHandler(service *application.CommentService) *CommentHandler <span class="cov0" title="0">{
+        return &amp;CommentHandler{service: service}
+}</span>
+
+func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var req domain.Comment
+        if err := json.NewDecoder(r.Body).Decode(&amp;req); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "Invalid request", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if err := h.service.AddComment(req.EntityID, req.Content, req.AuthorID); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "Failed to add comment", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.WriteHeader(http.StatusCreated)</span>
+}
+
+func (h *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        idStr := r.PathValue("id")
+        entityID, err := strconv.Atoi(idStr)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid post ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">comments, err := h.service.GetComments(entityID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "Failed to get comments", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(comments)</span>
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package interfaces
+
+import (
+        "encoding/json"
+        "fmt"
+        "net/http"
+        "strconv"
+
+        "github.com/bandvov/social-media-go/application"
+)
+
+type FollowerHandler struct {
+        service application.FollowerServiceInterface
+}
+
+func NewFollowerHandler(service application.FollowerServiceInterface) *FollowerHandler <span class="cov0" title="0">{
+        return &amp;FollowerHandler{service: service}
+}</span>
+
+func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        // Parse the URL parameters to get the follower and followee IDs
+        userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+        if !ok || userID == 0 </span><span class="cov0" title="0">{
+                http.Error(w, "unauthenticated", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">id := r.PathValue("id")
+        followeeID, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid follower ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        // Call the service to add the follower
+        <span class="cov0" title="0">err = h.service.AddFollower(userID, followeeID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        // Send a response back
+        <span class="cov0" title="0">w.WriteHeader(http.StatusOK)
+        fmt.Fprintf(w, "Follower added successfully")</span>
+}
+
+func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        // Parse the URL parameters to get the follower and followee IDs
+        userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+        if !ok || userID == 0 </span><span class="cov0" title="0">{
+                http.Error(w, "unauthenticated", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">id := r.PathValue("id")
+        followeeID, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid follower ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        // Call the service to remove the follower
+        <span class="cov0" title="0">err = h.service.RemoveFollower(userID, followeeID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        // Send a response back
+        <span class="cov0" title="0">w.WriteHeader(http.StatusOK)
+        fmt.Fprintf(w, "Follower removed successfully")</span>
+}
+
+func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        id := r.PathValue("id")
+        userIDFromUrl, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid user ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">query := r.URL.Query()
+
+        // Parse `limit` and `offset` with default values
+        limit, err := strconv.Atoi(query.Get("limit"))
+        if err != nil || limit &lt;= 0 </span><span class="cov0" title="0">{
+                limit = 10 // Default limit
+        }</span>
+
+        <span class="cov0" title="0">offset, err := strconv.Atoi(query.Get("offset"))
+        if err != nil || offset &lt; 0 </span><span class="cov0" title="0">{
+                offset = 0 // Default offset
+        }</span>
+
+        // Parse `sort` with default value
+        <span class="cov0" title="0">sort := query.Get("sort")
+        if sort != "asc" &amp;&amp; sort != "desc" </span><span class="cov0" title="0">{
+                sort = "desc" // Default sort
+        }</span>
+        <span class="cov0" title="0">search := query.Get("search")
+        orderBy := query.Get("order_by")
+
+        // Call the service to get followers
+        followers, err := h.service.GetFollowers(userIDFromUrl, limit, offset, sort, orderBy, search)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(followers)</span>
+}
+func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        id := r.PathValue("id")
+        userIDFromUrl, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid user ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">query := r.URL.Query()
+
+        // Parse `limit` and `offset` with default values
+        limit, err := strconv.Atoi(query.Get("limit"))
+        if err != nil || limit &lt;= 0 </span><span class="cov0" title="0">{
+                limit = 10 // Default limit
+        }</span>
+
+        <span class="cov0" title="0">offset, err := strconv.Atoi(query.Get("offset"))
+        if err != nil || offset &lt; 0 </span><span class="cov0" title="0">{
+                offset = 0 // Default offset
+        }</span>
+
+        // Parse `sort` with default value
+        <span class="cov0" title="0">sort := query.Get("sort")
+        if sort != "asc" &amp;&amp; sort != "desc" </span><span class="cov0" title="0">{
+                sort = "desc" // Default sort
+        }</span>
+        <span class="cov0" title="0">search := query.Get("search")
+        orderBy := query.Get("order_by")
+
+        // Call the service to get followers
+        followers, err := h.service.GetFollowers(userIDFromUrl, limit, offset, sort, orderBy, search)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(followers)</span>
+}
+</pre>
+		
+		<pre class="file" id="file20" style="display: none">package interfaces
+
+import (
+        "context"
+        "fmt"
+        "log"
+        "net/http"
+
+        "github.com/bandvov/social-media-go/utils"
+)
+
+// Define keys for context
+type contextKey string
+
+const (
+        userIDKey  contextKey = "userID"
+        isAdminKey contextKey = "isAdmin"
+)
+
+func AdminOnlyMiddleware(next http.Handler) http.Handler <span class="cov0" title="0">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                // Assuming admin status is part of context
+                isAdmin := r.Context().Value(isAdminKey).(bool)
+                if !isAdmin </span><span class="cov0" title="0">{
+                        http.Error(w, "forbidden: admin access required", http.StatusForbidden)
+                        return
+                }</span>
+                <span class="cov0" title="0">next.ServeHTTP(w, r)</span>
+        })
+}
+
+func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc <span class="cov0" title="0">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                log.Printf("Request: %s %s", r.Method, r.URL.Path)
+                next(w, r)
+        }</span>
+}
+
+// Middleware to extract userID from cookie and add to context
+func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc <span class="cov0" title="0">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                // Extract the cookie
+                cookie, err := r.Cookie("access_token")
+                if err != nil </span><span class="cov0" title="0">{
+                        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+                        return
+                }</span>
+
+                // Parse userID from cookie
+                <span class="cov0" title="0">var token string
+                _, err = fmt.Sscanf(cookie.Value, "%s", &amp;token)
+                if err != nil </span><span class="cov0" title="0">{
+                        http.Error(w, "Invalid access token", http.StatusBadRequest)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">claims, err := utils.ValidateJWT(token)
+                if err != nil </span><span class="cov0" title="0">{
+                        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+                        return
+                }</span>
+
+                // Retrieve user from the database
+                <span class="cov0" title="0">user, err := h.UserService.GetUserByID(claims.UserID)
+                if err != nil </span><span class="cov0" title="0">{
+                        http.Error(w, "User not found", http.StatusUnauthorized)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">isAdmin := user.Role == "admin"
+
+                // Add userID and isAdmin to context
+                ctx := context.WithValue(r.Context(), userIDKey, user.ID)
+                ctx = context.WithValue(ctx, isAdminKey, isAdmin)
+                // Call the next handler with updated context
+                next(w, r.WithContext(ctx))</span>
+        }
+}
+
+// Middleware to extract userID from cookie and add to context
+func (h *UserHTTPHandler) IsAdminMiddleware(next http.HandlerFunc) http.HandlerFunc <span class="cov0" title="0">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                // Retrieve userID and isAdmin from context
+                isAdmin := r.Context().Value(isAdminKey).(bool)
+                if !isAdmin </span><span class="cov0" title="0">{
+                        http.Error(w, "Forbidden", http.StatusForbidden)
+                        return
+                }</span>
+                // Call the next handler with updated context
+                <span class="cov0" title="0">next(w, r)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file21" style="display: none">package interfaces
+
+import (
+        "database/sql"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "net/http"
+        "strconv"
+
+        "github.com/bandvov/social-media-go/application"
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type PostHTTPHandler struct {
+        PostService application.PostServiceInterface
+}
+
+func NewPostHTTPHandler(postService application.PostServiceInterface) *PostHTTPHandler <span class="cov0" title="0">{
+        return &amp;PostHTTPHandler{PostService: postService}
+}</span>
+
+func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        authorID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+        if !ok || authorID == 0 </span><span class="cov0" title="0">{
+                http.Error(w, "unauthenticated", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">var newPost domain.CreatePostRequest
+        if err := json.NewDecoder(r.Body).Decode(&amp;newPost); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid request body", http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov0" title="0">if newPost.Content == "" </span><span class="cov0" title="0">{
+                http.Error(w, "invalid request body", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">newPost.AuthorID = authorID
+
+        err := p.PostService.CreatePost(&amp;newPost)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})</span>
+}
+
+func (p *PostHTTPHandler) DeletePost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+
+        json.NewEncoder(w).Encode(map[string]string{"message": "post deleted successfully"})
+}</span>
+
+func (p *PostHTTPHandler) UpdatePost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        id := r.PathValue("id")
+        postID, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid post ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">var post *domain.CreatePostRequest
+
+        if err := json.NewDecoder(r.Body).Decode(&amp;post); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid request body", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = p.PostService.UpdatePost(postID, &amp;domain.Post{
+                Content: post.Content, Visibility: &amp;post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
+        })
+
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "error updating post: "+err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov0" title="0">json.NewEncoder(w).Encode(map[string]string{"message": "post updated successfully"})</span>
+}
+
+func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+        if !ok || userID == 0 </span><span class="cov0" title="0">{
+                http.Error(w, "unauthenticated", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">isAdmin := r.Context().Value(isAdminKey).(bool)
+
+        id := r.PathValue("id")
+        postID, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid post ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">post, err := p.PostService.GetPostByID(postID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov0" title="0">fmt.Println("here")
+        if !isAdmin || (*post.Visibility == domain.Private &amp;&amp; post.AuthorID != userID) </span><span class="cov0" title="0">{
+                fmt.Println("here1")
+                http.Error(w, "Access forbidden", http.StatusForbidden)
+                return
+        }</span>
+        <span class="cov0" title="0">fmt.Println("here2")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(post)</span>
+}
+
+func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        idStr := r.PathValue("id")
+        userID, err := strconv.Atoi(idStr)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid post ID", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">posts, err := h.PostService.GetPostsByUser(userID)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, sql.ErrNoRows) </span><span class="cov0" title="0">{
+                        http.Error(w, "No posts", http.StatusNotFound)
+                        return
+                }</span>
+                <span class="cov0" title="0">http.Error(w, "could not retrieve posts", http.StatusInternalServerError)
+                return</span>
+        }
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(posts)</span>
+}
+</pre>
+		
+		<pre class="file" id="file22" style="display: none">package interfaces
+
+import (
+        "encoding/json"
+        "net/http"
+
+        "github.com/bandvov/social-media-go/application"
+        "github.com/bandvov/social-media-go/domain"
+)
+
+type TagHandler struct {
+        TagService application.TagServiceInterface
+}
+
+// NewTagHandler creates a new HTTP handler for tags.
+func NewTagHandler(service application.TagServiceInterface) *TagHandler <span class="cov0" title="0">{
+        return &amp;TagHandler{TagService: service}
+}</span>
+
+// CreateTag handles creating a new tag.
+func (h *TagHandler) CreateTag(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var req domain.Tag
+
+        if err := json.NewDecoder(r.Body).Decode(&amp;req); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid request body", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">err := h.TagService.DeleteTag(req.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(map[string]string{"message": "tag created successfully"})</span>
+}
+
+// GetTags handles retrieving all tags.
+func (h *TagHandler) GetTags(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        tags, err := h.TagService.GetAllTags()
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">json.NewEncoder(w).Encode(tags)</span>
+}
+
+// GetTags handles retrieving all tags.
+func (h *TagHandler) DeleteTag(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        json.NewEncoder(w).Encode(map[string]string{"message": "tag deleted successfully"})
+}</span>
+</pre>
+		
+		<pre class="file" id="file23" style="display: none">package interfaces
+
+import (
+        "context"
+        "database/sql"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "net/http"
+        "strconv"
+
+        "github.com/bandvov/social-media-go/application"
+        "github.com/bandvov/social-media-go/domain"
+        "github.com/bandvov/social-media-go/utils"
+        "github.com/lib/pq"
+)
+
+type UserHTTPHandler struct {
+        UserService application.UserServiceInterface
+}
+
+func NewUserHTTPHandler(userService application.UserServiceInterface) *UserHTTPHandler <span class="cov8" title="1">{
+        return &amp;UserHTTPHandler{UserService: userService}
+}</span>
+
+func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var newUser domain.CreateUserRequest
+        if err := json.NewDecoder(r.Body).Decode(&amp;newUser); err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">if err := ValidateEmail(newUser.Email); err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">if err := ValidatePassword(newUser.Password); err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err := h.UserService.RegisterUser(newUser)
+        if err != nil </span><span class="cov8" title="1">{
+                fmt.Println("err: ", err)
+                if pgErr, ok := err.(*pq.Error); ok &amp;&amp; pgErr.Code == "23505" </span><span class="cov8" title="1">{
+                        http.Error(w, "error registering user: user already exists", http.StatusBadRequest)
+                        return
+                }</span>
+                <span class="cov8" title="1">http.Error(w, "error registering user: "+err.Error(), http.StatusInternalServerError)
+                return</span>
+        }
+
+        <span class="cov8" title="1">fmt.Println("here3")
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(map[string]string{"message": "user registered successfully"})</span>
+}
+
+func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var request domain.CreateUserRequest
+
+        // Parse and validate the request body
+        if err := json.NewDecoder(r.Body).Decode(&amp;request); err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">if request.Email == "" || request.Password == "" </span><span class="cov0" title="0">{
+                http.Error(w, "email and password are required", http.StatusBadRequest)
+                return
+        }</span>
+
+        // Authenticate user
+        <span class="cov8" title="1">user, err := h.UserService.Authenticate(request.Email, request.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                if err == sql.ErrNoRows </span><span class="cov0" title="0">{
+                        http.Error(w, "User not found", http.StatusNotFound)
+                        return
+                }</span>
+                <span class="cov0" title="0">http.Error(w, err.Error(), http.StatusInternalServerError)
+                return</span>
+        }
+
+        // Generate JWT token
+        <span class="cov8" title="1">token, err := utils.GenerateJWT(user.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "failed to generate token", http.StatusInternalServerError)
+                return
+        }</span>
+
+        // Set token in cookies
+        <span class="cov8" title="1">http.SetCookie(w, &amp;http.Cookie{
+                Name:     "access_token",
+                Value:    token,
+                HttpOnly: true,
+                Path:     "/",
+        })
+
+        // Respond with user data
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(user)</span>
+}
+
+func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if r.Method != http.MethodPut </span><span class="cov0" title="0">{
+                http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+                return
+        }</span>
+
+        <span class="cov8" title="1">id := r.PathValue("id")
+        userID, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "{\"message\": \"invalid user ID\"}", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">var req domain.User
+        req.ID = userID
+
+        if err := json.NewDecoder(r.Body).Decode(&amp;req); err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">if req.Email != "" </span><span class="cov8" title="1">{
+                if err := ValidateEmail(req.Email); err != nil </span><span class="cov8" title="1">{
+                        http.Error(w, err.Error(), http.StatusBadRequest)
+                        return
+                }</span>
+        }
+
+        <span class="cov8" title="1">if req.Password != "" </span><span class="cov8" title="1">{
+                if err := ValidatePassword(req.Password); err != nil </span><span class="cov8" title="1">{
+                        http.Error(w, err.Error(), http.StatusBadRequest)
+                        return
+                }</span>
+        }
+
+        <span class="cov8" title="1">err = h.UserService.UpdateUserData(req)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov8" title="1">json.NewEncoder(w).Encode(map[string]string{"message": "user updated successfully"})</span>
+}
+
+func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        id := r.PathValue("id")
+        userID, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, fmt.Sprintf("%v", struct{ message string }{message: "invalid user ID"}), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">var req struct {
+                Role string `json:"role"`
+        }
+
+        if err := json.NewDecoder(r.Body).Decode(&amp;req); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid request body", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if err := ValidateRole(req.Role); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">isAdmin := r.Context().Value(isAdminKey).(bool)
+
+        if !isAdmin </span><span class="cov0" title="0">{
+                http.Error(w, "Forbidden", http.StatusForbidden)
+                return
+        }</span>
+
+        <span class="cov0" title="0">err = h.UserService.ChangeUserRole(userID, req.Role, isAdmin)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "error changing user role: "+err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">json.NewEncoder(w).Encode(map[string]string{"message": "user role changed successfully"})</span>
+}
+
+func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        fmt.Println("here")
+        userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
+        if !ok || userId == 0 </span><span class="cov8" title="1">{
+                http.Error(w, "Unauthorized", http.StatusForbidden)
+                return
+        }</span>
+        <span class="cov8" title="1">fmt.Println("here2")
+        isAdmin := h.IsAdmin(r.Context())
+
+        id := r.PathValue("id")
+        userIDFromUrl, err := strconv.Atoi(id)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid user ID", http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">fmt.Printf("%v|%v", userId, userIDFromUrl)
+        fmt.Printf("is equal%v", userId == userIDFromUrl)
+        if !(isAdmin || userId == userIDFromUrl) </span><span class="cov8" title="1">{
+                http.Error(w, "Unauthorized", http.StatusForbidden)
+                return
+        }</span>
+
+        // Ensure user lookup happens after authorization checks
+        <span class="cov8" title="1">user, err := h.UserService.GetUserByID(userIDFromUrl)
+        if err != nil </span><span class="cov8" title="1">{
+                if errors.Is(err, sql.ErrNoRows) </span><span class="cov0" title="0">{
+                        http.Error(w, "User not found", http.StatusNotFound)
+                        return
+                }</span>
+                <span class="cov8" title="1">http.Error(w, "Internal server error", http.StatusInternalServerError)
+                return</span>
+        }
+        <span class="cov8" title="1">user.Password = ""
+        // Respond with user profile data
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(user)</span>
+}
+
+func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        query := r.URL.Query()
+
+        // Parse `limit` and `offset` with default values
+        limit, err := strconv.Atoi(query.Get("limit"))
+        if err != nil || limit &lt;= 0 </span><span class="cov0" title="0">{
+                limit = 10 // Default limit
+        }</span>
+
+        <span class="cov0" title="0">offset, err := strconv.Atoi(query.Get("offset"))
+        if err != nil || offset &lt; 0 </span><span class="cov0" title="0">{
+                offset = 0 // Default offset
+        }</span>
+
+        // Parse `sort` with default value
+        <span class="cov0" title="0">sort := query.Get("sort")
+        if sort != "asc" &amp;&amp; sort != "desc" </span><span class="cov0" title="0">{
+                sort = "desc" // Default sort
+        }</span>
+        <span class="cov0" title="0">search := query.Get("search")
+        orderBy := query.Get("order_by")
+
+        users, err := h.UserService.GetAllUsers(limit, offset, sort, orderBy, search)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(users)</span>
+}
+
+func (h *UserHTTPHandler) IsAdmin(ctx context.Context) bool <span class="cov8" title="1">{
+        return ctx.Value(isAdminKey).(bool)
+}</span>
+</pre>
+		
+		<pre class="file" id="file24" style="display: none">package interfaces
+
+import (
+        "errors"
+        "regexp"
+)
+
+func ValidateEmail(email string) error <span class="cov8" title="1">{
+        re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+        if !re.MatchString(email) </span><span class="cov8" title="1">{
+                return errors.New("invalid email format")
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func ValidatePassword(password string) error <span class="cov8" title="1">{
+        if len(password) &lt; 8 </span><span class="cov8" title="1">{
+                return errors.New("password must be at least 8 characters")
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func ValidateRole(role string) error <span class="cov0" title="0">{
+        validRoles := map[string]bool{"user": true, "admin": true, "moderator": true}
+        if !validRoles[role] </span><span class="cov0" title="0">{
+                return errors.New("invalid role")
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file25" style="display: none">package main
+
+import (
+        "database/sql"
+        "fmt"
+        "log"
+        "net/http"
+        "os"
+
+        "github.com/bandvov/social-media-go/application"
+        "github.com/bandvov/social-media-go/infrastructure"
+        "github.com/bandvov/social-media-go/interfaces"
+        "github.com/bandvov/social-media-go/utils"
+        _ "github.com/lib/pq" // Replace with the appropriate driver for your database
+)
+
+var PORT = ":8080"
+
+func main() <span class="cov0" title="0">{
+        port := os.Getenv("PORT")
+        if port != "" </span><span class="cov0" title="0">{
+                PORT = fmt.Sprintf(":%v", port)
+        }</span>
+
+        <span class="cov0" title="0">pgUser := os.Getenv("POSTGRES_USER")
+        if pgUser == "" </span><span class="cov0" title="0">{
+                log.Fatal("POSTGRES_USER is not set in the environment")
+        }</span>
+        <span class="cov0" title="0">pgPassword := os.Getenv("POSTGRES_PASSWORD")
+        if pgPassword == "" </span><span class="cov0" title="0">{
+                log.Fatal("POSTGRES_PASSWORD is not set in the environment")
+        }</span>
+        <span class="cov0" title="0">pgDb := os.Getenv("POSTGRES_DB")
+        if pgDb == "" </span><span class="cov0" title="0">{
+                log.Fatal("POSTGRES_DB is not set in the environment")
+        }</span>
+        <span class="cov0" title="0">pgPort := os.Getenv("POSTGRES_PORT")
+        if pgPort == "" </span><span class="cov0" title="0">{
+                log.Fatal("POSTGRES_PORT is not set in the environment")
+        }</span>
+        <span class="cov0" title="0">dbConnectionString := fmt.Sprintf("postgresql://%v:%v@localhost:%v/%v?sslmode=disable", pgUser, pgPassword, pgPort, pgDb)
+
+        db, err := sql.Open("postgres", dbConnectionString)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+        // Initialize PostgreSQL repository
+        userRepo := infrastructure.NewUserRepository(db)
+
+        // Initialize service
+        userService := application.NewUserService(userRepo)
+
+        // Initialize HTTP handler
+        userHandler := interfaces.NewUserHTTPHandler(userService)
+
+        postRepo := infrastructure.NewPostRepository(db)
+        postService := application.NewPostService(postRepo)
+        postHandler := interfaces.NewPostHTTPHandler(postService)
+
+        followerRepo := infrastructure.NewFollowerRepository(db)
+        Followerservice := application.NewFollowerService(followerRepo)
+        followerHandler := interfaces.NewFollowerHandler(Followerservice)
+
+        tagRepo := infrastructure.NewTagRepository(db)
+        tagService := application.NewTagService(tagRepo)
+        tagHandler := interfaces.NewTagHandler(tagService)
+
+        commentRepo := infrastructure.NewPostgresCommentRepository(db)
+        commentService := application.NewCommentService(commentRepo)
+        commentHandler := interfaces.NewCommentHandler(commentService)
+
+        // Create a custom router
+        router := utils.NewRouter()
+
+        // seeds.Seed(db, "./migrations/create_users_table.sql")
+        // seeds.Seed(db, "./migrations/create_posts_table.sql")
+        // seeds.Seed(db, "./migrations/media_urls_create_table.sql")
+        // seeds.Seed(db, "./migrations/create_reaction_types.table.sql")
+        // seeds.Seed(db, "./migrations/create_reactions_table.sql")
+        // seeds.Seed(db, "./migrations/create_followers_table.sql")
+        // seeds.Seed(db, "./migrations/create_tags_table.sql")
+        // seeds.Seed(db, "./migrations/create_comments_table.sql")
+
+        // seeds.Seed(db, "./seeds/seed_users.sql")
+        // seeds.Seed(db, "./seeds/seed_posts.sql")
+        // seeds.Seed(db, "./seeds/seed_media_urls.sql")
+        // seeds.Seed(db, "./seeds/seed_reaction_types.sql")
+        // seeds.Seed(db, "./seeds/seed_reactions.sql")
+        // seeds.Seed(db, "./seeds/seed_followers.sql")
+        // seeds.Seed(db, "./seeds/seed_tags.sql")
+        // seeds.Seed(db, "./seeds/seed_comments.sql")
+
+        // Define routes
+        router.HandleFunc("GET /users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
+        router.HandleFunc("POST /users", interfaces.LoggerMiddleware(userHandler.RegisterUser))
+        router.HandleFunc("PUT /users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
+        router.HandleFunc("POST /users/login", interfaces.LoggerMiddleware(userHandler.Login))
+        router.HandleFunc("PUT /users/{id}/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
+        router.HandleFunc("GET /users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
+
+        router.HandleFunc("GET /users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
+        router.HandleFunc("GET /users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
+        router.HandleFunc("GET /users/{id}/followees", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowees)))
+
+        router.HandleFunc("GET /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPost)))
+        router.HandleFunc("POST /posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.CreatePost)))
+        router.HandleFunc("PUT /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.UpdatePost)))
+        // this is mocked. Implement soft delete. make visibility = none
+        router.HandleFunc("DELETE /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.DeletePost)))
+
+        http.HandleFunc("POST /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.AddFollower)))
+        http.HandleFunc("DELETE /followers/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.RemoveFollower)))
+
+        http.HandleFunc("GET /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.GetTags)))
+        http.HandleFunc("POST /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.CreateTag)))
+        http.HandleFunc("DELETE /tags/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
+
+        http.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
+        http.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
+        // This in mocked
+        // Start server
+        log.Printf("Server is running on %v", PORT)
+        log.Fatal(http.ListenAndServe(PORT, router))</span>
+}
+</pre>
+		
+		<pre class="file" id="file26" style="display: none">package seeds
+
+import (
+        "bufio"
+        "database/sql"
+        "fmt"
+        "log"
+        "os"
+        "strings"
+)
+
+func Seed(db *sql.DB, filePath string) <span class="cov0" title="0">{
+        // Open the SQL file
+        if filePath == "" </span><span class="cov0" title="0">{
+                log.Fatal("filePath not provided")
+        }</span>
+
+        <span class="cov0" title="0">file, err := os.Open(filePath)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Failed to open SQL file: %v", err)
+        }</span>
+
+        <span class="cov0" title="0">defer file.Close()
+
+        // Use bufio to read the file line by line
+        var queryBuilder strings.Builder
+        scanner := bufio.NewScanner(file)
+
+        for scanner.Scan() </span><span class="cov0" title="0">{
+                line := scanner.Text()
+
+                // Ignore comments and empty lines
+                line = strings.TrimSpace(line)
+                if line == "" || strings.HasPrefix(line, "--") </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                // Accumulate the query
+                <span class="cov0" title="0">queryBuilder.WriteString(line)
+
+                // Execute the query when a semicolon is encountered
+                if strings.HasSuffix(line, ";") </span><span class="cov0" title="0">{
+                        query := queryBuilder.String()
+                        _, err := db.Exec(query)
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Printf("Failed to execute query: %s\nError: %v", query, err)
+                        }</span>
+                        <span class="cov0" title="0">queryBuilder.Reset()</span>
+                }
+        }
+
+        <span class="cov0" title="0">if err := scanner.Err(); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Error reading the SQL file: %v", err)
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("SQL file %v imported successfully!\n", filePath)</span>
+}
+</pre>
+		
+		<pre class="file" id="file27" style="display: none">package utils
+
+import (
+        "errors"
+        "fmt"
+        "log"
+        "os"
+        "sync"
+        "time"
+
+        "github.com/golang-jwt/jwt/v5"
+)
+
+var (
+        JWTSecretKey []byte
+        once         sync.Once
+)
+
+// Claims defines the custom claims structure.
+type Claims struct {
+        UserID int `json:"user_id"`
+        jwt.RegisteredClaims
+}
+
+// loadSecret initializes the JWT secret key from the environment only once.
+func loadSecret() <span class="cov8" title="1">{
+        once.Do(func() </span><span class="cov8" title="1">{
+                if JWTSecretKey == nil </span><span class="cov0" title="0">{
+                        jwtSecret := os.Getenv("JWT_SECRET")
+                        if jwtSecret == "" </span><span class="cov0" title="0">{
+                                log.Fatal("JWT_SECRET is not set in the environment")
+                        }</span>
+                        <span class="cov0" title="0">JWTSecretKey = []byte(jwtSecret)</span>
+                }
+        })
+}
+
+// GenerateJWT generates a new JWT token for a user.
+func GenerateJWT(userID int) (string, error) <span class="cov8" title="1">{
+        loadSecret()
+        claims := Claims{
+                UserID: userID,
+                RegisteredClaims: jwt.RegisteredClaims{
+                        ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+                        IssuedAt:  jwt.NewNumericDate(time.Now()),
+                },
+        }
+
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+        return token.SignedString(JWTSecretKey)
+}</span>
+
+// ValidateJWT validates a JWT token and returns the user claims.
+func ValidateJWT(tokenString string) (*Claims, error) <span class="cov0" title="0">{
+        loadSecret()
+
+        token, err := jwt.ParseWithClaims(tokenString, &amp;Claims{}, func(token *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                // Ensure the signing method is HMAC.
+                if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+                }</span>
+                <span class="cov0" title="0">return JWTSecretKey, nil</span>
+        })
+
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">claims, ok := token.Claims.(*Claims)
+        if !ok || !token.Valid </span><span class="cov0" title="0">{
+                return nil, errors.New("invalid token")
+        }</span>
+
+        <span class="cov0" title="0">return claims, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file28" style="display: none">package utils
+
+import (
+        "net/http"
+)
+
+// Router wraps the default ServeMux to add method-based routing.
+type Router struct {
+        mux *http.ServeMux
+}
+
+// NewRouter creates a new Router instance.
+func NewRouter() *Router <span class="cov0" title="0">{
+        return &amp;Router{
+                mux: http.NewServeMux(),
+        }
+}</span>
+func (r *Router) HandleFunc(pattern string, handler func(w http.ResponseWriter, req *http.Request)) <span class="cov0" title="0">{
+        r.mux.HandleFunc(pattern, handler)
+}</span>
+
+// ServeHTTP makes Router implement http.Handler.
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) <span class="cov0" title="0">{
+        r.mux.ServeHTTP(w, req)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
