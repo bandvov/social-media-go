@@ -11,6 +11,7 @@ import (
 	"github.com/bandvov/social-media-go/infrastructure"
 	"github.com/bandvov/social-media-go/interfaces"
 	"github.com/bandvov/social-media-go/utils"
+	"github.com/go-redis/redis/v8"
 	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
 )
 
@@ -45,11 +46,18 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	// Redis setup
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	cache := infrastructure.NewRedisCache(redisClient)
+
 	// Initialize PostgreSQL repository
 	userRepo := infrastructure.NewUserRepository(db)
 
 	// Initialize service
-	userService := application.NewUserService(userRepo)
+	userService := application.NewUserService(userRepo, cache)
 
 	// Initialize HTTP handler
 	userHandler := interfaces.NewUserHTTPHandler(userService)
