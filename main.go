@@ -129,5 +129,5 @@ func main() {
 	// This in mocked
 	// Start server
 	log.Printf("Server is running on %v", PORT)
-	log.Fatal(http.ListenAndServe(PORT,  interfaces.CorsMiddleware( router)))
+	log.Fatal(http.ListenAndServe(PORT, interfaces.CorsMiddleware(router)))
 }

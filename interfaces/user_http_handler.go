@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
@@ -24,22 +25,25 @@ func NewUserHTTPHandler(userService application.UserServiceInterface) *UserHTTPH
 }
 
 func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	var newUser domain.CreateUserRequest
+	var newUser struct {
+		Data domain.CreateUserRequest `json:"data"`
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
-	if err := ValidateEmail(newUser.Email); err != nil {
+	if err := ValidateEmail(newUser.Data.Email); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := ValidatePassword(newUser.Password); err != nil {
+	if err := ValidatePassword(newUser.Data.Password); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := h.UserService.RegisterUser(newUser)
+	err := h.UserService.RegisterUser(newUser.Data)
 	if err != nil {
 		fmt.Println("err: ", err)
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
@@ -56,9 +60,9 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var request struct{
+	var request struct {
 		Data domain.CreateUserRequest `json:"data"`
-	} 
+	}
 
 	// Parse and validate the request body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -88,13 +92,15 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to generate token", http.StatusInternalServerError)
 		return
 	}
-
 	// Set token in cookies
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    token,
 		HttpOnly: true,
 		Path:     "/",
+		MaxAge:   int(time.Hour * 24),
+		Secure:   false,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	// Respond with user data
@@ -199,7 +205,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-	
+
 	if !(isAdmin || userId == userIDFromUrl) {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
