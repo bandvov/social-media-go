@@ -56,20 +56,23 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var request domain.CreateUserRequest
+	var request struct{
+		Data domain.CreateUserRequest `json:"data"`
+	} 
 
 	// Parse and validate the request body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
-	if request.Email == "" || request.Password == "" {
+
+	if request.Data.Email == "" || request.Data.Password == "" {
 		http.Error(w, "email and password are required", http.StatusBadRequest)
 		return
 	}
 
 	// Authenticate user
-	user, err := h.UserService.Authenticate(request.Email, request.Password)
+	user, err := h.UserService.Authenticate(request.Data.Email, request.Data.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -196,8 +199,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("%v|%v", userId, userIDFromUrl)
-	fmt.Printf("is equal%v", userId == userIDFromUrl)
+	
 	if !(isAdmin || userId == userIDFromUrl) {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
