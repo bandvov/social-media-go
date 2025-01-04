@@ -2,6 +2,7 @@ package application
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/bandvov/social-media-go/domain"
@@ -119,7 +120,8 @@ func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) e
 
 func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 	// Try to fetch from cache
-	cachedUser, err := s.cache.Get(string(id))
+	strId := strconv.Itoa(id)
+	cachedUser, err := s.cache.Get(strId)
 	if err == nil && cachedUser != nil {
 		return cachedUser.(*domain.User), nil
 	}
@@ -132,7 +134,8 @@ func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 		return nil, err
 	}
 	// Store in cache
-	_ = s.cache.Set(string(id), user, 24*time.Hour)
+
+	_ = s.cache.Set(strId, user, 24*time.Hour)
 	return user, nil
 }
 

@@ -3,6 +3,7 @@ package application
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/bandvov/social-media-go/domain"
 	"github.com/bandvov/social-media-go/infrastructure"
@@ -65,7 +66,14 @@ func TestRegisterUser(t *testing.T) {
 				CreateUserFunc: tt.mockRepoFunc,
 			}
 
-			userService := NewUserService(mockRepo)
+			userService := NewUserService(mockRepo, &infrastructure.MockRedisCache{
+				SetFunc: func(key string, value interface{}, ttl time.Duration) error {
+					return nil
+				},
+				GetFunc: func(key string) (interface{}, error) {
+					return nil, nil
+				},
+			})
 
 			err := userService.RegisterUser(tt.input)
 
