@@ -55,7 +55,7 @@ func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request)
 	id := r.PathValue("id")
 	followeeID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "invalid follower ID", http.StatusBadRequest)
+		http.Error(w, "invalid followee ID", http.StatusBadRequest)
 		return
 	}
 

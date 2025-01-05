@@ -59,15 +59,13 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("here1========================")
-
 		// Retrieve user from the database
 		user, err := h.UserService.GetUserByID(claims.UserID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
-
+		
 		isAdmin := user.Role == "admin"
 
 		// Add userID and isAdmin to context
@@ -98,7 +96,7 @@ func CorsMiddleware(next http.Handler) http.Handler {
 		// Allow all origins, adjust as needed
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Handle preflight requests

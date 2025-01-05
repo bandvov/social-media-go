@@ -123,10 +123,9 @@ func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 	strId := strconv.Itoa(id)
 	cachedUser, err := s.cache.Get(strId)
 	if err == nil && cachedUser != nil {
-		return cachedUser.(*domain.User), nil
-	}
-	if err != nil {
-		return nil, err
+		if user, ok := cachedUser.(*domain.User); ok {
+			return user, nil
+		}
 	}
 
 	user, err := s.repo.GetUserByID(id)

@@ -97,10 +97,9 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Name:     "access_token",
 		Value:    token,
 		HttpOnly: true,
-		Path:     "/",
-		MaxAge:   int(time.Hour * 24),
+		Expires:  time.Now().Add(time.Hour * 24*7),
 		Secure:   false,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	// Respond with user data
@@ -190,13 +189,12 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("here")
+fmt.Println("here1")
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
-	fmt.Println("here2")
 	isAdmin := h.IsAdmin(r.Context())
 
 	id := r.PathValue("id")
@@ -224,7 +222,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 	user.Password = ""
 	// Respond with user profile data
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(struct{ Data *domain.User  `json:"data"`}{Data: user})
 }
 
 func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
