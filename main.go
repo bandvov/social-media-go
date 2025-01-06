@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"log"
@@ -126,8 +127,18 @@ func main() {
 
 	http.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
 	http.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
-	// This in mocked
+	
+		// Configure TLS
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	server := &http.Server{
+		Addr:      ":443",
+		Handler:   interfaces.CorsMiddleware(router),
+		TLSConfig: tlsConfig,
+	}
+
 	// Start server
 	log.Printf("Server is running on %v", PORT)
-	log.Fatal(http.ListenAndServe(PORT, interfaces.CorsMiddleware(router)))
+	log.Fatal(server.ListenAndServeTLS("./certs/cert.pem","./certs/key.pem"))
 }

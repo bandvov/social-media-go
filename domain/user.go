@@ -18,9 +18,9 @@ type User struct {
 	Bio            *string   `json:"bio,omitempty"`         // Short biography
 	CreatedAt      time.Time `json:"created_at"`            // Account creation timestamp
 	UpdatedAt      time.Time `json:"updated_at"`            // Last update timestamp
-	PostsCount     int       `json:"posts_count"`
+	PostsCount     int       `json:"posts_count,omitempty"`
 	FollowerCount  int       `json:"follower_count,omitempty"`
-	FolloweeeCount int       `json:"followee_count,omitempty"`
+	FolloweeCount int       `json:"followee_count,omitempty"`
 }
 
 type CreateUserRequest struct {

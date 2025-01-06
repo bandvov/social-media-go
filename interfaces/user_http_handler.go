@@ -222,7 +222,7 @@ fmt.Println("here1")
 	user.Password = ""
 	// Respond with user profile data
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(struct{ Data *domain.User  `json:"data"`}{Data: user})
+	json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
