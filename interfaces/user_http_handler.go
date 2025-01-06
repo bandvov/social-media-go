@@ -54,7 +54,6 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("here3")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "user registered successfully"})
 }
@@ -98,13 +97,12 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Value:    token,
 		HttpOnly: true,
 		Expires:  time.Now().Add(time.Hour * 24*7),
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
+		Secure:   true,
 	})
 
 	// Respond with user data
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(map[string]int{"id": user.ID})
 }
 
 func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {

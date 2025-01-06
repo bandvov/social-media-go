@@ -129,9 +129,8 @@ func main() {
 	http.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
 	
 		// Configure TLS
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
-	}
+	tlsConfig := &tls.Config{}
+	
 	server := &http.Server{
 		Addr:      ":443",
 		Handler:   interfaces.CorsMiddleware(router),
