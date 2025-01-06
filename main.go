@@ -127,10 +127,10 @@ func main() {
 
 	http.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
 	http.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
-	
-		// Configure TLS
+
+	// Configure TLS
 	tlsConfig := &tls.Config{}
-	
+
 	server := &http.Server{
 		Addr:      ":443",
 		Handler:   interfaces.CorsMiddleware(router),
@@ -139,5 +139,5 @@ func main() {
 
 	// Start server
 	log.Printf("Server is running on %v", PORT)
-	log.Fatal(server.ListenAndServeTLS("./certs/cert.pem","./certs/key.pem"))
+	log.Fatal(server.ListenAndServeTLS("./certs/cert.pem", "./certs/key.pem"))
 }

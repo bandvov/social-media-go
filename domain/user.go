@@ -19,8 +19,8 @@ type User struct {
 	CreatedAt      time.Time `json:"created_at"`            // Account creation timestamp
 	UpdatedAt      time.Time `json:"updated_at"`            // Last update timestamp
 	PostsCount     int       `json:"posts_count,omitempty"`
-	FollowerCount  int       `json:"follower_count,omitempty"`
-	FolloweeCount int       `json:"followee_count,omitempty"`
+	FollowersCount  int       `json:"followers_count,omitempty"`
+	FolloweesCount int       `json:"followees_count,omitempty"`
 }
 
 type CreateUserRequest struct {

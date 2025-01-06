@@ -79,8 +79,8 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 		u.created_at,
 		u.updated_at,
 		COALESCE(pc.post_count, 0) AS post_count,
-		COALESCE(fs.follower_count, 0) AS follower_count,
-		COALESCE(fs.followee_count, 0) AS followee_count
+		COALESCE(fs.follower_count, 0) AS followers_count,
+		COALESCE(fs.followee_count, 0) AS followees_count
 	FROM users u
 	LEFT JOIN post_counts pc ON u.id = pc.author_id
 	LEFT JOIN follower_stats fs ON u.id = fs.followee_id
@@ -91,7 +91,7 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	defer stmt.Close()
 
 	err = stmt.QueryRow(id).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowerCount, &user.FolloweeCount)
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount)
 	if err != nil {
 		return nil, err
 	}

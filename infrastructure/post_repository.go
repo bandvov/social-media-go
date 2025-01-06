@@ -73,7 +73,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	rows, err := r.db.Query(`	
 	SELECT 
     p.id AS post_id,
-    COALESCE(u.username,'') AS username,
+    COALESCE(u.username,'') AS author_name,
     p.content,
     p.visibility,
     p.pinned,
@@ -110,7 +110,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	var posts []domain.Post
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.ID, &post.AuthorID, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions); err != nil {
+		if err := rows.Scan(&post.ID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)
