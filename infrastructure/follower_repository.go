@@ -54,7 +54,7 @@ func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort st
 		JSON_AGG(JSON_BUILD_OBJECT(
 			'id', f.followee_id,
 			'profile_pic',uf.profile_pic
-		)) AS followers
+		)) AS followees
 	FROM followers f
 	LEFT JOIN users uf ON f.follower_id = uf.id
 	WHERE f.followee_id = $1
@@ -107,7 +107,7 @@ func (r *FollowerRepository) GetFollowees(userID int, limit, offset int, sort st
 		)) AS followers
 	FROM followers f
 	LEFT JOIN users uf ON f.follower_id = uf.id
-	WHERE f.follower_id = $1
+	WHERE f.followee_id = $1
 	GROUP BY f.followee_id;`
 
 	if searchTerm != "" {

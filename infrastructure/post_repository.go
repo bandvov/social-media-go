@@ -99,7 +99,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	LEFT JOIN users u ON p.author_id = u.id
 	WHERE 
 		p.author_id = $1 -- Replace with the user ID you want to query
-	GROUP BY p.id
+	GROUP BY p.id, u.username
 	ORDER BY p.id;
 	`, userID)
 	if err != nil {
