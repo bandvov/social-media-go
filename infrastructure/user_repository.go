@@ -124,8 +124,8 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
     ),
     relationship_flags AS (
         SELECT 
-            BOOL_OR(follower_id = $1) AS isFollower,
-            BOOL_OR(followee_id = $1) AS isFollowee
+            COALESCE(BOOL_OR(follower_id = $1), FALSE) AS is_follower,
+            COALESCE(BOOL_OR(followee_id = $1), FALSE) AS is_followee
         FROM followers
         WHERE (follower_id = $1 AND followee_id = $2)
            OR (follower_id = $2 AND followee_id = $1)
@@ -143,8 +143,8 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
 		COALESCE(pc.post_count, 0) AS post_count,
 		COALESCE(fs.follower_count, 0) AS followers_count,
 		COALESCE(fs.followee_count, 0) AS followees_count,
-		r.isFollower,
-		r.isFollowee
+		COALESCE(r.is_follower, FALSE) AS is_follower,
+		COALESCE(r.is_followee, FALSE) AS is_followee
 	FROM users u
 	LEFT JOIN post_counts pc ON u.id = pc.author_id
 	LEFT JOIN follower_stats fs ON u.id = fs.followee_id

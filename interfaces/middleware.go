@@ -53,18 +53,21 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			http.Error(w, "Invalid access token", http.StatusBadRequest)
 			return
 		}
-
+		
+		fmt.Println("here1========================")
 		claims, err := utils.ValidateJWT(token)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+		fmt.Println("here2========================")
 		// Retrieve user from the database
 		user, err := h.UserService.GetUserByID(claims.UserID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
+		fmt.Println("here4========================")
 		
 		isAdmin := user.Role == "admin"
 

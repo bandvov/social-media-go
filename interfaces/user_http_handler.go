@@ -192,17 +192,11 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
-	isAdmin := h.IsAdmin(r.Context())
 
 	id := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	if !(isAdmin || userId == userIDFromUrl) {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
@@ -213,6 +207,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 			http.Error(w, "User not found", http.StatusNotFound)
 			return
 		}
+		fmt.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
