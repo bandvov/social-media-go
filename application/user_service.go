@@ -17,6 +17,7 @@ type UserServiceInterface interface {
 	UpdateUserData(domain.User) error
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	GetUserByID(id int) (*domain.User, error)
+	GetUserProfileInfo(id, otherUser int) (*domain.User, error)
 	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
 type UserService struct {
@@ -129,6 +130,26 @@ func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 	}
 
 	user, err := s.repo.GetUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+	// Store in cache
+
+	_ = s.cache.Set(strId, user, 24*time.Hour)
+	return user, nil
+}
+
+func (s *UserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {
+	// Try to fetch from cache
+	strId := strconv.Itoa(id)
+	cachedUser, err := s.cache.Get(strId)
+	if err == nil && cachedUser != nil {
+		if user, ok := cachedUser.(*domain.User); ok {
+			return user, nil
+		}
+	}
+
+	user, err := s.repo.GetUserProfileInfo(id, otherUser)
 	if err != nil {
 		return nil, err
 	}

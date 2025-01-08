@@ -33,7 +33,7 @@ func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error {
 	return nil
 }
 
-func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -48,25 +48,30 @@ func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort st
 		limit = 24
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 	SELECT 
-		f.follower_id,
-		JSON_AGG(JSON_BUILD_OBJECT(
-			'id', f.followee_id,
-			'profile_pic',uf.profile_pic
-		)) AS followees
-	FROM followers f
-	LEFT JOIN users uf ON f.follower_id = uf.id
-	WHERE f.followee_id = $1
-	GROUP BY f.follower_id;`
+    u.id,
+    u.profile_pic,
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 
+            FROM followers f2 
+            WHERE f2.followee_id = f1.follower_id AND f2.follower_id = $2
+        ) THEN TRUE
+        ELSE FALSE
+    END AS is_followed_by
+	FROM followers f1
+	JOIN users u ON f1.follower_id = u.id
+	WHERE f1.followee_id = $1
+	GROUP BY u.id, f1.follower_id, u.%v`, orderBy)
 
 	if searchTerm != "" {
 		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
 	}
 
-	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $2 OFFSET $3", orderBy, sort)
-
-	rows, err := r.db.Query(query, userID, limit, offset)
+	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $3 OFFSET $4", orderBy, sort)
+	fmt.Println(query)
+	rows, err := r.db.Query(query, userID, otherUser, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followers: %v", err)
 	}
@@ -75,7 +80,7 @@ func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort st
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Email, &user.ProfilePic); err != nil {
+		if err := rows.Scan(&user.ID, &user.ProfilePic, &user.IsFollowedBy); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
 		users = append(users, user)
@@ -83,7 +88,7 @@ func (r *FollowerRepository) GetFollowers(userID int, limit, offset int, sort st
 	return users, nil
 }
 
-func (r *FollowerRepository) GetFollowees(userID int, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+func (r *FollowerRepository) GetFollowees(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -98,25 +103,31 @@ func (r *FollowerRepository) GetFollowees(userID int, limit, offset int, sort st
 		limit = 24
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 	SELECT 
-		f.followee_id,
-		JSON_AGG(JSON_BUILD_OBJECT(
-			'id', f.follower_id,
-			'profile_pic',uf.profile_pic
-		)) AS followers
+    u.id,
+    u.profile_pic AS followee_profile_pic,
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 
+            FROM followers f2 
+            WHERE f2.followee_id = f.followee_id 
+              AND f2.follower_id = $2
+        ) THEN TRUE
+        ELSE FALSE
+    END AS is_followed_by
 	FROM followers f
-	LEFT JOIN users uf ON f.follower_id = uf.id
-	WHERE f.followee_id = $1
-	GROUP BY f.followee_id;`
+	JOIN users u ON f.followee_id = u.id
+	WHERE f.follower_id = $1
+	GROUP BY u.id, f.followee_id, u.%v`, orderBy)
 
 	if searchTerm != "" {
 		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
 	}
 
-	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $2 OFFSET $3", orderBy, sort)
+	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $3 OFFSET $4", orderBy, sort)
 
-	rows, err := r.db.Query(query, userID, limit, offset)
+	rows, err := r.db.Query(query, userID, otherUser, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followees: %v", err)
 	}
@@ -125,7 +136,7 @@ func (r *FollowerRepository) GetFollowees(userID int, limit, offset int, sort st
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Email, &user.ProfilePic); err != nil {
+		if err := rows.Scan(&user.ID, &user.ProfilePic, &user.IsFollowedBy); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
 		users = append(users, user)

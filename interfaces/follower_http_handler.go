@@ -72,6 +72,12 @@ func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userId == 0 {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
 	id := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(id)
 	if err != nil {
@@ -101,8 +107,9 @@ func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	orderBy := query.Get("order_by")
 
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userIDFromUrl, limit, offset, sort, orderBy, search)
+	followers, err := h.service.GetFollowers(userIDFromUrl,userId, limit, offset, sort, orderBy, search)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -110,7 +117,12 @@ func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(followers)
 }
-func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
+func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {	
+	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userId == 0 {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
 	id := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(id)
 	if err != nil {
@@ -140,7 +152,7 @@ func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 	orderBy := query.Get("order_by")
 
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userIDFromUrl, limit, offset, sort, orderBy, search)
+	followers, err := h.service.GetFollowees(userIDFromUrl,userId, limit, offset, sort, orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

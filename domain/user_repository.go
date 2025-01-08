@@ -5,6 +5,7 @@ type UserRepository interface {
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
+	GetUserProfileInfo(id, otherUser int ) (*User, error)
 	UpdateUser(user *User) error
 	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*User, error)
 }

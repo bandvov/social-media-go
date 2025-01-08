@@ -187,7 +187,6 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-fmt.Println("here1")
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -208,7 +207,7 @@ fmt.Println("here1")
 	}
 
 	// Ensure user lookup happens after authorization checks
-	user, err := h.UserService.GetUserByID(userIDFromUrl)
+	user, err := h.UserService.GetUserProfileInfo(userIDFromUrl,userId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "User not found", http.StatusNotFound)

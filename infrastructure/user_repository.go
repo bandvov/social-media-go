@@ -98,6 +98,72 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 
 	return &user, nil
 }
+
+func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain.User, error) {
+	var user domain.User
+
+	// Prepare the statement
+	stmt, err := r.db.Prepare(`	
+	WITH 
+    post_counts AS (
+        SELECT
+            author_id,
+            COUNT(*) AS post_count
+        FROM posts
+        WHERE author_id = $1 -- Filter early to reduce computation
+        GROUP BY author_id
+    ),
+    follower_stats AS (
+        SELECT
+            followee_id,
+            COUNT(*) AS follower_count,
+            COUNT(DISTINCT follower_id) AS followee_count
+        FROM followers
+        WHERE followee_id = $1 -- Filter early
+        GROUP BY followee_id
+    ),
+    relationship_flags AS (
+        SELECT 
+            BOOL_OR(follower_id = $1) AS isFollower,
+            BOOL_OR(followee_id = $1) AS isFollowee
+        FROM followers
+        WHERE (follower_id = $1 AND followee_id = $2)
+           OR (follower_id = $2 AND followee_id = $1)
+    )
+	SELECT
+		u.id,
+		u.username,
+		u.password,
+		u.email,
+		u.status,
+		u.role,
+		u.profile_pic,
+		u.created_at,
+		u.updated_at,
+		COALESCE(pc.post_count, 0) AS post_count,
+		COALESCE(fs.follower_count, 0) AS followers_count,
+		COALESCE(fs.followee_count, 0) AS followees_count,
+		r.isFollower,
+		r.isFollowee
+	FROM users u
+	LEFT JOIN post_counts pc ON u.id = pc.author_id
+	LEFT JOIN follower_stats fs ON u.id = fs.followee_id
+	LEFT JOIN relationship_flags r ON TRUE
+	WHERE u.id = $1;
+`)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(id,authenticatedUser).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
 

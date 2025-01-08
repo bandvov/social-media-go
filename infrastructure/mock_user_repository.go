@@ -3,12 +3,13 @@ package infrastructure
 import "github.com/bandvov/social-media-go/domain"
 
 type MockUserRepository struct {
-	CreateUserFunc        func(user *domain.User) error
-	GetUserByUsernameFunc func(username string) (*domain.User, error)
-	GetUserByEmailFunc    func(email string) (*domain.User, error)
-	GetUserByIDFunc       func(id int) (*domain.User, error)
-	UpdateUserFunc        func(user *domain.User) error
-	GetAllUsersFunc       func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
+	CreateUserFunc         func(user *domain.User) error
+	GetUserByUsernameFunc  func(username string) (*domain.User, error)
+	GetUserByEmailFunc     func(email string) (*domain.User, error)
+	GetUserByIDFunc        func(id int) (*domain.User, error)
+	GetUserProfileInfoFunc func(id, authenticatedUser int) (*domain.User, error)
+	UpdateUserFunc         func(user *domain.User) error
+	GetAllUsersFunc        func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
 
 func (m *MockUserRepository) CreateUser(user *domain.User) error {
@@ -35,6 +36,12 @@ func (m *MockUserRepository) GetUserByEmail(email string) (*domain.User, error) 
 func (m *MockUserRepository) GetUserByID(id int) (*domain.User, error) {
 	if m.GetUserByIDFunc != nil {
 		return m.GetUserByIDFunc(id)
+	}
+	return nil, nil
+}
+func (m *MockUserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
+	if m.GetUserProfileInfoFunc != nil {
+		return m.GetUserProfileInfoFunc(id, authenticatedUser)
 	}
 	return nil, nil
 }
