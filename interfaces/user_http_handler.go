@@ -96,7 +96,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Name:     "access_token",
 		Value:    token,
 		HttpOnly: true,
-		Expires:  time.Now().Add(time.Hour * 24*7),
+		Expires:  time.Now().Add(time.Hour * 24 * 7),
 		Secure:   true,
 	})
 
@@ -110,7 +110,6 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
@@ -118,10 +117,10 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req domain.User
+	req := &domain.User{}
 	req.ID = userID
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
@@ -201,7 +200,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Ensure user lookup happens after authorization checks
-	user, err := h.UserService.GetUserProfileInfo(userIDFromUrl,userId)
+	user, err := h.UserService.GetUserProfileInfo(userIDFromUrl, userId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "User not found", http.StatusNotFound)

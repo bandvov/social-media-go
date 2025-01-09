@@ -14,7 +14,7 @@ import (
 type UserServiceInterface interface {
 	Authenticate(email, password string) (*domain.User, error)
 	RegisterUser(user domain.CreateUserRequest) error
-	UpdateUserData(domain.User) error
+	UpdateUserData(*domain.User) error
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	GetUserByID(id int) (*domain.User, error)
 	GetUserProfileInfo(id, otherUser int) (*domain.User, error)
@@ -61,55 +61,22 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	return user, nil
 }
 
-func (s *UserService) UpdateUserData(userData domain.User) error {
+func (s *UserService) UpdateUserData(userData *domain.User) error {
 	_, err := s.repo.GetUserByID(userData.ID)
 	if err != nil {
 		return err
 	}
 
-	user := &domain.User{}
-	user.ID = userData.ID
-
-	if userData.Email != "" {
-		user.UpdateEmail(userData.Email)
-	}
 
 	if userData.Password != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
-		user.UpdatePassword(string(hashedPassword))
+		userData.UpdatePassword(string(hashedPassword))
 	}
 
-	if userData.FirstName != nil {
-		user.FirstName = userData.FirstName
-	}
-
-	if userData.LastName != nil {
-		user.LastName = userData.LastName
-	}
-
-	if userData.Bio != nil {
-		user.Bio = userData.Bio
-	}
-
-	if userData.ProfilePic != nil {
-		user.ProfilePic = userData.ProfilePic
-	}
-
-	if userData.Username != nil {
-		user.Username = userData.Username
-	}
-	if userData.Role != "" {
-		user.Role = userData.Role
-	}
-
-	if userData.Status != "" {
-		user.Status = userData.Status
-	}
-
-	return s.repo.UpdateUser(user)
+	return s.repo.UpdateUser(userData)
 }
 
 func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error {

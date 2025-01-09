@@ -133,6 +133,8 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
 	SELECT
 		u.id,
 		u.username,
+		u.first_name,
+		u.last_name,
 		u.password,
 		u.email,
 		u.status,
@@ -157,7 +159,7 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
 	defer stmt.Close()
 
 	err = stmt.QueryRow(id,authenticatedUser).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
+		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +170,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
 
 	// Prepare the statement
-	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1")
+	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1;")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
 	}
