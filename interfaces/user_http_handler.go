@@ -30,7 +30,7 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
+		http.Error(w, `{"message": "invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 	if err := ValidateEmail(newUser.Data.Email); err != nil {

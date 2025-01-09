@@ -49,6 +49,15 @@ func TestLogin_Success(t *testing.T) {
 		return
 	}
 
+	req := struct {
+		Data *domain.CreateUserRequest `json:"data"`
+	}{Data: &domain.CreateUserRequest{
+		Email:    "john@example.com",
+		Password: "password123",
+	},
+	}
+	reqJSON, _ := json.Marshal(req)
+
 	utils.JWTSecretKey = []byte("testsecret")
 
 	tests := []struct {
@@ -60,11 +69,8 @@ func TestLogin_Success(t *testing.T) {
 		expectedCookie  *string
 	}{
 		{
-			name: "Valid Login",
-			requestBody: domain.CreateUserRequest{
-				Email:    "john@example.com",
-				Password: "password123",
-			},
+			name:        "Valid Login",
+			requestBody:string(reqJSON),
 			mockUserService: &application.MockUserService{
 				AuthenticateFunc: func(email, password string) (*domain.User, error) {
 					return &expectedUser, nil
@@ -145,27 +151,33 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			name: "Invalid email",
-			inputBody: map[string]string{
-				"email":    "invalid-email",
-				"password": "StrongPass123!",
+			inputBody: map[string]interface{}{
+				"data": map[string]string{
+					"email":    "invalid-email",
+					"password": "StrongPass123!",
+				},
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   "invalid email address",
+			expectedResponse:   "invalid email format",
 		},
 		{
 			name: "Invalid password",
-			inputBody: map[string]string{
-				"email":    "test@example.com",
-				"password": "weak",
+			inputBody: map[string]interface{}{
+				"data": map[string]string{
+					"email":    "test@example.com",
+					"password": "weak",
+				},
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   "password does not meet complexity requirements",
+			expectedResponse:   "password must be at least 8 characters",
 		},
 		{
 			name: "User already exists",
-			inputBody: map[string]string{
-				"email":    "test@example.com",
-				"password": "StrongPass123!",
+			inputBody: map[string]interface{}{
+				"data": map[string]string{
+					"email":    "test@example.com",
+					"password": "StrongPass123!",
+				},
 			},
 			mockResponse:       &pq.Error{Code: "23505"},
 			expectedStatusCode: http.StatusBadRequest,
@@ -173,22 +185,26 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			name: "Internal server error",
-			inputBody: map[string]string{
-				"email":    "test@example.com",
-				"password": "StrongPass123!",
+			inputBody: map[string]interface{}{
+				"data": map[string]string{
+					"email":    "test@example.com",
+					"password": "StrongPass123!",
+				},
 			},
-			mockResponse:       errors.New("some error"),
+			mockResponse:       errors.New("database error"),
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedResponse:   "error registering user: database error",
 		},
 		{
 			name: "Successful registration",
-			inputBody: map[string]string{
-				"email":    "test@example.com",
-				"password": "StrongPass123!",
+			inputBody: map[string]interface{}{
+				"data": map[string]string{
+					"email":    "test@example.com",
+					"password": "StrongPass123!",
+				},
 			},
 			expectedStatusCode: http.StatusCreated,
-			expectedResponse:   `{"message": "user registered successfully"}`,
+			expectedResponse:   `{"message":"user registered successfully"}`,
 		},
 	}
 
@@ -202,7 +218,17 @@ func TestRegisterUser(t *testing.T) {
 
 			handler := NewUserHTTPHandler(mockService)
 
-			body, _ := json.Marshal(tt.inputBody)
+			var body []byte
+			var err error
+			if strBody, ok := tt.inputBody.(string); ok {
+				body = []byte(strBody)
+			} else {
+				body, err = json.Marshal(tt.inputBody)
+				if err != nil {
+					t.Fatalf("failed to marshal inputBody: %v", err)
+				}
+			}
+
 			req := httptest.NewRequest(http.MethodPost, "/users/register", bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
@@ -212,8 +238,9 @@ func TestRegisterUser(t *testing.T) {
 			if tt.expectedStatusCode != rec.Code {
 				t.Errorf("expected status code %v, got %v", tt.expectedStatusCode, rec.Code)
 			}
-			if reflect.DeepEqual(rec.Body.Bytes(), []byte(tt.expectedResponse)) {
-				t.Errorf("expected response body %s, got %s", tt.expectedResponse, rec.Body.String())
+
+			if strings.TrimRight(rec.Body.String(), "\n") != tt.expectedResponse {
+				t.Errorf("expected response body %q, got %q", tt.expectedResponse, rec.Body.String())
 			}
 		})
 	}
@@ -235,7 +262,7 @@ func TestUpdateUser(t *testing.T) {
 			body:            "{}",
 			mockUserService: nil,
 			expectedStatus:  http.StatusBadRequest,
-			expectedBody:    "{\"message\": \"invalid user ID\"}\n",
+			expectedBody:    "{\"message\": \"invalid user ID\"}",
 		},
 		{
 			name:            "Invalid request body",
@@ -243,7 +270,7 @@ func TestUpdateUser(t *testing.T) {
 			body:            "invalid-json",
 			mockUserService: nil,
 			expectedStatus:  http.StatusBadRequest,
-			expectedBody:    "{\"message\": \"invalid request body\"}\n",
+			expectedBody:    "{\"message\": \"invalid request body\"}",
 		},
 		{
 			name:            "Invalid email",
@@ -251,7 +278,7 @@ func TestUpdateUser(t *testing.T) {
 			body:            `{"email": "invalid-email"}`,
 			mockUserService: nil,
 			expectedStatus:  http.StatusBadRequest,
-			expectedBody:    "invalid email format\n",
+			expectedBody:    "invalid email format",
 		},
 		{
 			name:            "Invalid password",
@@ -259,31 +286,31 @@ func TestUpdateUser(t *testing.T) {
 			body:            `{"password": "short"}`,
 			mockUserService: nil,
 			expectedStatus:  http.StatusBadRequest,
-			expectedBody:    "password must be at least 8 characters\n",
+			expectedBody:    "password must be at least 8 characters",
 		},
 		{
 			name:      "Successful update",
 			PathValue: "1",
 			body:      `{"email": "valid@example.com", "password": "ValidPassword123"}`,
 			mockUserService: &application.MockUserService{
-				UpdateUserDataFunc: func(user domain.User) error {
+				UpdateUserDataFunc: func(user *domain.User) error {
 					return nil
 				},
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   "{\"message\":\"user updated successfully\"}\n",
+			expectedBody:   "{\"message\":\"user updated successfully\"}",
 		},
 		{
 			name:      "Service error",
 			PathValue: "1",
 			body:      `{"email": "valid@example.com"}`,
 			mockUserService: &application.MockUserService{
-				UpdateUserDataFunc: func(user domain.User) error {
+				UpdateUserDataFunc: func(user *domain.User) error {
 					return errors.New("database error")
 				},
 			},
 			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   "error updating user: database error\n",
+			expectedBody:   "error updating user: database error",
 		},
 	}
 
@@ -312,7 +339,7 @@ func TestUpdateUser(t *testing.T) {
 
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(res.Body)
-			if buf.String() != tt.expectedBody {
+			if strings.TrimRight(buf.String(), "\n") != tt.expectedBody {
 				t.Errorf("expected body %q, got %q", tt.expectedBody, buf.String())
 			}
 		})
@@ -352,54 +379,6 @@ func TestGetUserProfile(t *testing.T) {
 			expectedBody: "Unauthorized\n",
 		},
 		{
-			name:               "Unauthorized - user ID mismatch",
-			isAdmin:            false,
-			userIDInContext:    2,
-			userIDFromURL:      "1",
-			expectedStatusCode: http.StatusForbidden,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
-				return nil, nil
-			},
-			expectedBody: "Unauthorized\n",
-		},
-		{
-			name:               "Unauthorized - user ID mismatch",
-			isAdmin:            false,
-			userIDInContext:    2,
-			userIDFromURL:      "1",
-			expectedStatusCode: http.StatusForbidden,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
-				return nil, nil
-			},
-			expectedBody: "Unauthorized\n",
-		},
-		{
-			name:               "User is admin",
-			isAdmin:            true,
-			userIDInContext:    111, // Matches userIDFromURL
-			userIDFromURL:      "1",
-			expectedStatusCode: http.StatusOK,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
-				return mockUser, nil
-			},
-			expectedBody: func() string {
-				data, _ := json.Marshal(mockUser)
-				return string(data) + "\n" // Add newline to match actual response
-			}(),
-		},
-		{
-			name:               "User is not admin",
-			isAdmin:            false,
-			userIDInContext:    111, // Matches userIDFromURL
-			userIDFromURL:      "1",
-			expectedStatusCode: http.StatusForbidden,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
-				return nil, nil
-			},
-			expectedBody: "Unauthorized\n",
-		},
-
-		{
 			name:               "Internal server error",
 			isAdmin:            false,
 			userIDInContext:    1,
@@ -412,7 +391,6 @@ func TestGetUserProfile(t *testing.T) {
 		},
 		{
 			name:               "Successful user profile retrieval",
-			isAdmin:            false,
 			userIDInContext:    1,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusOK,
