@@ -51,33 +51,43 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
         ),
         '[]'
     ) AS reactions,
-	COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_count
+    COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
+    COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies
 	FROM 
 		posts p
 	LEFT JOIN 
-    users u ON p.author_id = u.id
+		users u ON p.author_id = u.id
 	LEFT JOIN (
-		SELECT 
-			r.entity_id AS post_id,
-			rt.name AS reaction_type,
-			COUNT(r.id) AS reaction_count
-		FROM 
-			reactions r
-		LEFT JOIN 
-			reaction_types rt ON r.reaction_type_id = rt.id
-		GROUP BY 
-			r.entity_id, rt.name
+    SELECT 
+        r.entity_id AS post_id,
+        rt.name AS reaction_type,
+        COUNT(r.id) AS reaction_count
+    FROM 
+        reactions r
+    LEFT JOIN 
+        reaction_types rt ON r.reaction_type_id = rt.id
+    GROUP BY 
+        r.entity_id, rt.name
 	) grouped_reactions ON p.id = grouped_reactions.post_id
-	WHERE
+	LEFT JOIN (
+    SELECT 
+        c.entity_id,
+        COUNT(c.id) AS total_comments_and_replies
+    FROM 
+        comments c
+    WHERE 
+        c.entity_type IN ('post', 'comment') -- Adjust entity_type values as needed
+    GROUP BY 
+        c.entity_id
+	) comment_counts ON p.id = comment_counts.entity_id
+	WHERE 
 		p.id = $1 -- Replace with the post ID you want to query
 	GROUP BY 
-		p.id, u.username
+		p.id, u.username, comment_counts.total_comments_and_replies
 	ORDER BY 
-    p.id;
-;
-;
+		p.id;
 `, id).
-		Scan(&post.ID, &post.AuthorID, post.AuthorName, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotalCount)
+		Scan(&post.ID, &post.AuthorID, post.AuthorName, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotaReactionslCount, &post.TotalCommentsCount)
 	if err != nil {
 		return nil, err
 	}
@@ -105,29 +115,42 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
         ),
         '[]'
     ) AS reactions,
-	COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_count
+    COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
+    COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies
 	FROM 
 		posts p
 	LEFT JOIN 
 		users u ON p.author_id = u.id
 	LEFT JOIN (
-		SELECT 
-			r.entity_id AS post_id,
-			rt.name AS reaction_type,
-			COUNT(r.id) AS reaction_count
-		FROM 
-			reactions r
-		LEFT JOIN 
-			reaction_types rt ON r.reaction_type_id = rt.id
-		GROUP BY 
-			r.entity_id, rt.name
+    SELECT 
+        r.entity_id AS post_id,
+        rt.name AS reaction_type,
+        COUNT(r.id) AS reaction_count
+    FROM 
+        reactions r
+    LEFT JOIN 
+        reaction_types rt ON r.reaction_type_id = rt.id
+    GROUP BY 
+        r.entity_id, rt.name
 	) grouped_reactions ON p.id = grouped_reactions.post_id
-	WHERE
+	LEFT JOIN (
+    SELECT 
+        c.entity_id,
+        COUNT(c.id) AS total_comments_and_replies
+    FROM 
+        comments c
+    WHERE 
+        c.entity_type IN ('post', 'comment') -- Adjust entity_type values as needed
+    GROUP BY 
+        c.entity_id
+	) comment_counts ON p.id = comment_counts.entity_id
+	WHERE 
 		p.author_id = $1 -- Replace with the post ID you want to query
 	GROUP BY 
-		p.id, u.username
+		p.id, u.username, comment_counts.total_comments_and_replies
 	ORDER BY 
-    p.id;
+		p.id;
+
 
 	`, userID)
 	if err != nil {
@@ -138,7 +161,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	var posts []domain.Post
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.ID,&post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt,&post.Reactions, &post.TotalCount); err != nil {
+		if err := rows.Scan(&post.ID, &post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotaReactionslCount, &post.TotalCommentsCount); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)
