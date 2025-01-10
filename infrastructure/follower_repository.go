@@ -51,6 +51,9 @@ func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, 
 	query := fmt.Sprintf(`
 	SELECT 
     u.id,
+	u.username,
+	u.email,
+	u.bio,
     u.profile_pic,
     CASE 
         WHEN EXISTS (
@@ -80,7 +83,7 @@ func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, 
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
-		if err := rows.Scan(&user.ID, &user.ProfilePic, &user.IsFollowedBy); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email,&user.Bio, &user.ProfilePic, &user.IsFollowedBy); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
 		users = append(users, user)
@@ -106,6 +109,9 @@ func (r *FollowerRepository) GetFollowees(userID, otherUser, limit, offset int, 
 	query := fmt.Sprintf(`
 	SELECT 
     u.id,
+	u.username,
+	u.email,
+	u.bio,
     u.profile_pic AS followee_profile_pic,
     CASE 
         WHEN EXISTS (
@@ -136,7 +142,7 @@ func (r *FollowerRepository) GetFollowees(userID, otherUser, limit, offset int, 
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
-		if err := rows.Scan(&user.ID, &user.ProfilePic, &user.IsFollowedBy); err != nil {
+		if err := rows.Scan(&user.ID,&user.Username, &user.Email, &user.Bio, &user.ProfilePic, &user.IsFollowedBy); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
 		users = append(users, user)
