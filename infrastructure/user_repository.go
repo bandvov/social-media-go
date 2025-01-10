@@ -115,43 +115,42 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
     ),
     follower_stats AS (
         SELECT
-            followee_id,
-            COUNT(*) AS follower_count,
-            COUNT(DISTINCT follower_id) AS followee_count
+            $1 AS user_id,
+            COUNT(DISTINCT follower_id) FILTER (WHERE followee_id = $1) AS followers_count, -- Count of users who follow the current user
+            COUNT(DISTINCT followee_id) FILTER (WHERE follower_id = $1) AS followees_count -- Count of users the current user follows
         FROM followers
-        WHERE followee_id = $1 -- Filter early
-        GROUP BY followee_id
     ),
     relationship_flags AS (
         SELECT 
-            COALESCE(BOOL_OR(follower_id = $1), FALSE) AS is_follower,
-            COALESCE(BOOL_OR(followee_id = $1), FALSE) AS is_followee
+            MAX(CASE WHEN follower_id = $1 AND followee_id = $2 THEN 1 ELSE 0 END)::BOOLEAN AS is_followee,
+            MAX(CASE WHEN followee_id = $1 AND follower_id = $2 THEN 1 ELSE 0 END)::BOOLEAN AS is_follower
         FROM followers
-        WHERE (follower_id = $1 AND followee_id = $2)
-           OR (follower_id = $2 AND followee_id = $1)
+        WHERE 
+            (follower_id = $1 AND followee_id = $2)
+            OR (followee_id = $1 AND follower_id = $2)
     )
 	SELECT
-		u.id,
-		u.username,
-		u.first_name,
-		u.last_name,
-		u.password,
-		u.email,
-		u.status,
-		u.role,
-		u.profile_pic,
-		u.created_at,
-		u.updated_at,
-		COALESCE(pc.post_count, 0) AS post_count,
-		COALESCE(fs.follower_count, 0) AS followers_count,
-		COALESCE(fs.followee_count, 0) AS followees_count,
-		COALESCE(r.is_follower, FALSE) AS is_follower,
-		COALESCE(r.is_followee, FALSE) AS is_followee
+    u.id,
+    u.username,
+    u.first_name,
+    u.last_name,
+    u.email,
+    u.status,
+    u.role,
+    u.profile_pic,
+    u.created_at,
+    u.updated_at,
+    COALESCE(pc.post_count, 0) AS post_count,
+    COALESCE(fs.followers_count, 0) AS followers_count,
+    COALESCE(fs.followees_count, 0) AS followees_count,
+    COALESCE(rf.is_follower, FALSE) AS is_follower,
+    COALESCE(rf.is_followee, FALSE) AS is_followee
 	FROM users u
 	LEFT JOIN post_counts pc ON u.id = pc.author_id
-	LEFT JOIN follower_stats fs ON u.id = fs.followee_id
-	LEFT JOIN relationship_flags r ON TRUE
+	LEFT JOIN follower_stats fs ON u.id = fs.user_id
+	LEFT JOIN relationship_flags rf ON TRUE
 	WHERE u.id = $1;
+;
 `)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
@@ -159,11 +158,11 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
 	defer stmt.Close()
 
 	err = stmt.QueryRow(id,authenticatedUser).
-		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
+		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
 	if err != nil {
 		return nil, err
 	}
-
+fmt.Println(&user)
 	return &user, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
