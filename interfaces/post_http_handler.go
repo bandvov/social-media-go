@@ -122,6 +122,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	posts, err := h.PostService.GetPostsByUser(userID)
 	if err != nil {
+		fmt.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "No posts", http.StatusNotFound)
 			return

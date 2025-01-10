@@ -36,32 +36,48 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
 	SELECT 
     p.id AS post_id,
     p.author_id,
+    u.username AS author_name,
     p.content,
     p.visibility,
     p.pinned,
+	p.created_at,
+	p.updated_at,
     COALESCE(
         json_agg(
             json_build_object(
-				'reaction_id', r.id,
-                'reacting_user_id', r.user_id,
-                'reaction_type_id', r.reaction_type_id,
-				'reacting_user_profile_pic', ru.profile_pic
+                'reaction_type', grouped_reactions.reaction_type,
+                'count', grouped_reactions.reaction_count
             )
-        ) FILTER (WHERE r.user_id IS NOT NULL),
+        ),
         '[]'
-    ) AS reactions
-FROM 
-    posts p
-LEFT JOIN 
-    reactions r ON p.id = r.entity_id
-LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
-LEFT JOIN users ru ON ru.id = r.user_id
-WHERE 
-    p.id = $1 -- Replace with the user ID you want to query
-GROUP BY p.id
-ORDER BY p.id;
+    ) AS reactions,
+	COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_count
+	FROM 
+		posts p
+	LEFT JOIN 
+    users u ON p.author_id = u.id
+	LEFT JOIN (
+		SELECT 
+			r.entity_id AS post_id,
+			rt.name AS reaction_type,
+			COUNT(r.id) AS reaction_count
+		FROM 
+			reactions r
+		LEFT JOIN 
+			reaction_types rt ON r.reaction_type_id = rt.id
+		GROUP BY 
+			r.entity_id, rt.name
+	) grouped_reactions ON p.id = grouped_reactions.post_id
+	WHERE
+		p.id = $1 -- Replace with the post ID you want to query
+	GROUP BY 
+		p.id, u.username
+	ORDER BY 
+    p.id;
+;
+;
 `, id).
-		Scan(&post.ID, &post.AuthorID, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.Comments)
+		Scan(&post.ID, &post.AuthorID, post.AuthorName, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotalCount)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +89,8 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	rows, err := r.db.Query(`	
 	SELECT 
     p.id AS post_id,
-    COALESCE(u.username,'') AS author_name,
+    p.author_id,
+    u.username AS author_name,
     p.content,
     p.visibility,
     p.pinned,
@@ -82,25 +99,36 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
     COALESCE(
         json_agg(
             json_build_object(
-				'reaction_id', r.id,
-                'reacting_user_id', r.user_id,
-                'reaction_type_id', r.reaction_type_id,
-				'reacting_user_profile_pic', ru.profile_pic
+                'reaction_type', grouped_reactions.reaction_type,
+                'count', grouped_reactions.reaction_count
             )
-        ) FILTER (WHERE r.user_id IS NOT NULL),
+        ),
         '[]'
-    ) AS reactions
+    ) AS reactions,
+	COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_count
 	FROM 
 		posts p
 	LEFT JOIN 
-		reactions r ON p.id = r.entity_id
-	LEFT JOIN reaction_types rt ON r.reaction_type_id = rt.id
-	LEFT JOIN users ru ON ru.id = r.user_id
-	LEFT JOIN users u ON p.author_id = u.id
-	WHERE 
-		p.author_id = $1 -- Replace with the user ID you want to query
-	GROUP BY p.id, u.username
-	ORDER BY p.id;
+		users u ON p.author_id = u.id
+	LEFT JOIN (
+		SELECT 
+			r.entity_id AS post_id,
+			rt.name AS reaction_type,
+			COUNT(r.id) AS reaction_count
+		FROM 
+			reactions r
+		LEFT JOIN 
+			reaction_types rt ON r.reaction_type_id = rt.id
+		GROUP BY 
+			r.entity_id, rt.name
+	) grouped_reactions ON p.id = grouped_reactions.post_id
+	WHERE
+		p.author_id = $1 -- Replace with the post ID you want to query
+	GROUP BY 
+		p.id, u.username
+	ORDER BY 
+    p.id;
+
 	`, userID)
 	if err != nil {
 		return nil, err
@@ -110,7 +138,7 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	var posts []domain.Post
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.ID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions); err != nil {
+		if err := rows.Scan(&post.ID,&post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt,&post.Reactions, &post.TotalCount); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)
