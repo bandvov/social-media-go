@@ -114,13 +114,13 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
-	userID, err := strconv.Atoi(idStr)
+	userIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}
 
-	posts, err := h.PostService.GetPostsByUser(userID)
+	posts, err := h.PostService.GetPostsByUser(userIDFromUrl)
 	if err != nil {
 		fmt.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
