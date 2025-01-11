@@ -47,46 +47,24 @@ func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, 
 	}
 
 	query := `
-	WITH user3_followers AS (
-    SELECT 
-        u.id, 
-        u.username, 
-        u.email, 
-		u.bio,
-        u.profile_pic,
-		u.created_at
-    FROM followers AS f
-    JOIN users AS u ON f.follower_id = u.id -- Use the actual column name here
-    WHERE f.followee_id = $1
-	)
 	SELECT 
-    uf.id,
-    uf.username,
-    uf.email,
-	uf.bio,
-    uf.profile_pic,
+    u.id,
+	u.username,
+	u.email,
+	u.bio,
+	u.profile_pic,
     CASE 
-        WHEN EXISTS (
-            SELECT 
-			f1.followee_id
-            FROM followers AS f1 
-            WHERE f1.follower_id = $2
-              AND f1.followee_id = uf.id
-        ) THEN TRUE
-        ELSE FALSE
-    END AS follows_follower_status,
-    CASE 
-        WHEN EXISTS (
-            SELECT 
-				f2.followee_id
-            FROM followers AS f2 
-            WHERE f2.follower_id = uf.id 
-              AND f2.followee_id = $2
-        ) THEN TRUE
-        ELSE FALSE
-    END AS followed_by_follower_status
-	FROM user3_followers AS uf
-	GROUP BY uf.id,uf.username, uf.email, uf.bio, uf.profile_pic, uf.created_at`
+        WHEN f.follower_id = $2 THEN TRUE      
+        ELSE FALSE                            
+    END AS follows_follower,
+	 CASE 
+        WHEN f.followee_id = $2 THEN TRUE      
+        ELSE FALSE                            
+    END AS followed_by_follower
+	FROM followers f
+	LEFT JOIN users u ON u.id = f.follower_id
+	WHERE f.followee_id = $1                          
+`
 
 	if searchTerm != "" {
 		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
@@ -127,47 +105,24 @@ func (r *FollowerRepository) GetFollowees(userID, otherUser, limit, offset int, 
 	}
 
 	query := `
-	WITH user3_followers AS (
-    SELECT 
-        u.id, 
-        u.username, 
-        u.email, 
-		u.bio,
-        u.profile_pic,
-		u.created_at
-    FROM followers AS f
-    JOIN users AS u ON f.followee_id = u.id -- Use the actual column name here
-    WHERE f.followee_id = $1
-	GROUP BY u.id
-	)
 	SELECT 
-    uf.id,
-    uf.username,
-    uf.email,
-	uf.bio,
-    uf.profile_pic,
+    u.id,
+	u.username,
+	u.email,
+	u.bio,
+	u.profile_pic,
     CASE 
-        WHEN EXISTS (
-            SELECT 
-			f1.followee_id
-            FROM followers AS f1 
-            WHERE f1.follower_id = $2
-              AND f1.followee_id = uf.id
-        ) THEN TRUE
-        ELSE FALSE
-    END AS follows_follower_status,
-    CASE 
-        WHEN EXISTS (
-            SELECT 
-				f2.followee_id
-            FROM followers AS f2 
-            WHERE f2.follower_id = uf.id 
-              AND f2.followee_id = $2
-        ) THEN TRUE
-        ELSE FALSE
-    END AS followed_by_follower_status
-	FROM user3_followers AS uf
-	GROUP BY uf.id,uf.username, uf.email, uf.bio, uf.profile_pic, uf.created_at`
+        WHEN f.follower_id = $2 THEN TRUE      
+        ELSE FALSE                            
+    END AS follows_follower,
+	 CASE 
+        WHEN f.followee_id = $2 THEN TRUE      
+        ELSE FALSE                            
+    END AS followed_by_follower
+	FROM followers f
+	LEFT JOIN users u ON u.id = f.followee_id
+	WHERE f.follower_id = $1                         
+`
 
 	if searchTerm != "" {
 		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
