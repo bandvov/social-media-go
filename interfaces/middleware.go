@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/bandvov/social-media-go/utils"
 )
@@ -39,8 +40,9 @@ func LoggerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 // Middleware to extract userID from cookie and add to context
 func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cookieName := "access_token"
 		// Extract the cookie
-		cookie, err := r.Cookie("access_token")
+		cookie, err := r.Cookie(cookieName)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -53,10 +55,17 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			http.Error(w, "Invalid access token", http.StatusBadRequest)
 			return
 		}
-		
+
 		fmt.Println("here1========================")
 		claims, err := utils.ValidateJWT(token)
 		if err != nil {
+			http.SetCookie(w,&http.Cookie{
+				Name: cookieName,
+				Value: "",
+				HttpOnly: true,
+				Secure: true,
+				Expires: time.Unix(0, 0),
+			})
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -68,7 +77,7 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			return
 		}
 		fmt.Println("here4========================")
-		
+
 		isAdmin := user.Role == "admin"
 
 		// Add userID and isAdmin to context

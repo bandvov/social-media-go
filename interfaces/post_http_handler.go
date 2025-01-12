@@ -116,7 +116,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	idStr := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
 
