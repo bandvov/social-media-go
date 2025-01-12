@@ -18,6 +18,7 @@ type UserServiceInterface interface {
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	GetUserByID(id int) (*domain.User, error)
 	GetPublicProfiles(limit, offset int) ([]domain.User, error)
+	GetAdminProfiles(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfo(id, otherUser int) (*domain.User, error)
 	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
@@ -109,6 +110,11 @@ func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 // GetPublicProfiles retrieves public profiles with pagination
 func (s *UserService) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
 	return s.repo.GetPublicProfiles(limit, offset)
+}
+
+// GetAdminProfiles retrieves admin profiles with pagination
+func (s *UserService) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
+	return s.repo.GetAdminProfiles(limit, offset)
 }
 
 func (s *UserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {

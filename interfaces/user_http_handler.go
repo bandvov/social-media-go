@@ -196,6 +196,24 @@ func (h *UserHTTPHandler) GetPublicProfiles(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(users)
 }
 
+func (h *UserHTTPHandler) GetAdminProfiles(w http.ResponseWriter, r *http.Request) {
+	isAdmin := r.Context().Value(isAdminKey).(bool)
+
+	if !isAdmin {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+	
+	limit, offset := utils.ParsePagination(r)
+	users, err := h.UserService.GetAdminProfiles(limit, offset)
+	if err != nil {
+		http.Error(w, "Failed to fetch admin profiles", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {

@@ -103,7 +103,7 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 	query := `SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`
 	rows, err := r.db.Query(query, offset, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch public profiles: %w", err)
+		return nil, fmt.Errorf("failed to fetch public profiles: %v", err)
 	}
 	defer rows.Close()
 
@@ -111,6 +111,25 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 	for rows.Next() {
 		var user domain.User
 		if err := rows.Scan(&user.ID, &user.Username, &user.ProfilePic); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
+	query := `SELECT id, username, email, role, status, created_at, updated_at  FROM users LIMIT $1 OFFSET $2`
+	rows, err := r.db.Query(query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch admin profiles: %v", err)
+	}
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		var user domain.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.Status, &user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)

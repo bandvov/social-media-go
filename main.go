@@ -101,7 +101,9 @@ func main() {
 	// seeds.Seed(db, "./seeds/seed_comments.sql")
 
 	// Define routes
-	router.HandleFunc("GET /users", userHandler.GetPublicProfiles)
+	router.HandleFunc("/admin/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.IsAdminMiddleware(userHandler.GetAdminProfiles))))
+
+	router.HandleFunc("GET /users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetPublicProfiles)))
 	router.HandleFunc("GET /users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
 	router.HandleFunc("POST /users", interfaces.LoggerMiddleware(userHandler.RegisterUser))
 	router.HandleFunc("PUT /users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
