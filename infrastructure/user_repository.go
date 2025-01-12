@@ -99,7 +99,26 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain.User, error) {
+func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, error) {
+	query := `SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`
+	rows, err := r.db.Query(query, offset, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch public profiles: %w", err)
+	}
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		var user domain.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.ProfilePic); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
 	var user domain.User
 
 	// Prepare the statement
@@ -157,12 +176,12 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int ) (*domain
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(id,authenticatedUser).
+	err = stmt.QueryRow(id, authenticatedUser).
 		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
 	if err != nil {
 		return nil, err
 	}
-fmt.Println(&user)
+	fmt.Println(&user)
 	return &user, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {

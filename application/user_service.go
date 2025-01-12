@@ -17,6 +17,7 @@ type UserServiceInterface interface {
 	UpdateUserData(*domain.User) error
 	ChangeUserRole(userID int, newRole string, isAdmin bool) error
 	GetUserByID(id int) (*domain.User, error)
+	GetPublicProfiles(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfo(id, otherUser int) (*domain.User, error)
 	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
@@ -67,7 +68,6 @@ func (s *UserService) UpdateUserData(userData *domain.User) error {
 		return err
 	}
 
-
 	if userData.Password != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userData.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -104,6 +104,11 @@ func (s *UserService) GetUserByID(id int) (*domain.User, error) {
 
 	_ = s.cache.Set(strId, user, 24*time.Hour)
 	return user, nil
+}
+
+// GetPublicProfiles retrieves public profiles with pagination
+func (s *UserService) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
+	return s.repo.GetPublicProfiles(limit, offset)
 }
 
 func (s *UserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {

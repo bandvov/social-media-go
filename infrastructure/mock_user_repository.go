@@ -7,6 +7,7 @@ type MockUserRepository struct {
 	GetUserByUsernameFunc  func(username string) (*domain.User, error)
 	GetUserByEmailFunc     func(email string) (*domain.User, error)
 	GetUserByIDFunc        func(id int) (*domain.User, error)
+	GetPublicProfilesFunc  func(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfoFunc func(id, authenticatedUser int) (*domain.User, error)
 	UpdateUserFunc         func(user *domain.User) error
 	GetAllUsersFunc        func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
@@ -39,6 +40,14 @@ func (m *MockUserRepository) GetUserByID(id int) (*domain.User, error) {
 	}
 	return nil, nil
 }
+
+func (m *MockUserRepository) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
+	if m.GetPublicProfilesFunc != nil {
+		return m.GetPublicProfilesFunc(limit, offset)
+	}
+	return nil, nil
+}
+
 func (m *MockUserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
 	if m.GetUserProfileInfoFunc != nil {
 		return m.GetUserProfileInfoFunc(id, authenticatedUser)

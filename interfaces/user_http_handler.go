@@ -185,6 +185,17 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(map[string]string{"message": "user role changed successfully"})
 }
 
+func (h *UserHTTPHandler) GetPublicProfiles(w http.ResponseWriter, r *http.Request) {
+	limit, offset := utils.ParsePagination(r)
+	users, err := h.UserService.GetPublicProfiles(limit, offset)
+	if err != nil {
+		http.Error(w, "Failed to fetch public profiles", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {

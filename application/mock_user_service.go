@@ -11,6 +11,7 @@ type MockUserService struct {
 	ChangeUserRoleFunc     func(userID int, newRole string, isAdmin bool) error
 	FindByEmailFunc        func(email string) (*domain.User, error)
 	GetUserByIDFunc        func(id int) (*domain.User, error)
+	GetPublicProfilesFunc  func(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfoFunc func(id, otherUser int) (*domain.User, error)
 	GetAllUsersFunc        func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
@@ -34,6 +35,10 @@ func (m *MockUserService) FindByEmail(email string) (*domain.User, error) {
 func (m *MockUserService) GetUserByID(id int) (*domain.User, error) {
 	return m.GetUserByIDFunc(id)
 }
+func (m *MockUserService) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
+	return m.GetPublicProfilesFunc(limit, offset)
+}
+
 func (m *MockUserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {
 	return m.GetUserProfileInfoFunc(id, otherUser)
 }
