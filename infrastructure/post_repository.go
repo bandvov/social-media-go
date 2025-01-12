@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/bandvov/social-media-go/domain"
 )
@@ -95,7 +96,7 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
 	return &post, nil
 }
 
-func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
+func (r *PostRepository) FindByUserID(userID, offset, limit int) ([]domain.Post, error) {
 	rows, err := r.db.Query(`	
 	SELECT 
     p.id AS post_id,
@@ -149,10 +150,9 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	GROUP BY 
 		p.id, u.username, comment_counts.total_comments_and_replies
 	ORDER BY 
-		p.id;
-
-
-	`, userID)
+		p.id
+    OFFSET $2
+    LIMIT $3;`, userID, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -168,4 +168,25 @@ func (r *PostRepository) FindByUserID(userID int) ([]domain.Post, error) {
 	}
 
 	return posts, nil
+}
+
+func (r *PostRepository) GetCountPostsByUser(authorID int) (int, error) {
+	var postsCount int
+
+	stmt, err := r.db.Prepare(`
+		SELECT COUNT(*) AS posts_count
+		FROM posts
+		WHERE author_id = $1;
+    `)
+
+	if err != nil {
+		return postsCount, fmt.Errorf("Failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(authorID).Scan(&postsCount)
+	if err != nil {
+		return postsCount, fmt.Errorf("Failed to execute query: %v", err)
+	}
+	return postsCount, nil
 }

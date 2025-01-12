@@ -9,7 +9,8 @@ type PostServiceInterface interface {
 	DeletePost(id int) error
 	UpdatePost(id int, post *domain.Post) error
 	GetPostByID(id int) (*domain.Post, error)
-	GetPostsByUser(userID int) ([]domain.Post, error)
+	GetPostsByUser(userID, offset, limit int) ([]domain.Post, error)
+	GetCountPostsByUser(userID int) (int, error)
 }
 
 type PostService struct {
@@ -36,6 +37,10 @@ func (s *PostService) GetPostByID(id int) (*domain.Post, error) {
 	return s.postRepo.GetByID(id)
 }
 
-func (s *PostService) GetPostsByUser(userID int) ([]domain.Post, error) {
-	return s.postRepo.FindByUserID(userID)
+func (s *PostService) GetPostsByUser(userID, offset, limit int) ([]domain.Post, error) {
+	return s.postRepo.FindByUserID(userID, offset, limit)
+}
+
+func (s *PostService) GetCountPostsByUser(userID int) (int, error) {
+	return s.postRepo.GetCountPostsByUser(userID)
 }

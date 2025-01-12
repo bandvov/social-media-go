@@ -10,6 +10,7 @@ import (
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
+	"golang.org/x/sync/errgroup"
 )
 
 type PostHTTPHandler struct {
@@ -120,17 +121,63 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	posts, err := h.PostService.GetPostsByUser(userIDFromUrl)
-	if err != nil {
-		fmt.Println(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "No posts", http.StatusNotFound)
-			return
+	query := r.URL.Query()
+
+	// Parse `limit` and `offset` with default values
+	page, err := strconv.Atoi(query.Get("page"))
+	if err != nil || page < 1 {
+		page = 1 // Default offset
+	}
+
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10 // Default limit
+	}
+
+	offset := (page - 1) * limit
+
+	var posts []domain.Post
+	var postsCount int
+
+	// Create a new errgroup
+	var g errgroup.Group
+
+	// First task: Fetch posts
+	g.Go(func() error {
+		var err error
+		posts, err = h.PostService.GetPostsByUser(userIDFromUrl, offset, limit)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				http.Error(w, "No posts", http.StatusNotFound)
+				return nil // No posts is not an error; early return
+			}
+			return err // Return other errors
 		}
-		http.Error(w, "could not retrieve posts", http.StatusInternalServerError)
+		return nil
+	})
+
+	// Second task: Fetch posts count
+	g.Go(func() error {
+		var err error
+		postsCount, err = h.PostService.GetCountPostsByUser(userIDFromUrl)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	// Wait for both goroutines to finish
+	if err := g.Wait(); err != nil {
+		http.Error(w, "could not complete request", http.StatusInternalServerError)
 		return
 	}
 
+	response := map[string]interface{}{
+		"data":    posts,
+		"total":   postsCount,
+		"hasMore": postsCount > offset+limit,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(response)
 }
