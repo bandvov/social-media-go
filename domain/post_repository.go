@@ -5,7 +5,7 @@ type PostRepository interface {
 	GetByID(id int) (*Post, error)
 	Update(id int, post *Post) error
 	Delete(id int) error
-	FindByUserID(userId, offset, limit int) ([]Post, error)
+	FindByUserID(userID, otherUserId, offset, limit int) ([]Post, error)
 	GetCountPostsByUser(userId int) (int, error)
 	// GetAll() ([]*Post, error)
 }

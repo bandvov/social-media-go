@@ -26,6 +26,7 @@ type Post struct {
 	Reactions           json.RawMessage `json:"reactions,omitempty"`
 	TotaReactionslCount int             `json:"total_reactions_count,omitempty"`
 	TotalCommentsCount  int             `json:"total_comments_count,omitempty"`
+	UserReaction        string          `json:"user_reaction,omitempty"`
 }
 
 // PostVisibility represents the visibility of a post

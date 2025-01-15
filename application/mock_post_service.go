@@ -7,7 +7,7 @@ type MockPostService struct {
 	DeletePostFunc   func(id int) error
 	UpdatePostFunc   func(id int, post *domain.Post) error
 	GetPostByIDFunc  func(id int) (*domain.Post, error)
-	FindByUserIDFunc func(userID int) ([]domain.Post, error)
+	FindByUserIDFunc func(userID, otherUserId, offset, limit int) ([]domain.Post, error)
 }
 
 func (s *MockPostService) CreatePost(post *domain.CreatePostRequest) error {
@@ -26,6 +26,6 @@ func (s *MockPostService) GetPostByID(id int) (*domain.Post, error) {
 	return s.GetPostByIDFunc(id)
 }
 
-func (s *MockPostService) GetPostsByUser(userID int) ([]domain.Post, error) {
-	return s.FindByUserIDFunc(userID)
+func (s *MockPostService) GetPostsByUser(userID, otherUserId, offset, limit int) ([]domain.Post, error) {
+	return s.FindByUserIDFunc(userID, otherUserId, offset, limit)
 }

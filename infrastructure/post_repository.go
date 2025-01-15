@@ -41,19 +41,20 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
     p.content,
     p.visibility,
     p.pinned,
-	p.created_at,
-	p.updated_at,
+    p.created_at,
+    p.updated_at,
     COALESCE(
         json_agg(
             json_build_object(
                 'reaction_type', grouped_reactions.reaction_type,
                 'count', grouped_reactions.reaction_count
             )
-        ),
+        ) FILTER (WHERE grouped_reactions.reaction_type IS NOT NULL),
         '[]'
     ) AS reactions,
     COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
-    COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies
+    COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies,
+    COALESCE(user_reactions.reaction_type, 'none') AS user_reaction -- User's specific reaction
 	FROM 
 		posts p
 	LEFT JOIN 
@@ -81,14 +82,25 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
     GROUP BY 
         c.entity_id
 	) comment_counts ON p.id = comment_counts.entity_id
+	LEFT JOIN (
+    SELECT 
+        r.entity_id AS post_id,
+        rt.name AS reaction_type
+    FROM 
+        reactions r
+    LEFT JOIN 
+        reaction_types rt ON r.reaction_type_id = rt.id
+    WHERE 
+        r.user_id = $2 -- User ID to check for their reaction
+	) user_reactions ON p.id = user_reactions.post_id
 	WHERE 
-		p.id = $1 -- Replace with the post ID you want to query
+		p.author_id = $1 -- Author ID
 	GROUP BY 
-		p.id, u.username, comment_counts.total_comments_and_replies
+		p.id, u.username, comment_counts.total_comments_and_replies, user_reactions.reaction_type
 	ORDER BY 
 		p.id;
 `, id).
-		Scan(&post.ID, &post.AuthorID, post.AuthorName, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotaReactionslCount, &post.TotalCommentsCount)
+		Scan(&post.ID, &post.AuthorID, post.AuthorName, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotaReactionslCount, &post.TotalCommentsCount, &post.UserReaction)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +108,7 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
 	return &post, nil
 }
 
-func (r *PostRepository) FindByUserID(userID, offset, limit int) ([]domain.Post, error) {
+func (r *PostRepository) FindByUserID(userID, otherUserId, offset, limit int) ([]domain.Post, error) {
 	rows, err := r.db.Query(`	
 	SELECT 
     p.id AS post_id,
@@ -105,19 +117,20 @@ func (r *PostRepository) FindByUserID(userID, offset, limit int) ([]domain.Post,
     p.content,
     p.visibility,
     p.pinned,
-	p.created_at,
-	p.updated_at,
+    p.created_at,
+    p.updated_at,
     COALESCE(
         json_agg(
             json_build_object(
                 'reaction_type', grouped_reactions.reaction_type,
                 'count', grouped_reactions.reaction_count
             )
-        ),
+        ) FILTER (WHERE grouped_reactions.reaction_type IS NOT NULL),
         '[]'
     ) AS reactions,
     COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
-    COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies
+    COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies,
+    COALESCE(user_reactions.reaction_type, 'none') AS user_reaction -- User's specific reaction
 	FROM 
 		posts p
 	LEFT JOIN 
@@ -145,14 +158,25 @@ func (r *PostRepository) FindByUserID(userID, offset, limit int) ([]domain.Post,
     GROUP BY 
         c.entity_id
 	) comment_counts ON p.id = comment_counts.entity_id
+	LEFT JOIN (
+    SELECT 
+        r.entity_id AS post_id,
+        rt.name AS reaction_type
+    FROM 
+        reactions r
+    LEFT JOIN 
+        reaction_types rt ON r.reaction_type_id = rt.id
+    WHERE 
+        r.user_id = $2 -- User ID to check for their reaction
+	) user_reactions ON p.id = user_reactions.post_id
 	WHERE 
-		p.author_id = $1 -- Replace with the post ID you want to query
+		p.author_id = $1 -- Author ID
 	GROUP BY 
-		p.id, u.username, comment_counts.total_comments_and_replies
+		p.id, u.username, comment_counts.total_comments_and_replies, user_reactions.reaction_type
 	ORDER BY 
 		p.id
-    OFFSET $2
-    LIMIT $3;`, userID, offset, limit)
+	OFFSET $3
+	LIMIT $4;`, userID, otherUserId, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +185,7 @@ func (r *PostRepository) FindByUserID(userID, offset, limit int) ([]domain.Post,
 	var posts []domain.Post
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.ID, &post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotaReactionslCount, &post.TotalCommentsCount); err != nil {
+		if err := rows.Scan(&post.ID, &post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions, &post.TotaReactionslCount, &post.TotalCommentsCount, &post.UserReaction); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)

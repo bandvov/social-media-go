@@ -114,6 +114,12 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userID == 0 {
+		http.Error(w, "unauthenticated", http.StatusBadRequest)
+		return
+	}
+
 	idStr := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -141,11 +147,10 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	// Create a new errgroup
 	var g errgroup.Group
-
 	// First task: Fetch posts
 	g.Go(func() error {
 		var err error
-		posts, err = h.PostService.GetPostsByUser(userIDFromUrl, offset, limit)
+		posts, err = h.PostService.GetPostsByUser(userIDFromUrl, userID, offset, limit)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				http.Error(w, "No posts", http.StatusNotFound)
@@ -174,7 +179,6 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	response := map[string]interface{}{
 		"data":    posts,
-		"total":   postsCount,
 		"hasMore": postsCount > offset+limit,
 	}
 

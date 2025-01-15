@@ -109,7 +109,6 @@ func main() {
 	router.HandleFunc("PUT /users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
 	router.HandleFunc("POST /users/login", interfaces.LoggerMiddleware(userHandler.Login))
 	router.HandleFunc("PUT /users/{id}/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
-	router.HandleFunc("GET /users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetAllUsers)))
 
 	router.HandleFunc("GET /users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
 	router.HandleFunc("GET /users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
