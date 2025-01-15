@@ -23,6 +23,9 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+	if !req.IsValidAuthorId() || !req.IsValidEntityId() || !req.IsValidContent() {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+	}
 
 	if err := h.service.AddComment(req.EntityID, req.Content, req.AuthorID); err != nil {
 		http.Error(w, "Failed to add comment", http.StatusInternalServerError)

@@ -34,3 +34,16 @@ type Comment struct {
 	CreatedAt time.Time     `json:"created_at,omitempty"`
 	UpdatedAt time.Time     `json:"updated_at,omitempty"`
 }
+
+func (c *Comment) IsValidEntityId() bool {
+	return c.EntityID > 0
+}
+
+func (c *Comment) IsValidAuthorId() bool {
+	return c.AuthorID > 0
+
+}
+
+func (c *Comment) IsValidContent() bool {
+	return c.Content != ""
+}
