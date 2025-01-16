@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,7 +19,7 @@ func NewCommentHandler(service *application.CommentService) *CommentHandler {
 }
 
 func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
-	var req domain.Comment
+	var req *domain.Comment
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
@@ -27,7 +28,8 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 	}
 
-	if err := h.service.AddComment(req.EntityID, req.Content, req.AuthorID); err != nil {
+	if err := h.service.AddComment(req); err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
 		return
 	}

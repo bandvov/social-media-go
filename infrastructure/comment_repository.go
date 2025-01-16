@@ -16,14 +16,14 @@ func NewPostgresCommentRepository(db *sql.DB) *PostgresCommentRepository {
 
 func (r *PostgresCommentRepository) AddComment(comment domain.Comment) error {
 	_, err := r.db.Exec(
-		"INSERT INTO comments (id, entity_id, content, author_id) VALUES ($1, $2, $3, $4)",
-		comment.ID, comment.EntityID, comment.Content, comment.AuthorID,
+		"INSERT INTO comments (entity_id, entity_type, content, author_id) VALUES ($1, $2, $3, $4)",
+		comment.EntityID, comment.EntityType, comment.Content, comment.AuthorID,
 	)
 	return err
 }
 
 func (r *PostgresCommentRepository) GetCommentsByEntityID(entityID int) ([]domain.Comment, error) {
-	rows, err := r.db.Query("SELECT id, entity_id, content, author_id FROM comments WHERE post_id = $1", entityID)
+	rows, err := r.db.Query("SELECT id, entity_id, content, author_id FROM comments WHERE entity_id = $1", entityID)
 	if err != nil {
 		return nil, err
 	}

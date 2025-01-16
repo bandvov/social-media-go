@@ -4,7 +4,7 @@ import "github.com/bandvov/social-media-go/domain"
 
 // CommentServiceInterface defines methods for tags-related operations.
 type CommentServiceInterface interface {
-	AddComment(entityID int, content string, authorID int) error
+	AddComment(c *domain.Comment) error
 	GetComments(entityID int) ([]domain.Comment, error)
 }
 type CommentService struct {
@@ -17,12 +17,13 @@ func NewCommentService(repo domain.CommentRepository) *CommentService {
 	}
 }
 
-func (s *CommentService) AddComment(entityID int, content string, authorID int) error {
+func (s *CommentService) AddComment(c *domain.Comment) error {
 	comment := domain.Comment{
-		EntityID: entityID,
-		Content:  content,
-		AuthorID: authorID,
-		Status:   domain.Active,
+		EntityID:   c.EntityID,
+		EntityType: c.EntityType,
+		Content:    c.Content,
+		AuthorID:   c.AuthorID,
+		Status:     domain.Active,
 	}
 	return s.commentRepo.AddComment(comment)
 }
