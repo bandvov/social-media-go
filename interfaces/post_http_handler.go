@@ -28,19 +28,21 @@ func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newPost domain.CreatePostRequest
+	var newPost struct {
+		Data domain.CreatePostRequest `json:"data"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	if newPost.Content == "" {
+	if newPost.Data.Content == "" {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	newPost.AuthorID = authorID
+	newPost.Data.AuthorID = authorID
 
-	err := p.PostService.CreatePost(&newPost)
+	err := p.PostService.CreatePost(&newPost.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

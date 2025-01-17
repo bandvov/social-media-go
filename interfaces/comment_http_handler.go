@@ -19,16 +19,18 @@ func NewCommentHandler(service *application.CommentService) *CommentHandler {
 }
 
 func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
-	var req *domain.Comment
+	var req struct {
+		Data *domain.Comment `json:"data"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	if !req.IsValidAuthorId() || !req.IsValidEntityId() || !req.IsValidContent() {
+	if !req.Data.IsValidAuthorId() || !req.Data.IsValidEntityId() || !req.Data.IsValidContent() {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 	}
 
-	if err := h.service.AddComment(req); err != nil {
+	if err := h.service.AddComment(req.Data); err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
 		return
