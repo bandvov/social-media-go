@@ -95,6 +95,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    token,
+		Path: "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(time.Hour * 24 * 7),
 		Secure:   true,

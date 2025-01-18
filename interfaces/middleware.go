@@ -59,12 +59,12 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 		fmt.Println("here1========================")
 		claims, err := utils.ValidateJWT(token)
 		if err != nil {
-			http.SetCookie(w,&http.Cookie{
-				Name: cookieName,
-				Value: "",
+			http.SetCookie(w, &http.Cookie{
+				Name:     cookieName,
+				Value:    "",
 				HttpOnly: true,
-				Secure: true,
-				Expires: time.Unix(0, 0),
+				Secure:   true,
+				Expires:  time.Unix(0, 0),
 			})
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -76,7 +76,7 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("here4========================")
+		fmt.Println("here4========================", user)
 
 		isAdmin := user.Role == "admin"
 
@@ -108,12 +108,12 @@ func CorsMiddleware(next http.Handler) http.Handler {
 		// Allow all origins, adjust as needed
 		w.Header().Set("Access-Control-Allow-Origin", "https://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, Origin")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Handle preflight requests
 		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
