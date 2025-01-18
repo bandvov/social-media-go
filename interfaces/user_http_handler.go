@@ -246,37 +246,6 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *UserHTTPHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-
-	// Parse `limit` and `offset` with default values
-	limit, err := strconv.Atoi(query.Get("limit"))
-	if err != nil || limit <= 0 {
-		limit = 10 // Default limit
-	}
-
-	offset, err := strconv.Atoi(query.Get("offset"))
-	if err != nil || offset < 0 {
-		offset = 0 // Default offset
-	}
-
-	// Parse `sort` with default value
-	sort := query.Get("sort")
-	if sort != "asc" && sort != "desc" {
-		sort = "desc" // Default sort
-	}
-	search := query.Get("search")
-	orderBy := query.Get("order_by")
-
-	users, err := h.UserService.GetAllUsers(limit, offset, sort, orderBy, search)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
-}
 
 func (h *UserHTTPHandler) IsAdmin(ctx context.Context) bool {
 	return ctx.Value(isAdminKey).(bool)

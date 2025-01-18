@@ -11,7 +11,6 @@ type MockUserRepository struct {
 	GetAdminProfilesFunc   func(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfoFunc func(id, authenticatedUser int) (*domain.User, error)
 	UpdateUserFunc         func(user *domain.User) error
-	GetAllUsersFunc        func(limit, offset int, sort, orderBy, search string) ([]*domain.User, error)
 }
 
 func (m *MockUserRepository) CreateUser(user *domain.User) error {
@@ -19,13 +18,6 @@ func (m *MockUserRepository) CreateUser(user *domain.User) error {
 		return m.CreateUserFunc(user)
 	}
 	return nil
-}
-
-func (m *MockUserRepository) GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*domain.User, error) {
-	if m.GetAllUsersFunc != nil {
-		return m.GetAllUsersFunc(limit, offset, sort, orderBy, search)
-	}
-	return nil, nil
 }
 
 func (m *MockUserRepository) GetUserByEmail(email string) (*domain.User, error) {

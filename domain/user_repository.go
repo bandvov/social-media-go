@@ -9,5 +9,4 @@ type UserRepository interface {
 	GetAdminProfiles(limit, offset int) ([]User, error)
 	GetUserProfileInfo(id, otherUser int) (*User, error)
 	UpdateUser(user *User) error
-	GetAllUsers(limit, offset int, sort, orderBy, search string) ([]*User, error)
 }

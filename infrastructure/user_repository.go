@@ -1,20 +1,25 @@
 package infrastructure
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bandvov/social-media-go/domain"
 )
 
 type UserRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	cache Cache
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *sql.DB, cache Cache) *UserRepository {
+	return &UserRepository{db: db, cache: cache}
 }
 
 func (r *UserRepository) CreateUser(user *domain.User) error {
@@ -50,7 +55,15 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	var user domain.User
 
-	// Prepare the statement
+	cacheKey := strconv.Itoa(id)
+	ctx := context.Background()
+	cachedUser, err := r.cache.Get(ctx, cacheKey)
+	if err == nil && cachedUser != "" {
+		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
+			return &user, nil
+		}
+	}
+
 	stmt, err := r.db.Prepare(`	
 	WITH 
 	post_counts AS (
@@ -95,13 +108,22 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	data, err := json.Marshal(user)
+	if err == nil {
+		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
+	}
 	return &user, nil
 }
 
 func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, error) {
-	query := `SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`
-	rows, err := r.db.Query(query, offset, limit)
+	stmt, err := r.db.Prepare(`SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	// Execute the prepared statement with parameters
+	rows, err := stmt.Query(offset, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch public profiles: %v", err)
 	}
@@ -111,16 +133,41 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 	for rows.Next() {
 		var user domain.User
 		if err := rows.Scan(&user.ID, &user.Username, &user.ProfilePic); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 		users = append(users, user)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("row iteration error: %v", err)
+	}
+
 	return users, nil
 }
 
 func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
-	query := `SELECT id, username, email, role, status, created_at, updated_at  FROM users LIMIT $1 OFFSET $2`
-	rows, err := r.db.Query(query, limit, offset)
+	cacheKey := fmt.Sprintf("admin_profiles:limit:%d:offset:%d", limit, offset)
+
+	ctx := context.Background()
+	cachedData, err := r.cache.Get(ctx, cacheKey)
+	if err == nil && cachedData != "" {
+		var users []domain.User
+		if err := json.Unmarshal([]byte(cachedData), &users); err == nil {
+			return users, nil
+		}
+	}
+
+	stmt, err := r.db.Prepare(`
+		SELECT id, username, email, role, status, created_at, updated_at 
+		FROM users 
+		LIMIT $1 OFFSET $2
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %v", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch admin profiles: %v", err)
 	}
@@ -129,16 +176,43 @@ func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, err
 	var users []domain.User
 	for rows.Next() {
 		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.Status, &user.CreatedAt, &user.UpdatedAt); err != nil {
-			return nil, err
+		if err := rows.Scan(
+			&user.ID,
+			&user.Username,
+			&user.Email,
+			&user.Role,
+			&user.Status,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 		users = append(users, user)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %v", err)
+	}
+
+	data, err := json.Marshal(users)
+	if err == nil {
+		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
+	}
+
 	return users, nil
 }
 
 func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
 	var user domain.User
+
+	cacheKey := strconv.Itoa(id)
+	ctx := context.Background()
+	cachedUser, err := r.cache.Get(ctx, cacheKey)
+	if err == nil && cachedUser != "" {
+		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
+			return &user, nil
+		}
+	}
 
 	// Prepare the statement
 	stmt, err := r.db.Prepare(`	
@@ -200,7 +274,11 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(&user)
+	
+	data, err := json.Marshal(user)
+	if err == nil {
+		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
+	}
 	return &user, nil
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
@@ -237,58 +315,6 @@ func (r *UserRepository) UpdateUser(user *domain.User) error {
 
 	_, err = stmt.Exec()
 	return err
-}
-
-func (r *UserRepository) GetAllUsers(limit, offset int, sort string, orderBy string, searchTerm string) ([]*domain.User, error) {
-	// Validate and set default sorting
-	if sort == "" || sort == "desc" {
-		sort = "DESC"
-	}
-	if sort == "asc" {
-		sort = "ASC"
-	}
-	if orderBy == "" {
-		orderBy = "created_at"
-	}
-	if limit == 0 {
-		limit = 24
-	}
-
-	query := `SELECT id, username, email, status, role, profile_pic, created_at FROM users`
-	if searchTerm != "" {
-		query += fmt.Sprintf("\nWHERE position('%v' IN email) > 0 \n OR position('%v' IN id) > 0 \n", searchTerm, searchTerm)
-	}
-
-	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $1 OFFSET $2", orderBy, sort)
-
-	// Prepare the statement
-	stmt, err := r.db.Prepare(query)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query(limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var users []*domain.User
-	for rows.Next() {
-		var user domain.User
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, &user)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return users, nil
 }
 
 func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {

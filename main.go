@@ -55,10 +55,10 @@ func main() {
 	cache := infrastructure.NewRedisCache(redisClient)
 
 	// Initialize PostgreSQL repository
-	userRepo := infrastructure.NewUserRepository(db)
+	userRepo := infrastructure.NewUserRepository(db, cache)
 
 	// Initialize service
-	userService := application.NewUserService(userRepo, cache)
+	userService := application.NewUserService(userRepo)
 
 	// Initialize HTTP handler
 	userHandler := interfaces.NewUserHTTPHandler(userService)
