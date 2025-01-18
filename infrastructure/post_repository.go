@@ -54,7 +54,7 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
     ) AS reactions,
     COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
     COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies,
-    COALESCE(user_reactions.reaction_type, 'none') AS user_reaction -- User's specific reaction
+    COALESCE(user_reactions.reaction_type, '') AS user_reaction -- User's specific reaction
 	FROM 
 		posts p
 	LEFT JOIN 
@@ -130,7 +130,7 @@ func (r *PostRepository) FindByUserID(userID, otherUserId, offset, limit int) ([
     ) AS reactions,
     COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
     COALESCE(comment_counts.total_comments_and_replies, 0) AS total_comments_and_replies,
-    COALESCE(user_reactions.reaction_type, 'none') AS user_reaction -- User's specific reaction
+    COALESCE(user_reactions.reaction_type, '') AS user_reaction -- User's specific reaction
 	FROM 
 		posts p
 	LEFT JOIN 
