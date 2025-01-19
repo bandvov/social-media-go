@@ -79,6 +79,10 @@ func main() {
 	commentService := application.NewCommentService(commentRepo)
 	commentHandler := interfaces.NewCommentHandler(commentService)
 
+	reactionRepo := infrastructure.NewReactionRepository(db)
+	reactionService := application.NewReactionService(reactionRepo)
+	reactionHandler := interfaces.NewReactionHandler(reactionService)
+
 	// Create a custom router
 	router := utils.NewRouter()
 
@@ -129,6 +133,9 @@ func main() {
 
 	router.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
 	router.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
+
+	http.HandleFunc("POST /reaction", reactionHandler.AddOrUpdateReaction)
+	http.HandleFunc("DELETE /reaction", reactionHandler.RemoveReaction)
 
 	// Configure TLS
 	tlsConfig := &tls.Config{}

@@ -1,6 +1,11 @@
 package domain
 
 type Reaction struct {
-	ReactionType string `json:"reaction_type"`
-	Count int `json:"count"`
+	EntityId string `json:"entity_id"`
+	Reaction string `json:"reaction_type_id"`
+}
+
+type ReactionRepository interface {
+	AddOrUpdateReaction(userId int, reaction Reaction) error
+	RemoveReaction(userID, contentID string) error
 }
