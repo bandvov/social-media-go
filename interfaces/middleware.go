@@ -61,6 +61,7 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 		if err != nil {
 			http.SetCookie(w, &http.Cookie{
 				Name:     cookieName,
+				Path:     "/",
 				Value:    "",
 				HttpOnly: true,
 				Secure:   true,
@@ -79,7 +80,7 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 		fmt.Println("here4========================", user)
 
 		isAdmin := user.Role == "admin"
-
+		fmt.Printf("claims %+v\n", user)
 		// Add userID and isAdmin to context
 		ctx := context.WithValue(r.Context(), userIDKey, user.ID)
 		ctx = context.WithValue(ctx, isAdminKey, isAdmin)

@@ -95,7 +95,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    token,
-		Path: "/",
+		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(time.Hour * 24 * 7),
 		Secure:   true,
@@ -204,7 +204,7 @@ func (h *UserHTTPHandler) GetAdminProfiles(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	
+
 	limit, offset := utils.ParsePagination(r)
 	users, err := h.UserService.GetAdminProfiles(limit, offset)
 	if err != nil {
@@ -245,7 +245,6 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
 }
-
 
 func (h *UserHTTPHandler) IsAdmin(ctx context.Context) bool {
 	return ctx.Value(isAdminKey).(bool)
