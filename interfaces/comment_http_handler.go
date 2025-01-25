@@ -39,7 +39,7 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
+func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	entityID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -47,12 +47,32 @@ func (h *CommentHandler) GetComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comments, err := h.service.GetComments(entityID)
+	query := r.URL.Query()
+
+	// Parse `limit` and `offset` with default values
+	page, err := strconv.Atoi(query.Get("page"))
+	if err != nil || page < 1 {
+		page = 1 // Default offset
+	}
+
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10 // Default limit
+	}
+
+	offset := (page - 1) * limit
+
+	comments, err := h.service.GetCommentsByEntityID(entityID, offset, limit)
 	if err != nil {
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)
 		return
 	}
 
+	response := map[string]interface{}{
+		"data":    comments,
+		"hasMore": true,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comments)
+	json.NewEncoder(w).Encode(response)
 }

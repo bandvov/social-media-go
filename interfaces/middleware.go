@@ -77,10 +77,10 @@ func (h *UserHTTPHandler) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc
 			http.Error(w, "User not found", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("here4========================", user)
+		fmt.Println("here4========================")
 
 		isAdmin := user.Role == "admin"
-		fmt.Printf("claims %+v\n", user)
+
 		// Add userID and isAdmin to context
 		ctx := context.WithValue(r.Context(), userIDKey, user.ID)
 		ctx = context.WithValue(ctx, isAdminKey, isAdmin)

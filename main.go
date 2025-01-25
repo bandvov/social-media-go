@@ -132,7 +132,7 @@ func main() {
 	router.HandleFunc("DELETE /tags/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
 
 	router.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
-	router.HandleFunc("GET /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetComments)))
+	router.HandleFunc("GET /comments/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetCommentsByEntityID)))
 
 	router.HandleFunc("GET /reaction", reactionHandler.AddOrUpdateReaction)
 	router.HandleFunc("DELETE /reaction", reactionHandler.RemoveReaction)

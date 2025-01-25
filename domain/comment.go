@@ -26,14 +26,15 @@ func (c CommentStatus) String() string {
 }
 
 type Comment struct {
-	ID         int           `json:"id,omitempty"`
-	EntityID   int           `json:"entity_id,omitempty"`
-	EntityType string        `json:"entity_type,omitempty"`
-	Content    string        `json:"content,omitempty"`
-	AuthorID   int           `json:"author_id,omitempty"`
-	Status     CommentStatus `json:"status,omitempty"`
-	CreatedAt  time.Time     `json:"created_at,omitempty"`
-	UpdatedAt  time.Time     `json:"updated_at,omitempty"`
+	ID           int           `json:"id,omitempty"`
+	EntityID     int           `json:"entity_id,omitempty"`
+	EntityType   string        `json:"entity_type,omitempty"`
+	Content      string        `json:"content,omitempty"`
+	AuthorID     int           `json:"author_id,omitempty"`
+	Status       CommentStatus `json:"status,omitempty"`
+	RepliesCount int           `json:"replies_count,omitempty"`
+	CreatedAt    time.Time     `json:"created_at,omitempty"`
+	UpdatedAt    time.Time     `json:"updated_at,omitempty"`
 }
 
 func (c *Comment) IsValidEntityId() bool {
