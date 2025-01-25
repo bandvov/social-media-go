@@ -71,7 +71,7 @@ func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, 
 	}
 
 	query += "\nLIMIT $3 OFFSET $4"
-	fmt.Println(query)
+
 	rows, err := r.db.Query(query, userID, otherUser, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followers: %v", err)

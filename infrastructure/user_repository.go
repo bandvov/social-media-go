@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -55,7 +54,8 @@ func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error
 func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	var user domain.User
 
-	cacheKey := strconv.Itoa(id)
+	cacheKey := fmt.Sprintf("user:%d", id)
+
 	ctx := context.Background()
 	cachedUser, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedUser != "" {
@@ -116,6 +116,17 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 }
 
 func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, error) {
+	cacheKey := fmt.Sprintf("public_profiles:limit:%d:offset:%d", limit, offset)
+
+	ctx := context.Background()
+	cachedData, err := r.cache.Get(ctx, cacheKey)
+	if err == nil && cachedData != "" {
+		var users []domain.User
+		if err := json.Unmarshal([]byte(cachedData), &users); err == nil {
+			return users, nil
+		}
+	}
+
 	stmt, err := r.db.Prepare(`SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %v", err)
@@ -140,6 +151,11 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("row iteration error: %v", err)
+	}
+
+	data, err := json.Marshal(users)
+	if err == nil {
+		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
 	}
 
 	return users, nil
@@ -205,7 +221,7 @@ func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, err
 func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
 	var user domain.User
 
-	cacheKey := strconv.Itoa(id)
+	cacheKey := fmt.Sprintf("public-user:%v:authenticatedUser:%v", id, authenticatedUser)
 	ctx := context.Background()
 	cachedUser, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedUser != "" {
@@ -274,7 +290,7 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.
 	if err != nil {
 		return nil, err
 	}
-	
+
 	data, err := json.Marshal(user)
 	if err == nil {
 		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
@@ -283,6 +299,16 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.
 }
 func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
+
+	cacheKey := fmt.Sprintf("user:%v", email)
+
+	ctx := context.Background()
+	cachedUser, err := r.cache.Get(ctx, cacheKey)
+	if err == nil && cachedUser != "" {
+		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
+			return &user, nil
+		}
+	}
 
 	// Prepare the statement
 	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1;")
@@ -295,6 +321,11 @@ func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
+	}
+
+	data, err := json.Marshal(user)
+	if err == nil {
+		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
 	}
 
 	return &user, nil
