@@ -78,7 +78,7 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
     FROM 
         comments c
     WHERE 
-        c.entity_type IN ('post', 'comment') -- Adjust entity_type values as needed
+        c.entity_type IN ('comment', 'reply') -- Adjust entity_type values as needed
     GROUP BY 
         c.entity_id
 	) comment_counts ON p.id = comment_counts.entity_id
