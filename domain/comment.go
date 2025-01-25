@@ -31,6 +31,8 @@ type Comment struct {
 	EntityType   string        `json:"entity_type,omitempty"`
 	Content      string        `json:"content,omitempty"`
 	AuthorID     int           `json:"author_id,omitempty"`
+	Username     string        `json:"username,omitempty"`
+	ProfilePic   string        `json:"profile_pic,omitempty"`
 	Status       CommentStatus `json:"status,omitempty"`
 	RepliesCount int           `json:"replies_count,omitempty"`
 	CreatedAt    time.Time     `json:"created_at,omitempty"`
