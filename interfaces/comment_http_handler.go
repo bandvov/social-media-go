@@ -40,6 +40,12 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+	if !ok || userID == 0 {
+		http.Error(w, "unauthenticated", http.StatusBadRequest)
+		return
+	}
+
 	idStr := r.PathValue("id")
 	entityID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -62,8 +68,9 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	offset := (page - 1) * limit
 
-	comments, err := h.service.GetCommentsByEntityID(entityID, offset, limit)
+	comments, err := h.service.GetCommentsByEntityID(entityID, userID, offset, limit)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)
 		return
 	}

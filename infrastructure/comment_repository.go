@@ -22,32 +22,63 @@ func (r *PostgresCommentRepository) AddComment(comment domain.Comment) error {
 	return err
 }
 
-func (r *PostgresCommentRepository) FetchCommentsByEntityID(entityID, offset, limit int) ([]domain.Comment, error) {
+func (r *PostgresCommentRepository) FetchCommentsByEntityID(entityID, userID, offset, limit int) ([]domain.Comment, error) {
 
 	// Prepare the SQL query
 	stmt, err := r.db.Prepare(`
 	SELECT 
-		c.id, 
-		c.entity_id, 
-		c.content, 
-		c.author_id,
-		u.username, 
-		u.profile_pic,
-		c.created_at,   
-		COALESCE(r.reply_count, 0) AS replies_count
-	FROM comments c
+    c.id, 
+    c.entity_id, 
+    c.content, 
+    c.author_id, 
+    u.username, 
+    u.profile_pic, 
+    c.created_at,   
+    COALESCE((
+        SELECT rt.name
+        FROM reactions rct2
+        JOIN reaction_types rt ON rct2.reaction_type_id = rt.id
+        WHERE rct2.entity_id = c.id AND rct2.user_id = $2
+        LIMIT 1
+    ),'') AS user_reaction,
+    COALESCE(SUM(grouped_reactions.reaction_count), 0) AS total_reactions_count,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'reaction_type', grouped_reactions.reaction_type,
+                'count', grouped_reactions.reaction_count
+            )
+        ) FILTER (WHERE grouped_reactions.reaction_type IS NOT NULL),
+        '[]'
+    ) AS reactions,
+    COALESCE(r.reply_count, 0) AS replies_count  -- Added this line
+FROM comments c
+LEFT JOIN (
+    SELECT 
+        r.entity_id,
+        rt.name AS reaction_type,
+        COUNT(r.id) AS reaction_count
+    FROM 
+        reactions r
+    LEFT JOIN 
+        reaction_types rt ON r.reaction_type_id = rt.id
+    GROUP BY 
+        r.entity_id, rt.name
+	) grouped_reactions ON c.id = grouped_reactions.entity_id
 	LEFT JOIN (
-		SELECT 
-			entity_id, 
-			COUNT(*) AS reply_count
-		FROM comments
-		WHERE entity_type = 'reply'
-		GROUP BY entity_id
+    SELECT 
+        entity_id, 
+        COUNT(*) AS reply_count
+    FROM comments
+    WHERE entity_type = 'reply'
+    GROUP BY entity_id
 	) r ON c.id = r.entity_id
 	LEFT JOIN users u ON c.author_id = u.id
 	WHERE c.entity_id = $1 AND c.entity_type = 'comment'
+	GROUP BY c.id, u.username, u.profile_pic, r.reply_count
 	ORDER BY c.created_at DESC
-	OFFSET $2 LIMIT $3;
+	OFFSET $3 LIMIT $4;
+
 	`)
 	if err != nil {
 		return nil, err
@@ -55,7 +86,7 @@ func (r *PostgresCommentRepository) FetchCommentsByEntityID(entityID, offset, li
 	defer stmt.Close()
 
 	// Execute the prepared statement
-	rows, err := stmt.Query(entityID, offset, limit)
+	rows, err := stmt.Query(entityID, userID, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +103,9 @@ func (r *PostgresCommentRepository) FetchCommentsByEntityID(entityID, offset, li
 			&comment.Username,
 			&comment.ProfilePic,
 			&comment.CreatedAt,
+			&comment.UserReaction,
+			&comment.TotaReactionslCount,
+			&comment.Reactions,
 			&comment.RepliesCount,
 		); err != nil {
 			return nil, err
