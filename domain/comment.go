@@ -41,9 +41,8 @@ type Comment struct {
 	Reactions           json.RawMessage `json:"reactions,omitempty"`
 	TotaReactionslCount int             `json:"total_reactions_count,omitempty"`
 	UserReaction        string          `json:"user_reaction,omitempty"`
-
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	CreatedAt           time.Time       `json:"created_at,omitempty"`
+	UpdatedAt           time.Time       `json:"updated_at,omitempty"`
 }
 
 func (c *Comment) IsValidEntityId() bool {
