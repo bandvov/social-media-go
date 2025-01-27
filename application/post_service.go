@@ -1,6 +1,8 @@
 package application
 
 import (
+	"context"
+
 	"github.com/bandvov/social-media-go/domain"
 	"golang.org/x/sync/errgroup"
 )
@@ -18,6 +20,7 @@ type PostService struct {
 	reactionRepo domain.ReactionRepository
 	postRepo     domain.PostRepository
 	commentRepo  domain.CommentRepository
+	userRepo     domain.UserRepository
 }
 
 func NewPostService(repo domain.PostRepository) *PostService {
@@ -59,8 +62,10 @@ func (s *PostService) GetPostsByUser(authorID, otherUserId, offset, limit int) (
 
 	// Create error group for concurrent fetching
 	var eg errgroup.Group
+	var userIDList []int
 	reactionMap := make(map[int][]domain.Reaction)
 	commentMap := make(map[int][]domain.Comment)
+	commentAuthorMap := make(map[int]domain.User)
 
 	// Fetch reactions concurrently
 	eg.Go(func() error {
@@ -75,17 +80,20 @@ func (s *PostService) GetPostsByUser(authorID, otherUserId, offset, limit int) (
 		return nil
 	})
 
-	// Fetch comments concurrently
+	// Fetch comments
 	eg.Go(func() error {
 		comments, err := s.commentRepo.GetCommentsByPostIDs(postIDs)
 		if err != nil {
 			return err
 		}
-		// Map comments to post IDs
+
 		for _, comment := range comments {
 			commentMap[comment.EntityID] = append(commentMap[comment.EntityID], comment)
+			userIDList = append(userIDList, comment.AuthorID)
+
 		}
-		return nil
+
+		return err
 	})
 
 	// Wait for both operations to complete
@@ -93,10 +101,27 @@ func (s *PostService) GetPostsByUser(authorID, otherUserId, offset, limit int) (
 		return nil, err
 	}
 
+	userDetails, err := s.userRepo.GetUsers(context.Background(), userIDList)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map of user details for quick lookup
+	for _, user := range userDetails {
+		commentAuthorMap[user.ID] = user
+	}
+
 	// Populate posts with comments and reactions
 	for i, post := range posts {
 		posts[i].Reactions = reactionMap[post.ID]
-		posts[i].Comments = commentMap[post.ID]
+		comments := commentMap[post.ID]
+		for j, comment := range comments {
+			if user, exists := commentAuthorMap[comment.AuthorID]; exists {
+				comments[j].ProfilePic = *user.ProfilePic
+				comments[j].Username = *user.Username
+			}
+		}
+		posts[i].Comments = comments
 	}
 
 	return posts, nil
