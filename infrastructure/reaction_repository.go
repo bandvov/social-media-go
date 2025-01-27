@@ -33,17 +33,18 @@ func (r *ReactionRepository) RemoveReaction(userID, entityID string) error {
 	return err
 }
 
+// Fetch reactions by post IDs
 func (r *ReactionRepository) GetReactionsByPostIDs(postIDs []int64) ([]domain.Reaction, error) {
 	if len(postIDs) == 0 {
 		return nil, nil
 	}
 
-	// Prepare query with IN clause
 	query := fmt.Sprintf(`
-        SELECT post_id, reaction_type_id, COUNT(*)
-        FROM reactions
-        WHERE post_id IN (%s)
-        GROUP BY post_id, reaction_type`, utils.Placeholders(len(postIDs)))
+        SELECT r.entity_id, rt.name AS reaction, COUNT(r.id) AS count
+        FROM reactions r
+        JOIN reaction_types rt ON r.reaction_type_id = rt.id
+        WHERE r.post_id IN (%s)
+        GROUP BY r.post_id, rt.name`, utils.Placeholders(len(postIDs)))
 
 	rows, err := r.db.Query(query, utils.ToInterface(postIDs)...)
 	if err != nil {
@@ -54,11 +55,9 @@ func (r *ReactionRepository) GetReactionsByPostIDs(postIDs []int64) ([]domain.Re
 	var reactions []domain.Reaction
 	for rows.Next() {
 		var reaction domain.Reaction
-
 		if err := rows.Scan(&reaction.EntityId, &reaction.Reaction, &reaction.Count); err != nil {
 			return nil, err
 		}
-
 		reactions = append(reactions, reaction)
 	}
 
