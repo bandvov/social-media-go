@@ -1,11 +1,14 @@
 # social-media-go
-## Software requirement specifications (SRS)
+## Software requirement specification (SRS)
 - [SRS](docs/SRS.md)
+### Sequence diagrams
 - [registration sequence diagram](docs/registration_sequnce.md)
-- [login sequence diagram](docs/login_sequence.md)
 - [fetch user posts sequence diagram](docs/fetch_user_posts_sequence.md)
+- [login sequence diagram](docs/login_sequence.md)
+### Dataflow diagrams
 - [registration dataflow diagram](docs/registration_dataflow.md)
 - [login dataflow diagram](docs/login_dataflow.md)
+---
 ## Start server
 1. Copy `.env.example`
 2. Paste it and rename to `.env`
