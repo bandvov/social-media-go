@@ -2,8 +2,10 @@ package infrastructure
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/bandvov/social-media-go/domain"
+	"github.com/bandvov/social-media-go/utils"
 )
 
 type PostgresCommentRepository struct {
@@ -112,5 +114,35 @@ LEFT JOIN (
 		}
 		comments = append(comments, comment)
 	}
+	return comments, nil
+}
+
+// Fetch comments by post IDs
+func (r *PostgresCommentRepository) GetCommentsByPostIDs(entityIDs []int64) ([]domain.Comment, error) {
+	if len(entityIDs) == 0 {
+		return nil, nil
+	}
+
+	// Prepare query with IN clause
+	query := fmt.Sprintf(`
+        SELECT id, entity_id, content, author_id, created_at
+        FROM comments
+        WHERE post_id IN (%s)`, utils.Placeholders(len(entityIDs)))
+
+	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []domain.Comment
+	for rows.Next() {
+		var comment domain.Comment
+		if err := rows.Scan(&comment.ID, &comment.EntityID, &comment.Content, &comment.AuthorID, &comment.CreatedAt); err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
 	return comments, nil
 }
