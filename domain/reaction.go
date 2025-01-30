@@ -9,5 +9,5 @@ type Reaction struct {
 type ReactionRepository interface {
 	AddOrUpdateReaction(userId int, reaction Reaction) error
 	RemoveReaction(userID, contentID string) error
-	GetReactionsByPostIDs(entityIDs []int) ([]Reaction, error)
+	GetReactionsByEntityIDs(entityIDs []int) ([]Reaction, error)
 }

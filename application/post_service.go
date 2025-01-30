@@ -43,7 +43,7 @@ func (s *PostService) GetPostByID(id int) (*domain.Post, error) {
 	return s.postRepo.GetByID(id)
 }
 
-func (s *PostService) GetPostsByUser(authorID, otherUserId, offset, limit int) ([]domain.Post, error) {
+func (s *PostService) GetPostsByUser(authorID, otherUserID, offset, limit int) ([]domain.Post, error) {
 	// Fetch posts
 	posts, err := s.postRepo.GetPosts(authorID, offset, limit)
 	if err != nil {
@@ -60,55 +60,54 @@ func (s *PostService) GetPostsByUser(authorID, otherUserId, offset, limit int) (
 		postIDs[i] = post.ID
 	}
 
-	// Create error group for concurrent fetching
-	var eg errgroup.Group
-	var userIDList []int
+	// Create maps for data aggregation
 	reactionMap := make(map[int][]domain.Reaction)
 	commentMap := make(map[int][]domain.Comment)
 	commentAuthorMap := make(map[int]domain.User)
+	// Fetch comments and prepare auxiliary lists
+	comments, err := s.commentRepo.GetCommentsByEntityIDs(postIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	userIDList := make([]int, 0, len(comments))
+	commentIDList := make([]int, 0, len(comments))
+	for _, comment := range comments {
+		commentMap[comment.EntityID] = append(commentMap[comment.EntityID], comment)
+		userIDList = append(userIDList, comment.AuthorID)
+		commentIDList = append(commentIDList, comment.EntityID)
+	}
+
+	// Create an error group for concurrent operations
+	var eg errgroup.Group
 
 	// Fetch reactions concurrently
 	eg.Go(func() error {
-		reactions, err := s.reactionRepo.GetReactionsByPostIDs(postIDs)
+		reactions, err := s.reactionRepo.GetReactionsByEntityIDs(append(postIDs, commentIDList...))
 		if err != nil {
 			return err
 		}
-		// Map reactions to post IDs
 		for _, reaction := range reactions {
 			reactionMap[reaction.EntityId] = append(reactionMap[reaction.EntityId], reaction)
 		}
 		return nil
 	})
 
-	// Fetch comments
+	// Fetch user details concurrently
 	eg.Go(func() error {
-		comments, err := s.commentRepo.GetCommentsByPostIDs(postIDs)
+		userDetails, err := s.userRepo.GetUsersByID(context.Background(), userIDList)
 		if err != nil {
 			return err
 		}
-
-		for _, comment := range comments {
-			commentMap[comment.EntityID] = append(commentMap[comment.EntityID], comment)
-			userIDList = append(userIDList, comment.AuthorID)
-
+		for _, user := range userDetails {
+			commentAuthorMap[user.ID] = user
 		}
-
-		return err
+		return nil
 	})
 
-	// Wait for both operations to complete
+	// Wait for all concurrent tasks to complete
 	if err := eg.Wait(); err != nil {
 		return nil, err
-	}
-
-	userDetails, err := s.userRepo.GetUsers(context.Background(), userIDList)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a map of user details for quick lookup
-	for _, user := range userDetails {
-		commentAuthorMap[user.ID] = user
 	}
 
 	// Populate posts with comments and reactions

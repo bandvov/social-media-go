@@ -118,23 +118,24 @@ LEFT JOIN (
 }
 
 // Fetch comments by post IDs
-func (r *PostgresCommentRepository) GetCommentsByPostIDs(entityIDs []int64) ([]domain.Comment, error) {
+func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]domain.Comment, error) {
 	if len(entityIDs) == 0 {
 		return nil, nil
 	}
 
 	// Prepare query with IN clause
 	query := fmt.Sprintf(`
-        SELECT id, entity_id, content, author_id, created_at
-        FROM comments
-        WHERE post_id IN (%s)`, utils.Placeholders(len(entityIDs)))
-
+	SELECT id, entity_id, content, author_id, created_at
+	FROM comments
+	WHERE post_id IN (%s)`, utils.Placeholders(len(entityIDs)))
+	
 	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
+	fmt.Println("here1")
+	
 	var comments []domain.Comment
 	for rows.Next() {
 		var comment domain.Comment
@@ -143,6 +144,7 @@ func (r *PostgresCommentRepository) GetCommentsByPostIDs(entityIDs []int64) ([]d
 		}
 		comments = append(comments, comment)
 	}
-
+	fmt.Println("here2")
+	
 	return comments, nil
 }

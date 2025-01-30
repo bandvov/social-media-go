@@ -14,8 +14,8 @@ func Placeholders(count int) string {
 	return strings.Join(placeholders, ", ")
 }
 
-// Helper to convert int64 slice to interface{} slice for query arguments
-func ToInterface(ids []int64) []interface{} {
+// Helper to convert int slice to interface{} slice for query arguments
+func ToInterface(ids []int) []interface{} {
 	args := make([]interface{}, len(ids))
 	for i, id := range ids {
 		args[i] = id

@@ -389,7 +389,7 @@ func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {
 }
 
 // GetUsersByID fetches user details for a given set of user IDs.
-func (r *UserRepository) GetUsersByID(ctx context.Context, userIDs []int64) ([]domain.User, error) {
+func (r *UserRepository) GetUsersByID(ctx context.Context, userIDs []int) ([]domain.User, error) {
 	if len(userIDs) == 0 {
 		return nil, nil
 	}

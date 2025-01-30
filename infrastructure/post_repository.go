@@ -215,7 +215,7 @@ func (r *PostRepository) GetCountPostsByUser(authorID int) (int, error) {
 	return postsCount, nil
 }
 
-func (r *PostRepository) GetPosts(authorID int64, offset int, limit int) ([]domain.Post, error) {
+func (r *PostRepository) GetPosts(authorID int, offset int, limit int) ([]domain.Post, error) {
 	rows, err := r.db.Query(`
         SELECT id, author_id, content, visibility, pinned, created_at, updated_at
         FROM posts

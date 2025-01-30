@@ -34,7 +34,7 @@ func (r *ReactionRepository) RemoveReaction(userID, entityID string) error {
 }
 
 // Fetch reactions by post IDs
-func (r *ReactionRepository) GetReactionsByPostIDs(postIDs []int64) ([]domain.Reaction, error) {
+func (r *ReactionRepository) GetReactionsByEntityIDs(postIDs []int) ([]domain.Reaction, error) {
 	if len(postIDs) == 0 {
 		return nil, nil
 	}
