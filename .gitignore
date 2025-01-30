@@ -26,3 +26,4 @@ go.work.sum
 .vscode
 coverage*
 certs
+*/.env
