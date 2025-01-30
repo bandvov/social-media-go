@@ -1,17 +1,17 @@
 # Use the official Golang image for building
-FROM golang:1.21 AS builder
+FROM golang:1.22 AS builder
 
 WORKDIR /app
 
 # Copy go modules and install dependencies
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN go mod download
 
 # Copy the source code
 COPY . .
 
 # Build the Go application
-RUN CGO_ENABLED=0 GOOS=linux go build -o activity-service ./cmd/main.go
+RUN CGO_ENABLED=0 go build -o activity-service ./main.go
 
 # Use a lightweight image for deployment
 FROM alpine:latest
