@@ -18,14 +18,14 @@ func NewPostgresActivityRepository(db *sql.DB) *PostgresActivityRepository {
 // Save inserts an activity with event data into the database.
 func (r *PostgresActivityRepository) Save(activity *domain.Activity) error {
 	_, err := r.db.Exec(
-		"INSERT INTO activities (id, user_id, action, target_id, event_data, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
-		activity.ID, activity.UserID, activity.Action, activity.TargetID, activity.EventData, activity.CreatedAt,
+		"INSERT INTO activities ( user_id, action, target_id, event_data, created_at) VALUES ($1, $2, $3, $4, $5)",
+		activity.UserID, activity.Action, activity.TargetID, activity.EventData, activity.CreatedAt,
 	)
 	return err
 }
 
 // GetRecentActivities retrieves recent activities for a user.
-func (r *PostgresActivityRepository) GetRecentActivities(userID string, limit int) ([]domain.Activity, error) {
+func (r *PostgresActivityRepository) GetRecentActivities(userID, limit int) ([]domain.Activity, error) {
 	rows, err := r.db.Query(
 		"SELECT id, user_id, action, target_id, event_data, created_at FROM activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2",
 		userID, limit,

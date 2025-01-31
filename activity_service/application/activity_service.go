@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type ActivityServiceInterface interface {
+	AddActivity(userID int, action string, targetID int, eventData map[string]interface{}) error
+	GetRecentActivities(userID int, limit int) ([]domain.Activity, error)
+}
+
 // ActivityService provides methods to manage the activity feed.
 type ActivityService struct {
 	repo domain.ActivityRepository
@@ -17,7 +22,7 @@ func NewActivityService(repo domain.ActivityRepository) *ActivityService {
 }
 
 // AddActivity records a new user activity with event data.
-func (s *ActivityService) AddActivity(userID, action, targetID string, eventData map[string]interface{}) error {
+func (s *ActivityService) AddActivity(userID int, action string, targetID int, eventData map[string]interface{}) error {
 	eventDataJSON, err := json.Marshal(eventData)
 	if err != nil {
 		return err
@@ -34,6 +39,6 @@ func (s *ActivityService) AddActivity(userID, action, targetID string, eventData
 }
 
 // GetRecentActivities retrieves the latest activities for a user.
-func (s *ActivityService) GetRecentActivities(userID string, limit int) ([]domain.Activity, error) {
+func (s *ActivityService) GetRecentActivities(userID int, limit int) ([]domain.Activity, error) {
 	return s.repo.GetRecentActivities(userID, limit)
 }

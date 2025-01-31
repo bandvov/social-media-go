@@ -14,7 +14,7 @@ import (
 	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
 )
 
-var PORT = ":80"
+var PORT = ":8080"
 
 func main() {
 	port := os.Getenv("PORT")

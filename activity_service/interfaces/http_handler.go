@@ -17,20 +17,20 @@ const (
 
 // ActivityHandler handles HTTP requests for the activity service.
 type ActivityHandler struct {
-	service *application.ActivityService
+	service application.ActivityServiceInterface
 }
 
 // NewActivityHandler initializes a new handler.
-func NewActivityHandler(service *application.ActivityService) *ActivityHandler {
+func NewActivityHandler(service application.ActivityServiceInterface) *ActivityHandler {
 	return &ActivityHandler{service: service}
 }
 
 // AddActivityEndpoint handles adding a new activity.
 func (h *ActivityHandler) AddActivity(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		UserID    string                 `json:"user_id"`
+		UserID    int                    `json:"user_id"`
 		Action    string                 `json:"action"`
-		TargetID  string                 `json:"target_id"`
+		TargetID  int                    `json:"target_id"`
 		EventData map[string]interface{} `json:"event_data"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -47,8 +47,8 @@ func (h *ActivityHandler) AddActivity(w http.ResponseWriter, r *http.Request) {
 
 // GetActivitiesEndpoint handles retrieving user activities.
 func (h *ActivityHandler) GetActivities(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(string)
-	if !ok || userID == "" {
+	userID, ok := r.Context().Value(userIDKey).(int)
+	if !ok || userID == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
