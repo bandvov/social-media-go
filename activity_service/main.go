@@ -1,4 +1,4 @@
-package activity_service
+package main
 
 import (
 	"activity-service/application"
@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
 )
 
 var PORT = ":443"
