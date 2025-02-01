@@ -6,6 +6,7 @@ type ReactionServiceInterface interface {
 	AddOrUpdateReaction(userID int, reaction domain.Reaction) error
 	RemoveReaction(userID, contentID string) error
 	GetReactions(entityIDs []int) (map[int][]domain.Reaction, error)
+	GetReactionsCount(entityIDs []int) ([]domain.Reaction, error)
 }
 type ReactionService struct {
 	reactionRepo domain.ReactionRepository
@@ -35,4 +36,8 @@ func (s *ReactionService) GetReactions(entityIDs []int) (map[int][]domain.Reacti
 	}
 
 	return reactionMap, nil
+}
+
+func (s *ReactionService) GetReactionsCount(entityIDs []int) ([]domain.Reaction, error) {
+	return s.reactionRepo.CountByEntityIDs(entityIDs)
 }

@@ -10,4 +10,5 @@ type ReactionRepository interface {
 	AddOrUpdateReaction(userId int, reaction Reaction) error
 	RemoveReaction(userID, contentID string) error
 	GetReactionsByEntityIDs(entityIDs []int) ([]Reaction, error)
+	CountByEntityIDs(entityIDs []int) ([]Reaction, error)
 }

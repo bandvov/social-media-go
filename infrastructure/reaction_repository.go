@@ -63,3 +63,31 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(postIDs []int) ([]domain.Re
 
 	return reactions, nil
 }
+
+func (r *ReactionRepository) CountByEntityIDs(entityIDs []int) ([]domain.Reaction, error) {
+
+	query := fmt.Sprintf(`
+        SELECT
+			entity_id,
+            COUNT(*) AS count
+        FROM reactions
+        WHERE entity_id IN (%s)
+		GROUP BY entity_id`, utils.Placeholders(len(entityIDs)))
+
+	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var counts []domain.Reaction
+	for rows.Next() {
+		var count domain.Reaction
+		if err := rows.Scan(&count.EntityId, &count.Count); err != nil {
+			return nil, err
+		}
+		counts = append(counts, count)
+	}
+
+	return counts, nil
+}

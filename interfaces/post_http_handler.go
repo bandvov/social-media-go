@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bandvov/social-media-go/application"
 	"github.com/bandvov/social-media-go/domain"
@@ -204,7 +205,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "unauthenticated", http.StatusBadRequest)
 		return
 	}
-
+	s := time.Now()
 	idStr := r.PathValue("id")
 	authorIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -238,12 +239,22 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 		postsCount  int
 		eg          errgroup.Group
 	)
-	countsMap := make(map[int]domain.CommentCount)
+	commentsCountsMap := make(map[int]domain.CommentCount)
+	reactionsCountsMap := make(map[int]domain.Reaction)
 
 	eg.Go(func() error {
 		counts, err := h.commentService.GetCommentsAndRepliesCount(postIDs)
 		for _, count := range counts {
-			countsMap[count.EntityID] = count
+			commentsCountsMap[count.EntityID] = count
+		}
+		return err
+	})
+
+	eg.Go(func() error {
+		counts, err := h.reactionService.GetReactionsCount(postIDs)
+		fmt.Println(counts)
+		for _, count := range counts {
+			reactionsCountsMap[count.EntityId] = count
 		}
 		return err
 	})
@@ -271,14 +282,15 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	for i, post := range posts {
 		posts[i].Reactions = reactionMap[post.ID]
-		posts[i].TotalCommentsCount = countsMap[post.ID].CommentCount + countsMap[post.ID].CommentCount
+		posts[i].TotalCommentsCount = commentsCountsMap[post.ID].CommentCount + commentsCountsMap[post.ID].CommentCount
+		posts[i].TotaReactionslCount = reactionsCountsMap[post.ID].Count
 	}
 
 	response := map[string]interface{}{
 		"data":    posts,
 		"hasMore": postsCount > offset+limit,
 	}
-
+	fmt.Println(time.Since(s))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
