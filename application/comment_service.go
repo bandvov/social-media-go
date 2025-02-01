@@ -6,6 +6,7 @@ import "github.com/bandvov/social-media-go/domain"
 type CommentServiceInterface interface {
 	AddComment(c *domain.Comment) error
 	GetCommentsByEntityID(entityID, userID, offset, limit int) ([]domain.Comment, error)
+	GetCommentsByEntityIDs(entityIDs []int) (map[int][]domain.Comment, []int, []int, error)
 }
 type CommentService struct {
 	commentRepo domain.CommentRepository
@@ -30,4 +31,23 @@ func (s *CommentService) AddComment(c *domain.Comment) error {
 
 func (s *CommentService) GetCommentsByEntityID(entityID, userID, offset, limit int) ([]domain.Comment, error) {
 	return s.commentRepo.FetchCommentsByEntityID(entityID, userID, offset, limit)
+}
+
+func (s *CommentService) GetCommentsByEntityIDs(entityIDs []int) (map[int][]domain.Comment, []int, []int, error) {
+	commentMap := make(map[int][]domain.Comment)
+	userIDList := []int{}
+	commentIDList := []int{}
+
+	comments, err := s.commentRepo.GetCommentsByEntityIDs(entityIDs)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	for _, comment := range comments {
+		commentMap[comment.EntityID] = append(commentMap[comment.EntityID], comment)
+		userIDList = append(userIDList, comment.AuthorID)
+		commentIDList = append(commentIDList, comment.EntityID)
+	}
+
+	return commentMap, commentIDList, userIDList, nil
 }

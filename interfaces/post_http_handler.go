@@ -1,9 +1,7 @@
 package interfaces
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,11 +12,23 @@ import (
 )
 
 type PostHTTPHandler struct {
-	PostService application.PostServiceInterface
+	postService     application.PostServiceInterface
+	commentService  application.CommentServiceInterface
+	userService     application.UserServiceInterface
+	reactionService application.ReactionServiceInterface
 }
 
-func NewPostHTTPHandler(postService application.PostServiceInterface) *PostHTTPHandler {
-	return &PostHTTPHandler{PostService: postService}
+func NewPostHTTPHandler(
+	postService application.PostServiceInterface,
+	commentService application.CommentServiceInterface,
+	userService application.UserServiceInterface,
+	reactionService application.ReactionServiceInterface,
+) *PostHTTPHandler {
+	return &PostHTTPHandler{
+		postService:     postService,
+		commentService:  commentService,
+		userService:     userService,
+		reactionService: reactionService}
 }
 
 func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +52,7 @@ func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	newPost.Data.AuthorID = authorID
 
-	err := p.PostService.CreatePost(&newPost.Data)
+	err := p.postService.CreatePost(&newPost.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -72,7 +82,7 @@ func (p *PostHTTPHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.PostService.UpdatePost(postID, &domain.Post{
+	err = p.postService.UpdatePost(postID, &domain.Post{
 		Content: post.Content, Visibility: &post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
 	})
 
@@ -99,7 +109,7 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := p.PostService.GetPostByID(postID)
+	post, err := p.postService.GetPostByID(postID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -115,6 +125,79 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 
+// func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
+// 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
+// 	if !ok || userID == 0 {
+// 		http.Error(w, "unauthenticated", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	idStr := r.PathValue("id")
+// 	userIDFromUrl, err := strconv.Atoi(idStr)
+// 	if err != nil {
+// 		http.Error(w, "invalid user ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	query := r.URL.Query()
+
+// 	// Parse `limit` and `offset` with default values
+// 	page, err := strconv.Atoi(query.Get("page"))
+// 	if err != nil || page < 1 {
+// 		page = 1 // Default offset
+// 	}
+
+// 	limit, err := strconv.Atoi(query.Get("limit"))
+// 	if err != nil || limit <= 0 {
+// 		limit = 10 // Default limit
+// 	}
+
+// 	offset := (page - 1) * limit
+
+// 	var posts []domain.Post
+// 	var postsCount int
+
+// 	// Create a new errgroup
+// 	var g errgroup.Group
+// 	// First task: Fetch posts
+// 	g.Go(func() error {
+// 		var err error
+// 		posts, err = h.postService.GetPostsByUser(userIDFromUrl, userID, offset, limit)
+// 		if err != nil {
+// 			if errors.Is(err, sql.ErrNoRows) {
+// 				http.Error(w, "No posts", http.StatusNotFound)
+// 				return nil // No posts is not an error; early return
+// 			}
+// 			return err // Return other errors
+// 		}
+// 		return nil
+// 	})
+
+// 	// Second task: Fetch posts count
+// 	g.Go(func() error {
+// 		var err error
+// 		postsCount, err = h.postService.GetCountPostsByUser(userIDFromUrl)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return nil
+// 	})
+
+// 	// Wait for both goroutines to finish
+// 	if err := g.Wait(); err != nil {
+// 		http.Error(w, "could not complete request", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	response := map[string]interface{}{
+// 		"data":    posts,
+// 		"hasMore": postsCount > offset+limit,
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	json.NewEncoder(w).Encode(response)
+// }
+
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userID == 0 {
@@ -123,7 +206,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	idStr := r.PathValue("id")
-	userIDFromUrl, err := strconv.Atoi(idStr)
+	authorIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
@@ -144,39 +227,64 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	offset := (page - 1) * limit
 
-	var posts []domain.Post
-	var postsCount int
+	posts, postIDs, err := h.postService.GetPostsByUser(authorIDFromUrl, offset, limit)
+	if err != nil || len(posts) == 0 {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
 
-	// Create a new errgroup
-	var g errgroup.Group
-	// First task: Fetch posts
-	g.Go(func() error {
-		var err error
-		posts, err = h.PostService.GetPostsByUser(userIDFromUrl, userID, offset, limit)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				http.Error(w, "No posts", http.StatusNotFound)
-				return nil // No posts is not an error; early return
-			}
-			return err // Return other errors
-		}
-		return nil
+	var (
+		commentMap       map[int][]domain.Comment
+		userMap          map[int]domain.User
+		reactionMap      map[int][]domain.Reaction
+		postsCount       int
+		commentIDs       []int
+		commentAuthorIDs []int
+
+		eg errgroup.Group
+	)
+
+	commentMap, commentIDs, commentAuthorIDs, err = h.commentService.GetCommentsByEntityIDs(postIDs)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	eg.Go(func() error {
+		userMap, err = h.userService.GetUsersByIDs(commentAuthorIDs)
+		return err
+	})
+
+	eg.Go(func() error {
+		reactionMap, err = h.reactionService.GetReactions(append(postIDs, commentIDs...))
+		return err
 	})
 
 	// Second task: Fetch posts count
-	g.Go(func() error {
+	eg.Go(func() error {
 		var err error
-		postsCount, err = h.PostService.GetCountPostsByUser(userIDFromUrl)
+		postsCount, err = h.postService.GetCountPostsByUser(authorIDFromUrl)
 		if err != nil {
 			return err
 		}
 		return nil
 	})
 
-	// Wait for both goroutines to finish
-	if err := g.Wait(); err != nil {
-		http.Error(w, "could not complete request", http.StatusInternalServerError)
+	if err := eg.Wait(); err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
+	}
+
+	for i, post := range posts {
+		posts[i].Reactions = reactionMap[post.ID]
+		comments := commentMap[post.ID]
+		for j, comment := range comments {
+			if user, exists := userMap[comment.AuthorID]; exists {
+				comments[j].ProfilePic = *user.ProfilePic
+				comments[j].Username = *user.Username
+			}
+		}
+		posts[i].Comments = comments
 	}
 
 	response := map[string]interface{}{
