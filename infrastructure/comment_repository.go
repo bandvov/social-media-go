@@ -6,6 +6,7 @@ import (
 
 	"github.com/bandvov/social-media-go/domain"
 	"github.com/bandvov/social-media-go/utils"
+	"github.com/lib/pq"
 )
 
 type PostgresCommentRepository struct {
@@ -128,14 +129,14 @@ func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]d
 	SELECT id, entity_id, content, author_id, created_at
 	FROM comments
 	WHERE entity_id IN (%s)`, utils.Placeholders(len(entityIDs)))
-	
+
 	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	fmt.Println("here1")
-	
+
 	var comments []domain.Comment
 	for rows.Next() {
 		var comment domain.Comment
@@ -145,6 +146,22 @@ func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]d
 		comments = append(comments, comment)
 	}
 	fmt.Println("here2")
-	
+
 	return comments, nil
+}
+
+func (r *PostgresCommentRepository) CountByEntityIDs(entityIDs []int) (int, int, error) {
+	query := `
+        SELECT
+            COUNT(CASE WHEN type = 'comment' THEN 1 END) AS comment_count,
+            COUNT(CASE WHEN type = 'reply' THEN 1 END) AS reply_count
+        FROM comments
+        WHERE entity_id = ANY($1)`
+
+	var commentCount, replyCount int
+	err := r.db.QueryRow(query, pq.Array(entityIDs)).Scan(&commentCount, &replyCount)
+	if err != nil {
+		return 0, 0, err
+	}
+	return commentCount, replyCount, nil
 }

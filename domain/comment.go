@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+type CommentType string
+
+const (
+	CommentTypeComment CommentType = "comment"
+	CommentTypeReply   CommentType = "reply"
+)
+
 // PostVisibility represents the visibility of a post
 type CommentStatus int
 
@@ -31,7 +38,7 @@ func (c CommentStatus) String() string {
 type Comment struct {
 	ID                  int             `json:"id,omitempty"`
 	EntityID            int             `json:"entity_id,omitempty"`
-	EntityType          string          `json:"entity_type,omitempty"`
+	EntityType          CommentType     `json:"entity_type,omitempty"`
 	Content             string          `json:"content,omitempty"`
 	AuthorID            int             `json:"author_id,omitempty"`
 	Username            string          `json:"username,omitempty"`

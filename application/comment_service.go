@@ -7,6 +7,7 @@ type CommentServiceInterface interface {
 	AddComment(c *domain.Comment) error
 	GetCommentsByEntityID(entityID, userID, offset, limit int) ([]domain.Comment, error)
 	GetCommentsByEntityIDs(entityIDs []int) (map[int][]domain.Comment, []int, []int, error)
+	GetCommentsAndRepliesCount(entityIDs []int) (int, int, error)
 }
 type CommentService struct {
 	commentRepo domain.CommentRepository
@@ -50,4 +51,8 @@ func (s *CommentService) GetCommentsByEntityIDs(entityIDs []int) (map[int][]doma
 	}
 
 	return commentMap, commentIDList, userIDList, nil
+}
+
+func (s *CommentService) GetCommentsAndRepliesCount(entityIDs []int) (int, int, error) {
+	return s.commentRepo.CountByEntityIDs(entityIDs)
 }

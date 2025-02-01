@@ -10,6 +10,10 @@ import (
 	"github.com/bandvov/social-media-go/domain"
 )
 
+type EntityIDsRequest struct {
+	EntityIDs []int `json:"entity_ids"`
+}
+
 type CommentHandler struct {
 	service *application.CommentService
 }
@@ -78,6 +82,28 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	response := map[string]interface{}{
 		"data":    comments,
 		"hasMore": true,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *http.Request) {
+	var request EntityIDsRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	commentCount, replyCount, err := h.service.GetCommentsAndRepliesCount(request.EntityIDs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]int{
+		"comment_count": commentCount,
+		"reply_count":   replyCount,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
