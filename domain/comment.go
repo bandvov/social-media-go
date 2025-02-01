@@ -64,3 +64,9 @@ func (c *Comment) IsValidAuthorId() bool {
 func (c *Comment) IsValidContent() bool {
 	return c.Content != ""
 }
+
+type CommentCount struct {
+	EntityID     int `json:"entity_id"`
+	CommentCount int `json:"comment_count"`
+	ReplyCount   int `json:"reply_count"`
+}

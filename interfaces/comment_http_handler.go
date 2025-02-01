@@ -95,17 +95,12 @@ func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *ht
 		return
 	}
 
-	commentCount, replyCount, err := h.service.GetCommentsAndRepliesCount(request.EntityIDs)
+	counts, err := h.service.GetCommentsAndRepliesCount(request.EntityIDs)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	response := map[string]int{
-		"comment_count": commentCount,
-		"reply_count":   replyCount,
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(counts)
 }

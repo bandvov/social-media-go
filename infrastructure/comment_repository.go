@@ -6,7 +6,6 @@ import (
 
 	"github.com/bandvov/social-media-go/domain"
 	"github.com/bandvov/social-media-go/utils"
-	"github.com/lib/pq"
 )
 
 type PostgresCommentRepository struct {
@@ -135,7 +134,6 @@ func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]d
 		return nil, err
 	}
 	defer rows.Close()
-	fmt.Println("here1")
 
 	var comments []domain.Comment
 	for rows.Next() {
@@ -145,23 +143,35 @@ func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]d
 		}
 		comments = append(comments, comment)
 	}
-	fmt.Println("here2")
 
 	return comments, nil
 }
 
-func (r *PostgresCommentRepository) CountByEntityIDs(entityIDs []int) (int, int, error) {
-	query := `
-        SELECT
-            COUNT(CASE WHEN type = 'comment' THEN 1 END) AS comment_count,
-            COUNT(CASE WHEN type = 'reply' THEN 1 END) AS reply_count
-        FROM comments
-        WHERE entity_id = ANY($1)`
+func (r *PostgresCommentRepository) CountByEntityIDs(entityIDs []int) ([]domain.CommentCount, error) {
 
-	var commentCount, replyCount int
-	err := r.db.QueryRow(query, pq.Array(entityIDs)).Scan(&commentCount, &replyCount)
+	query := fmt.Sprintf(`
+        SELECT
+			entity_id,
+			COALESCE(COUNT(CASE WHEN entity_type = 'comment' THEN 1 END), 0) AS comment_count,
+            COALESCE(COUNT(CASE WHEN entity_type = 'reply' THEN 1 END), 0) AS reply_count
+        FROM comments
+        WHERE entity_id IN (%s)
+		GROUP BY entity_id`, utils.Placeholders(len(entityIDs)))
+
+	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
 	if err != nil {
-		return 0, 0, err
+		return nil, err
 	}
-	return commentCount, replyCount, nil
+	defer rows.Close()
+
+	var counts []domain.CommentCount
+	for rows.Next() {
+		var count domain.CommentCount
+		if err := rows.Scan(&count.EntityID, &count.CommentCount, &count.ReplyCount); err != nil {
+			return nil, err
+		}
+		counts = append(counts, count)
+	}
+
+	return counts, nil
 }

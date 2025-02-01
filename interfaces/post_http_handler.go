@@ -234,29 +234,22 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	var (
-		commentMap       map[int][]domain.Comment
-		userMap          map[int]domain.User
-		reactionMap      map[int][]domain.Reaction
-		postsCount       int
-		commentIDs       []int
-		commentAuthorIDs []int
-
-		eg errgroup.Group
+		reactionMap map[int][]domain.Reaction
+		postsCount  int
+		eg          errgroup.Group
 	)
-
-	commentMap, commentIDs, commentAuthorIDs, err = h.commentService.GetCommentsByEntityIDs(postIDs)
-	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
-		return
-	}
+	countsMap := make(map[int]domain.CommentCount)
 
 	eg.Go(func() error {
-		userMap, err = h.userService.GetUsersByIDs(commentAuthorIDs)
+		counts, err := h.commentService.GetCommentsAndRepliesCount(postIDs)
+		for _, count := range counts {
+			countsMap[count.EntityID] = count
+		}
 		return err
 	})
 
 	eg.Go(func() error {
-		reactionMap, err = h.reactionService.GetReactions(append(postIDs, commentIDs...))
+		reactionMap, err = h.reactionService.GetReactions(postIDs)
 		return err
 	})
 
@@ -271,20 +264,14 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	})
 
 	if err := eg.Wait(); err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
 	}
 
 	for i, post := range posts {
 		posts[i].Reactions = reactionMap[post.ID]
-		comments := commentMap[post.ID]
-		for j, comment := range comments {
-			if user, exists := userMap[comment.AuthorID]; exists {
-				comments[j].ProfilePic = *user.ProfilePic
-				comments[j].Username = *user.Username
-			}
-		}
-		posts[i].Comments = comments
+		posts[i].TotalCommentsCount = countsMap[post.ID].CommentCount + countsMap[post.ID].CommentCount
 	}
 
 	response := map[string]interface{}{
