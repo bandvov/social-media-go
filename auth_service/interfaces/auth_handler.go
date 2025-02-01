@@ -1,10 +1,9 @@
 package interfaces
 
 import (
+	"auth-service/application"
 	"encoding/json"
 	"net/http"
-
-	"github.com/bandvov/social-media-go/auth/application"
 )
 
 type AuthHandler struct {

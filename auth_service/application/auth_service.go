@@ -1,6 +1,6 @@
 package application
 
-import "github.com/bandvov/social-media-go/auth/domain"
+import "auth-service/domain"
 
 type AuthApplication struct {
 	authService domain.AuthService

@@ -1,13 +1,12 @@
 package main
 
 import (
+	"auth-service/application"
+	"auth-service/infrastructure"
+	"auth-service/interfaces"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/bandvov/social-media-go/auth/application"
-	"github.com/bandvov/social-media-go/auth/infrastructure"
-	"github.com/bandvov/social-media-go/auth/interfaces"
 )
 
 var PORT = ":8081"
