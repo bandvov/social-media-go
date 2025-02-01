@@ -127,7 +127,7 @@ func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]d
 	query := fmt.Sprintf(`
 	SELECT id, entity_id, content, author_id, created_at
 	FROM comments
-	WHERE post_id IN (%s)`, utils.Placeholders(len(entityIDs)))
+	WHERE entity_id IN (%s)`, utils.Placeholders(len(entityIDs)))
 	
 	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
 	if err != nil {

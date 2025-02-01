@@ -43,8 +43,8 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(postIDs []int) ([]domain.Re
         SELECT r.entity_id, rt.name AS reaction, COUNT(r.id) AS count
         FROM reactions r
         JOIN reaction_types rt ON r.reaction_type_id = rt.id
-        WHERE r.post_id IN (%s)
-        GROUP BY r.post_id, rt.name`, utils.Placeholders(len(postIDs)))
+        WHERE r.entity_id IN (%s)
+        GROUP BY r.entity_id, rt.name`, utils.Placeholders(len(postIDs)))
 
 	rows, err := r.db.Query(query, utils.ToInterface(postIDs)...)
 	if err != nil {
