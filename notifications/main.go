@@ -50,7 +50,7 @@ func main() {
 	r := http.NewServeMux()
 
 	r.HandleFunc("/send", handler.SendNotification)
-	// r.HandleFunc("/listen", handler.ListenNotifications).Methods("GET") // WebSocket or SSE
+	r.HandleFunc("/listen", handler.ListenNotifications)
 
 	log.Println("Server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))

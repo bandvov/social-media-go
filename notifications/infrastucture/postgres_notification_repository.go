@@ -21,20 +21,28 @@ func (r *PostgresNotificationRepository) Save(notification domain.Notification) 
 	return err
 }
 
-func (r *PostgresNotificationRepository) FindByUser(userID string) ([]domain.Notification, error) {
-	rows, err := r.db.Query("SELECT id, user_id, message, created_at FROM notifications WHERE user_id=$1", userID)
+// Get all unsent messages for a user
+func (r *PostgresNotificationRepository) GetUnsentMessages(userID string) ([]domain.Notification, error) {
+	rows, err := r.db.Query("SELECT id, user_id, message, created_at FROM notifications WHERE user_id = $1 AND sent = false", userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var notifications []domain.Notification
+	var messages []domain.Notification
 	for rows.Next() {
-		var n domain.Notification
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Message, &n.CreatedAt); err != nil {
+		var msg domain.Notification
+		if err := rows.Scan(&msg.ID, &msg.UserID, &msg.Message, &msg.CreatedAt); err != nil {
 			return nil, err
 		}
-		notifications = append(notifications, n)
+		messages = append(messages, msg)
 	}
-	return notifications, nil
+
+	return messages, nil
+}
+
+// Mark message as sent
+func (r *PostgresNotificationRepository) MarkAsSent(notificationID string) error {
+	_, err := r.db.Exec("UPDATE notifications SET sent = true WHERE id = $1", notificationID)
+	return err
 }

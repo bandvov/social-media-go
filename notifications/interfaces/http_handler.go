@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"encoding/json"
+	"fmt"
 	"n/application"
 	"net/http"
 )
@@ -34,7 +35,45 @@ func (h *NotificationHandler) SendNotification(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 }
 
-// Listen to Notifications (WebSocket / SSE)
+// Listen for notifications (SSE)
 func (h *NotificationHandler) ListenNotifications(w http.ResponseWriter, r *http.Request) {
-	// Implementation for WebSocket / SSE
+	// Get user_id from query parameters
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		http.Error(w, "Missing user_id", http.StatusBadRequest)
+		return
+	}
+
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch and send unsent messages
+	messages, err := h.service.FetchUnsentMessages(userID)
+	if err != nil {
+		http.Error(w, "Failed to fetch unsent messages", http.StatusInternalServerError)
+		return
+	}
+
+	for _, msg := range messages {
+		fmt.Fprintf(w, "data: %s\n\n", msg.Message)
+		flusher.Flush()
+	}
+
+	// Subscribe to real-time notifications
+	h.service.SubscribeToNotifications(userID, func(message string) {
+		fmt.Fprintf(w, "data: %s\n\n", message)
+		flusher.Flush()
+	})
+
+	// Keep connection open
+	select {}
 }
