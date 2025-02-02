@@ -15,8 +15,8 @@ func NewPostgresNotificationRepository(db *sql.DB) *PostgresNotificationReposito
 
 func (r *PostgresNotificationRepository) Save(notification domain.Notification) error {
 	_, err := r.db.Exec(
-		"INSERT INTO notifications (id, user_id, message, created_at) VALUES ($1, $2, $3, $4)",
-		notification.ID, notification.UserID, notification.Message, notification.CreatedAt,
+		"INSERT INTO notifications (user_id, message, created_at) VALUES ($1, $2, $3)",
+		notification.UserID, notification.Message, notification.CreatedAt,
 	)
 	return err
 }

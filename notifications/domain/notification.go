@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Notification struct {
-	ID        string
+	ID        int
 	UserID    string
 	Message   string
 	CreatedAt time.Time

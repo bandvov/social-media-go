@@ -1,7 +1,7 @@
 package application
 
 import (
-	"log"
+	"fmt"
 	"n/domain"
 	"time"
 )
@@ -28,7 +28,7 @@ func (s *NotificationService) SendNotification(userID, message string) error {
 
 	// Publish event to Redis
 	if err := s.events.Publish("notifications", message); err != nil {
-		log.Println("Failed to publish event:", err)
+		return fmt.Errorf("Failed to publish event: %v", err)
 	}
 
 	return nil
