@@ -66,6 +66,7 @@ func (h *NotificationHandler) ListenNotifications(w http.ResponseWriter, r *http
 	for _, msg := range messages {
 		fmt.Fprintf(w, "data: %s\n\n", msg.Message)
 		flusher.Flush()
+		messagesIds = append(messagesIds, msg.ID)
 	}
 	_ = h.service.MarkAsSent(messagesIds)
 
