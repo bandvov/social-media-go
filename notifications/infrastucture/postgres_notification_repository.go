@@ -3,6 +3,8 @@ package infrastructure
 import (
 	"database/sql"
 	"n/domain"
+
+	pg "github.com/lib/pq"
 )
 
 type PostgresNotificationRepository struct {
@@ -42,7 +44,7 @@ func (r *PostgresNotificationRepository) GetUnsentMessages(userID string) ([]dom
 }
 
 // Mark message as sent
-func (r *PostgresNotificationRepository) MarkAsSent(notificationID string) error {
-	_, err := r.db.Exec("UPDATE notifications SET sent = true WHERE id = $1", notificationID)
+func (r *PostgresNotificationRepository) MarkAsSent(notificationIDs []int) error {
+	_, err := r.db.Exec("UPDATE notifications SET sent = true WHERE id = ANY($1)", pg.Array(notificationIDs))
 	return err
 }
