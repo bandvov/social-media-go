@@ -48,3 +48,9 @@ func (r *PostgresNotificationRepository) MarkAsSent(notificationIDs []int) error
 	_, err := r.db.Exec("UPDATE notifications SET sent = true WHERE id = ANY($1)", pg.Array(notificationIDs))
 	return err
 }
+
+// Mark message as read
+func (r *PostgresNotificationRepository) MarkAsRead(notificationIDs []int) error {
+	_, err := r.db.Exec("UPDATE notifications SET read = true WHERE id = ANY($1)", pg.Array(notificationIDs))
+	return err
+}

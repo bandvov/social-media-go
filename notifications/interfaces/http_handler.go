@@ -79,3 +79,16 @@ func (h *NotificationHandler) ListenNotifications(w http.ResponseWriter, r *http
 	// Keep connection open
 	select {}
 }
+
+func (h *NotificationHandler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Data []int `json:"data"`
+	}
+
+	// Parse and validate the request body
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
+		return
+	}
+	h.service.MarkAsRead(request.Data)
+}

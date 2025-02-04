@@ -48,3 +48,7 @@ func (s *NotificationService) SubscribeToNotifications(userID string, handler fu
 func (s *NotificationService) MarkAsSent(notificationIDs []int) error {
 	return s.repo.MarkAsSent(notificationIDs)
 }
+
+func (s *NotificationService) MarkAsRead(notificationIDs []int) error {
+	return s.repo.MarkAsRead(notificationIDs)
+}
