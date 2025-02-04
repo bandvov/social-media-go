@@ -19,7 +19,7 @@ func (s *NotificationService) SendNotification(userID, message string) error {
 	notification := domain.Notification{
 		UserID:    userID,
 		Message:   message,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Format(time.RFC3339),
 	}
 
 	if err := s.repo.Save(notification); err != nil {

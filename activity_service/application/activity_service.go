@@ -33,7 +33,7 @@ func (s *ActivityService) AddActivity(userID int, action string, targetID int, e
 		Action:    action,
 		TargetID:  targetID,
 		EventData: eventDataJSON,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Format(time.RFC3339),
 	}
 	return s.repo.Save(activity)
 }
