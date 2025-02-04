@@ -7,6 +7,7 @@ import (
 	"n/application"
 	infrastructure "n/infrastucture"
 	"n/interfaces"
+	"n/middlewares"
 	"net/http"
 	"os"
 
@@ -52,6 +53,6 @@ func main() {
 	r.HandleFunc("/send", handler.SendNotification)
 	r.HandleFunc("/listen", handler.ListenNotifications)
 
-	log.Println("Server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Println("Server running on port 8081")
+	log.Fatal(http.ListenAndServe(":8081", middlewares.CorsMiddleware(r)))
 }
