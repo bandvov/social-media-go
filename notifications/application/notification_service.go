@@ -36,6 +36,7 @@ func (s *NotificationService) SendNotification(n domain.Notification) error {
 	}
 	notification := domain.Notification{
 		UserID:     n.UserID,
+		SenderID:   n.SenderID,
 		Type:       n.Type,
 		Message:    message,
 		EntityType: n.EntityType,
@@ -48,7 +49,7 @@ func (s *NotificationService) SendNotification(n domain.Notification) error {
 	}
 	strUserId := strconv.Itoa(n.UserID)
 	// Publish event to Redis
-	if err := s.events.Publish("notifications:"+strUserId, fmt.Sprint(notification)); err != nil {
+	if err := s.events.Publish("notifications:"+strUserId, message); err != nil {
 		return fmt.Errorf("Failed to publish event: %v", err)
 	}
 

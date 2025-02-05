@@ -3,6 +3,7 @@ CREATE TABLE
     notifications (
         id SERIAL PRIMARY KEY,
         user_id INT NOT NULL, -- The user receiving the notification
+        sender_id INT NOT NULL, -- The user triggering the notification
         type VARCHAR(50) NOT NULL CHECK (
             type IN (
                 'new_follower',
