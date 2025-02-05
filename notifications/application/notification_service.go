@@ -15,11 +15,14 @@ func NewNotificationService(repo domain.NotificationRepository, events domain.Ev
 	return &NotificationService{repo: repo, events: events}
 }
 
-func (s *NotificationService) SendNotification(userID, message string) error {
+func (s *NotificationService) SendNotification(n domain.Notification) error {
 	notification := domain.Notification{
-		UserID:    userID,
-		Message:   message,
-		CreatedAt: time.Now().Format(time.RFC3339),
+		UserID:     n.UserID,
+		Type:       n.Type,
+		Message:    n.Message,
+		EntityType: n.EntityType,
+		EntityID:   n.EntityID,
+		CreatedAt:  time.Now().Format(time.RFC3339),
 	}
 
 	if err := s.repo.Save(notification); err != nil {
@@ -27,7 +30,7 @@ func (s *NotificationService) SendNotification(userID, message string) error {
 	}
 
 	// Publish event to Redis
-	if err := s.events.Publish("notifications:"+userID, message); err != nil {
+	if err := s.events.Publish("notifications:"+string(n.UserID), fmt.Sprint(notification)); err != nil {
 		return fmt.Errorf("Failed to publish event: %v", err)
 	}
 

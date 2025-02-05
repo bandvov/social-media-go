@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"n/application"
+	"n/domain"
 	"net/http"
 )
 
@@ -17,17 +18,14 @@ func NewNotificationHandler(service *application.NotificationService) *Notificat
 
 // Send Notification Endpoint
 func (h *NotificationHandler) SendNotification(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		UserID  string `json:"user_id"`
-		Message string `json:"message"`
-	}
+	var req domain.Notification
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.service.SendNotification(req.UserID, req.Message); err != nil {
+	if err := h.service.SendNotification(req); err != nil {
 		http.Error(w, "Failed to send notification", http.StatusInternalServerError)
 		return
 	}
