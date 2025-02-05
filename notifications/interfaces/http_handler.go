@@ -54,20 +54,6 @@ func (h *NotificationHandler) ListenNotifications(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Fetch and send unsent messages
-	messages, err := h.service.FetchUnsentMessages(userID)
-	if err != nil {
-		http.Error(w, "Failed to fetch unsent messages", http.StatusInternalServerError)
-		return
-	}
-	messagesIds := make([]int, len(messages))
-	for _, msg := range messages {
-		fmt.Fprintf(w, "data: %s\n\n", msg.Message)
-		flusher.Flush()
-		messagesIds = append(messagesIds, msg.ID)
-	}
-	_ = h.service.MarkAsSent(messagesIds)
-
 	// Subscribe to real-time notifications
 	h.service.SubscribeToNotifications(userID, func(message string) {
 		fmt.Fprintf(w, "data: %s\n\n", message)
