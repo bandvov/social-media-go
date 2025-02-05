@@ -6,11 +6,11 @@ CREATE TABLE
         type VARCHAR(50) NOT NULL CHECK (
             type IN (
                 'new_follower',
-                'mention',
-                'direct_message',
-                'post_comment',
-                'comment_reply',
-                'reaction'
+                'new_mention',
+                'new_direct_message',
+                'new_post_comment',
+                'new_comment_reply',
+                'new_reaction'
             )
         ),
         entity_type VARCHAR(50) NOT NULL CHECK (
