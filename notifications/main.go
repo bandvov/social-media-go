@@ -52,6 +52,7 @@ func main() {
 
 	r.HandleFunc("/send", handler.SendNotification)
 	r.HandleFunc("/listen", handler.ListenNotifications)
+	r.HandleFunc("/mark_as_read", handler.MarkAsRead)
 
 	log.Println("Server running on port 8081")
 	log.Fatal(http.ListenAndServe(":8081", middlewares.CorsMiddleware(r)))
