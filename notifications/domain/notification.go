@@ -21,6 +21,7 @@ const (
 
 type Notification struct {
 	ID         int              `json:"id"`
+	SenderID   int              `json:"sender_id"`   // Who triggers the notification
 	UserID     int              `json:"user_id"`     // Who receives the notification
 	Type       NotificationType `json:"type"`        // Type of notification
 	Message    string           `json:"message"`     // Notification message

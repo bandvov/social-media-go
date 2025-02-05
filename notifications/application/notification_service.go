@@ -17,10 +17,27 @@ func NewNotificationService(repo domain.NotificationRepository, events domain.Ev
 }
 
 func (s *NotificationService) SendNotification(n domain.Notification) error {
+
+	message := ""
+
+	switch n.Type {
+	case domain.NewMention:
+		message = fmt.Sprintf("%d mentioned you in a %s.", n.SenderID, n.EntityType)
+	case domain.NewReaction:
+		message = fmt.Sprintf("%d reacted to your %s.", n.SenderID, n.EntityType)
+	case domain.NewPostComment:
+		message = fmt.Sprintf("%d commented on your %s.", n.SenderID, n.EntityType)
+	case domain.NewCommentReply:
+		message = fmt.Sprintf("%d replied to your comment.", n.SenderID)
+	case domain.NewFollower:
+		message = fmt.Sprintf("%d started following you.", n.SenderID)
+	case domain.NewDirectMessage:
+		message = fmt.Sprintf("You received a message from %d.", n.SenderID)
+	}
 	notification := domain.Notification{
 		UserID:     n.UserID,
 		Type:       n.Type,
-		Message:    n.Message,
+		Message:    message,
 		EntityType: n.EntityType,
 		EntityID:   n.EntityID,
 		CreatedAt:  time.Now().Format(time.RFC3339),
