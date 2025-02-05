@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"n/domain"
+	"strconv"
 	"time"
 )
 
@@ -28,9 +29,9 @@ func (s *NotificationService) SendNotification(n domain.Notification) error {
 	if err := s.repo.Save(notification); err != nil {
 		return err
 	}
-
+	strUserId := strconv.Itoa(n.UserID)
 	// Publish event to Redis
-	if err := s.events.Publish("notifications:"+string(n.UserID), fmt.Sprint(notification)); err != nil {
+	if err := s.events.Publish("notifications:"+strUserId, fmt.Sprint(notification)); err != nil {
 		return fmt.Errorf("Failed to publish event: %v", err)
 	}
 
