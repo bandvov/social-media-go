@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"n/application"
 	"n/domain"
+	"n/utils"
 	"net/http"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type NotificationHandler struct {
@@ -75,4 +78,54 @@ func (h *NotificationHandler) MarkAsRead(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	h.service.MarkAsRead(request.Data)
+}
+
+func (h *NotificationHandler) GetNotifications(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value(utils.UserIDKey).(interface{}).(string)
+	if !ok || userId == "" {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	limit, page := utils.ParsePagination(r)
+
+	offset := (page - 1) * limit
+
+	var notifications []domain.Notification
+	var notificationsCount int
+
+	// Create a new errgroup
+	var g errgroup.Group
+	// First task: Fetch posts
+	g.Go(func() error {
+		var err error
+		notifications, err = h.service.FetchNotifications(userId, limit, offset)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		var err error
+		notificationsCount, err = h.service.CountByUserID(userId)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	// Wait for both goroutines to finish
+	if err := g.Wait(); err != nil {
+		http.Error(w, "could not complete request", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"data":    notifications,
+		"hasMore": notificationsCount > offset+limit,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

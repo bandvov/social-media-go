@@ -57,8 +57,8 @@ func (s *NotificationService) SendNotification(n domain.Notification) error {
 }
 
 // Fetch unsent messages and mark them as sent
-func (s *NotificationService) FetchUnReadMessages(userID string) ([]domain.Notification, error) {
-	return s.repo.GetUnreadMessages(userID)
+func (s *NotificationService) FetchNotifications(userID string, limit, offset int) ([]domain.Notification, error) {
+	return s.repo.GetNotifications(userID, limit, offset)
 }
 
 // Subscribe to real-time notifications for a specific user
@@ -69,4 +69,7 @@ func (s *NotificationService) SubscribeToNotifications(userID string, handler fu
 
 func (s *NotificationService) MarkAsRead(notificationIDs []int) error {
 	return s.repo.MarkAsRead(notificationIDs)
+}
+func (s *NotificationService) CountByUserID(userId string) (int, error) {
+	return s.repo.CountByUserID(userId)
 }

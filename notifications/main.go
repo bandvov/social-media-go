@@ -50,6 +50,7 @@ func main() {
 	// HTTP Router
 	r := http.NewServeMux()
 
+	r.HandleFunc("/", handler.GetNotifications)
 	r.HandleFunc("/send", handler.SendNotification)
 	r.HandleFunc("/listen", handler.ListenNotifications)
 	r.HandleFunc("/mark_as_read", handler.MarkAsRead)
