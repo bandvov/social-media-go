@@ -3,12 +3,17 @@ package domain
 type NotificationType string
 
 const (
-	NewFollower      NotificationType = "new_follower"
-	NewReaction      NotificationType = "new_reaction"
-	NewMention       NotificationType = "new_mention"
-	NewDirectMessage NotificationType = "new_direct_message"
-	NewPostComment   NotificationType = "new_post_comment"
-	NewCommentReply  NotificationType = "new_comment_reply"
+	NewFollower        NotificationType = "new_follower"
+	NewReactionLike    NotificationType = "new_reaction_like"
+	NewReactionDislike NotificationType = "new_reaction_dislike"
+	NewReactionLove    NotificationType = "new_reaction_love"
+	NewReactionLaugh   NotificationType = "new_reaction_laugh"
+	NewReactionAngry   NotificationType = "new_reaction_angry"
+	NewReactionWow     NotificationType = "new_reaction_wow"
+	NewMention         NotificationType = "new_mention"
+	NewDirectMessage   NotificationType = "new_direct_message"
+	NewPostComment     NotificationType = "new_post_comment"
+	NewCommentReply    NotificationType = "new_comment_reply"
 )
 
 type EntityType string
@@ -19,13 +24,21 @@ const (
 	Reply   EntityType = "reply"
 )
 
-type Notification struct {
+type NotificationRequest struct {
+	BaseNotification
+	SenderId int `json:"sender_id"`
+}
+
+type BaseNotification struct {
 	ID         int              `json:"id"`
-	SenderID   int              `json:"sender_id"`   // Who triggers the notification
 	UserID     int              `json:"user_id"`     // Who receives the notification
 	Type       NotificationType `json:"type"`        // Type of notification
-	Message    string           `json:"message"`     // Notification message
 	EntityType EntityType       `json:"entity_type"` // Type of entity (post, comment, reply)
 	EntityID   int              `json:"entity_id"`   // ID of the post, comment, or reply
-	CreatedAt  string           `json:"created_at"`
+}
+
+type Notification struct {
+	BaseNotification
+	ActorIDs  []int  `json:"actor_ids"` // array of users who reacted during half hour
+	CreatedAt string `json:"created_at"`
 }

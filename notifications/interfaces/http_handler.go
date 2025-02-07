@@ -21,7 +21,7 @@ func NewNotificationHandler(service *application.NotificationService) *Notificat
 
 // Send Notification Endpoint
 func (h *NotificationHandler) SendNotification(w http.ResponseWriter, r *http.Request) {
-	var req domain.Notification
+	var req domain.NotificationRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
