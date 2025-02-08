@@ -3,9 +3,9 @@ package infrastructure
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"n/domain"
 
-	"github.com/lib/pq"
 	pg "github.com/lib/pq"
 )
 
@@ -18,9 +18,11 @@ func NewPostgresNotificationRepository(db *sql.DB) *PostgresNotificationReposito
 }
 
 func (r *PostgresNotificationRepository) Save(notification domain.Notification) error {
+	fmt.Printf("here===========\n", "%+v", notification)
+
 	_, err := r.db.Exec(
-		"INSERT INTO notifications (user_id, message, type, entity_type, entity_id, created_at) VALUES($1, $2, $3, $4, $5, $6, $7)",
-		notification.UserID, notification.Message, notification.Type, notification.EntityType, notification.EntityID, notification.CreatedAt,
+		"INSERT INTO notifications (user_id, actor_ids, message, type, entity_type, entity_id, created_at) VALUES($1, $2, $3, $4, $5, $6, NOW())",
+		notification.UserID, notification.ActorIDs, notification.Message, notification.Type, notification.EntityType, notification.EntityID,
 	)
 	return err
 }
@@ -28,9 +30,10 @@ func (r *PostgresNotificationRepository) Save(notification domain.Notification) 
 func (r *PostgresNotificationRepository) Update(notification *domain.Notification) error {
 	_, err := r.db.Exec(`
 		UPDATE notifications 
-		SET actor_ids = $1,
-		WHERE id = $2`,
-		pq.Array(notification.ActorIDs),
+		SET actor_ids = $1, message = $2
+		WHERE id = $3`,
+		notification.ActorIDs,
+		notification.Message,
 		notification.ID,
 	)
 	return err
@@ -73,14 +76,14 @@ func (r *PostgresNotificationRepository) MarkAsRead(notificationIDs []int) error
 	return err
 }
 
-func (r *PostgresNotificationRepository) FindRecentNotification(EntityID int, eventType string) (*domain.Notification, error) {
+func (r *PostgresNotificationRepository) FindRecentNotification(userID, EntityID int, eventType string) (*domain.Notification, error) {
 	var notification domain.Notification
 	err := r.db.QueryRow(`
-		SELECT id, actor_ids, created_at FROM notifications 
-		WHERE entity_id = $2 AND type = $3 
+		SELECT id, user_id, actor_ids, type, entity_id, entity_type, message, created_at  created_at FROM notifications 
+		WHERE user_id = $1 AND entity_id = $2 AND type = $3 
 		AND created_at > NOW() - INTERVAL '30 minutes' 
-		ORDER BY created_at DESC LIMIT 1`, EntityID, eventType).
-		Scan(&notification.ID, pq.Array(&notification.ActorIDs), &notification.CreatedAt)
+		ORDER BY created_at DESC LIMIT 1`, userID, EntityID, eventType).
+		Scan(&notification.ID, notification.UserID, &notification.ActorIDs, &notification.Type, &notification.EntityID, &notification.EntityType, &notification.Message, &notification.CreatedAt)
 
 	if err != nil {
 		return nil, err

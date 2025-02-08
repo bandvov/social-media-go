@@ -1,11 +1,14 @@
 package application
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"n/domain"
 	"strconv"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type NotificationService struct {
@@ -19,13 +22,15 @@ func NewNotificationService(repo domain.NotificationRepository, events domain.Ev
 
 func (s *NotificationService) SendNotification(n domain.NotificationRequest) error {
 
-	existing, err := s.repo.FindRecentNotification(n.EntityID, string(n.Type))
+	existing, err := s.repo.FindRecentNotification(n.UserID, n.EntityID, string(n.Type))
 	if err != nil {
-		return err
+		if err != sql.ErrNoRows {
+			return err
+		}
 	}
 
 	if existing != nil {
-		existing.ActorIDs = append(existing.ActorIDs, n.SenderId)
+		existing.ActorIDs = append(existing.ActorIDs, int64(n.SenderId))
 		existing.Message = existing.GenerateMessage()
 		s.repo.Update(existing)
 
@@ -49,7 +54,7 @@ func (s *NotificationService) SendNotification(n domain.NotificationRequest) err
 				EntityType: n.EntityType,
 				EntityID:   n.EntityID,
 			},
-			ActorIDs:  []int{n.SenderId},
+			ActorIDs:  pq.Int64Array{n.SenderId},
 			CreatedAt: time.Now().Format(time.RFC3339),
 		}
 		notification.Message = notification.GenerateMessage()

@@ -27,4 +27,5 @@ CREATE TABLE notifications (
         entity_id INT NOT NULL, -- ID of the related post, comment, reaction, or user
         actor_ids INT[], -- Array o user IDs who triggered the event
         created_at TIMESTAMP DEFAULT NOW (),
-        is_read BOOLEAN DEFAULT FALSE);
+        is_read BOOLEAN DEFAULT FALSE;
+);

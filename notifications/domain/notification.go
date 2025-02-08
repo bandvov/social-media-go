@@ -1,6 +1,10 @@
 package domain
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/lib/pq"
+)
 
 type NotificationType string
 
@@ -28,7 +32,7 @@ const (
 
 type NotificationRequest struct {
 	BaseNotification
-	SenderId int `json:"sender_id"`
+	SenderId int64 `json:"sender_id"`
 }
 
 type BaseNotification struct {
@@ -41,9 +45,9 @@ type BaseNotification struct {
 
 type Notification struct {
 	BaseNotification
-	Message   string `json:"message"`
-	ActorIDs  []int  `json:"actor_ids"` // array of users who reacted during half hour
-	CreatedAt string `json:"created_at"`
+	Message   string        `json:"message"`
+	ActorIDs  pq.Int64Array `json:"actor_ids"` // array of users who reacted during half hour
+	CreatedAt string        `json:"created_at"`
 }
 
 // GenerateMessage generates a notification message based on the type
@@ -108,7 +112,7 @@ func getReactionVerb(notificationType NotificationType) string {
 }
 
 // generateReactionMessage creates a message for reactions with formatted names
-func generateReactionMessage(ActorIDs []int, reactionType NotificationType, entityType EntityType) string {
+func generateReactionMessage(ActorIDs pq.Int64Array, reactionType NotificationType, entityType EntityType) string {
 	count := len(ActorIDs)
 	verb := getReactionVerb(reactionType)
 
