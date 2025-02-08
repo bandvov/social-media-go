@@ -387,3 +387,45 @@ func (u *UserRepository) buildUpdateQuery(user *domain.User) (string, error) {
 	query := fmt.Sprintf("UPDATE users SET %s WHERE id = %d;", setClause, user.ID)
 	return query, nil
 }
+
+// GetUsersByID fetches user details for a given set of user IDs.
+func (r *UserRepository) GetUsersByID(ctx context.Context, userIDs []int) ([]domain.User, error) {
+	if len(userIDs) == 0 {
+		return nil, nil
+	}
+
+	// Generate placeholders for the SQL IN clause
+	placeholders := make([]string, len(userIDs))
+	args := make([]interface{}, len(userIDs))
+	for i, id := range userIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, username, profile_pic
+		FROM users
+		WHERE id IN (%s)
+	`, strings.Join(placeholders, ", "))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []domain.User
+	for rows.Next() {
+		var user domain.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.ProfilePic); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

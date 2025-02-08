@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -23,7 +22,8 @@ type Post struct {
 	Visibility          *PostVisibility `json:"visibility,omitempty"`
 	CreatedAt           time.Time       `json:"created_at,omitempty"`
 	UpdatedAt           time.Time       `json:"updated_at,omitempty"`
-	Reactions           json.RawMessage `json:"reactions,omitempty"`
+	Reactions           []Reaction      `json:"reactions,omitempty"`
+	Comments            []Comment       `json:"comments,omitempty"`
 	TotaReactionslCount int             `json:"total_reactions_count,omitempty"`
 	TotalCommentsCount  int             `json:"total_comments_count,omitempty"`
 	UserReaction        string          `json:"user_reaction,omitempty"`

@@ -63,9 +63,17 @@ func main() {
 	// Initialize HTTP handler
 	userHandler := interfaces.NewUserHTTPHandler(userService)
 
+	commentRepo := infrastructure.NewPostgresCommentRepository(db)
+	commentService := application.NewCommentService(commentRepo)
+	commentHandler := interfaces.NewCommentHandler(commentService)
+
+	reactionRepo := infrastructure.NewReactionRepository(db)
+	reactionService := application.NewReactionService(reactionRepo)
+	reactionHandler := interfaces.NewReactionHandler(reactionService)
+
 	postRepo := infrastructure.NewPostRepository(db)
 	postService := application.NewPostService(postRepo)
-	postHandler := interfaces.NewPostHTTPHandler(postService)
+	postHandler := interfaces.NewPostHTTPHandler(postService, commentService, userService, reactionService)
 
 	followerRepo := infrastructure.NewFollowerRepository(db)
 	Followerservice := application.NewFollowerService(followerRepo)
@@ -74,14 +82,6 @@ func main() {
 	tagRepo := infrastructure.NewTagRepository(db)
 	tagService := application.NewTagService(tagRepo)
 	tagHandler := interfaces.NewTagHandler(tagService)
-
-	commentRepo := infrastructure.NewPostgresCommentRepository(db)
-	commentService := application.NewCommentService(commentRepo)
-	commentHandler := interfaces.NewCommentHandler(commentService)
-
-	reactionRepo := infrastructure.NewReactionRepository(db)
-	reactionService := application.NewReactionService(reactionRepo)
-	reactionHandler := interfaces.NewReactionHandler(reactionService)
 
 	// Create a custom router
 	router := utils.NewRouter()

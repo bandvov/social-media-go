@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 
 	"github.com/bandvov/social-media-go/domain"
@@ -17,13 +18,14 @@ type UserServiceInterface interface {
 	GetPublicProfiles(limit, offset int) ([]domain.User, error)
 	GetAdminProfiles(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfo(id, otherUser int) (*domain.User, error)
+	GetUsersByIDs(userIDs []int) (map[int]domain.User, error)
 }
 type UserService struct {
-	repo domain.UserRepository
+	userRepo domain.UserRepository
 }
 
-func NewUserService(repo domain.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(userRepo domain.UserRepository) *UserService {
+	return &UserService{userRepo: userRepo}
 }
 
 func (s *UserService) RegisterUser(u domain.CreateUserRequest) error {
@@ -39,12 +41,12 @@ func (s *UserService) RegisterUser(u domain.CreateUserRequest) error {
 		Role:     "user",
 	}
 
-	return s.repo.CreateUser(user)
+	return s.userRepo.CreateUser(user)
 }
 
 func (s *UserService) Authenticate(email, password string) (*domain.User, error) {
 	// Retrieve user by email
-	user, err := s.repo.GetUserByEmail(email)
+	user, err := s.userRepo.GetUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +61,7 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 }
 
 func (s *UserService) UpdateUserData(userData *domain.User) error {
-	_, err := s.repo.GetUserByID(userData.ID)
+	_, err := s.userRepo.GetUserByID(userData.ID)
 	if err != nil {
 		return err
 	}
@@ -72,30 +74,45 @@ func (s *UserService) UpdateUserData(userData *domain.User) error {
 		userData.UpdatePassword(string(hashedPassword))
 	}
 
-	return s.repo.UpdateUser(userData)
+	return s.userRepo.UpdateUser(userData)
 }
 
 func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error {
-	return s.repo.UpdateUser(&domain.User{
+	return s.userRepo.UpdateUser(&domain.User{
 		ID:   userID,
 		Role: newRole,
 	})
 }
 
 func (s *UserService) GetUserByID(id int) (*domain.User, error) {
-	return s.repo.GetUserByID(id)
+	return s.userRepo.GetUserByID(id)
 }
 
 // GetPublicProfiles retrieves public profiles with pagination
 func (s *UserService) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
-	return s.repo.GetPublicProfiles(limit, offset)
+	return s.userRepo.GetPublicProfiles(limit, offset)
 }
 
 // GetAdminProfiles retrieves admin profiles with pagination
 func (s *UserService) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
-	return s.repo.GetAdminProfiles(limit, offset)
+	return s.userRepo.GetAdminProfiles(limit, offset)
 }
 
 func (s *UserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {
-	return s.repo.GetUserProfileInfo(id, otherUser)
+	return s.userRepo.GetUserProfileInfo(id, otherUser)
+}
+
+func (s *UserService) GetUsersByIDs(userIDs []int) (map[int]domain.User, error) {
+	userMap := make(map[int]domain.User)
+
+	userDetails, err := s.userRepo.GetUsersByID(context.Background(), userIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range userDetails {
+		userMap[user.ID] = user
+	}
+
+	return userMap, nil
 }

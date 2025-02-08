@@ -214,3 +214,26 @@ func (r *PostRepository) GetCountPostsByUser(authorID int) (int, error) {
 	}
 	return postsCount, nil
 }
+
+func (r *PostRepository) GetPosts(authorID int, offset int, limit int) ([]domain.Post, error) {
+	rows, err := r.db.Query(`
+        SELECT id, author_id, content, visibility, pinned, created_at, updated_at
+        FROM posts
+        WHERE author_id = $1
+        ORDER BY id
+        OFFSET $2 LIMIT $3`, authorID, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []domain.Post
+	for rows.Next() {
+		var post domain.Post
+		if err := rows.Scan(&post.ID, &post.AuthorID, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}

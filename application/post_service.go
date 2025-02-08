@@ -9,7 +9,7 @@ type PostServiceInterface interface {
 	DeletePost(id int) error
 	UpdatePost(id int, post *domain.Post) error
 	GetPostByID(id int) (*domain.Post, error)
-	GetPostsByUser(userID, otherUserId, offset, limit int) ([]domain.Post, error)
+	GetPostsByUser(userID, offset, limit int) ([]domain.Post, []int, error)
 	GetCountPostsByUser(userID int) (int, error)
 }
 
@@ -37,8 +37,16 @@ func (s *PostService) GetPostByID(id int) (*domain.Post, error) {
 	return s.postRepo.GetByID(id)
 }
 
-func (s *PostService) GetPostsByUser(userID, otherUserId, offset, limit int) ([]domain.Post, error) {
-	return s.postRepo.FindByUserID(userID, otherUserId, offset, limit)
+func (s *PostService) GetPostsByUser(authorID, offset, limit int) ([]domain.Post, []int, error) {
+	posts, err := s.postRepo.GetPosts(authorID, offset, limit)
+	if err != nil {
+		return nil, nil, err
+	}
+	postIDs := make([]int, len(posts))
+	for _, post := range posts {
+		postIDs = append(postIDs, post.ID)
+	}
+	return posts, postIDs, err
 }
 
 func (s *PostService) GetCountPostsByUser(userID int) (int, error) {

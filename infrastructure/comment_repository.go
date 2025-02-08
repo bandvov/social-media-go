@@ -2,8 +2,10 @@ package infrastructure
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/bandvov/social-media-go/domain"
+	"github.com/bandvov/social-media-go/utils"
 )
 
 type PostgresCommentRepository struct {
@@ -113,4 +115,63 @@ LEFT JOIN (
 		comments = append(comments, comment)
 	}
 	return comments, nil
+}
+
+// Fetch comments by post IDs
+func (r *PostgresCommentRepository) GetCommentsByEntityIDs(entityIDs []int) ([]domain.Comment, error) {
+	if len(entityIDs) == 0 {
+		return nil, nil
+	}
+
+	// Prepare query with IN clause
+	query := fmt.Sprintf(`
+	SELECT id, entity_id, content, author_id, created_at
+	FROM comments
+	WHERE entity_id IN (%s)`, utils.Placeholders(len(entityIDs)))
+
+	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []domain.Comment
+	for rows.Next() {
+		var comment domain.Comment
+		if err := rows.Scan(&comment.ID, &comment.EntityID, &comment.Content, &comment.AuthorID, &comment.CreatedAt); err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
+}
+
+func (r *PostgresCommentRepository) CountByEntityIDs(entityIDs []int) ([]domain.CommentCount, error) {
+
+	query := fmt.Sprintf(`
+        SELECT
+			entity_id,
+			COALESCE(COUNT(CASE WHEN entity_type = 'comment' THEN 1 END), 0) AS comment_count,
+            COALESCE(COUNT(CASE WHEN entity_type = 'reply' THEN 1 END), 0) AS reply_count
+        FROM comments
+        WHERE entity_id IN (%s)
+		GROUP BY entity_id`, utils.Placeholders(len(entityIDs)))
+
+	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var counts []domain.CommentCount
+	for rows.Next() {
+		var count domain.CommentCount
+		if err := rows.Scan(&count.EntityID, &count.CommentCount, &count.ReplyCount); err != nil {
+			return nil, err
+		}
+		counts = append(counts, count)
+	}
+
+	return counts, nil
 }
