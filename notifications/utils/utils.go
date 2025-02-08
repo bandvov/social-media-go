@@ -18,7 +18,7 @@ func ParsePagination(r *http.Request) (int, int) {
 	}
 	page, err := strconv.Atoi(query.Get("page"))
 	if err != nil || page < 0 {
-		page = 0
+		page = 1
 	}
 	return limit, page
 }
