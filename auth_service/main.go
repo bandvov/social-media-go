@@ -16,11 +16,16 @@ func main() {
 	if secretKey == "" {
 		log.Fatal("No JWT secret key")
 	}
+	userMicroserviceURL := os.Getenv("USER_MICROSERVICE_URL")
+	if userMicroserviceURL == "" {
+		log.Fatal("No JWT secret key")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		PORT = "8081"
 	}
-	authService := infrastructure.NewJWTAuthService(secretKey)
+	authService := infrastructure.NewJWTAuthService(secretKey, userMicroserviceURL)
 	authApp := application.NewAuthApplication(authService)
 	authHandler := interfaces.NewAuthHandler(authApp)
 

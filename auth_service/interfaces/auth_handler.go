@@ -27,6 +27,6 @@ func (h *AuthHandler) VerifyTokenHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	response := map[string]string{"user_id": userID}
+	response := map[string]*int{"user_id": userID}
 	json.NewEncoder(w).Encode(response)
 }
