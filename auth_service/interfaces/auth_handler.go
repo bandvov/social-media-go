@@ -21,12 +21,11 @@ func (h *AuthHandler) VerifyTokenHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	userID, err := h.authApp.Authenticate(token)
+	userID, err := h.authApp.ValidateServiceToken(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-
-	response := map[string]*int{"user_id": userID}
+	response := map[string]string{"user_id": userID}
 	json.NewEncoder(w).Encode(response)
 }

@@ -21,3 +21,7 @@ func (a *AuthApplication) Authenticate(token string) (*int, error) {
 	}
 	return exists, nil
 }
+
+func (a *AuthApplication) ValidateServiceToken(tokenString string) (string, error) {
+	return a.AuthRepo.DecodeToken(tokenString)
+}
