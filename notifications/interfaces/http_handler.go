@@ -81,10 +81,12 @@ func (h *NotificationHandler) MarkAsRead(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *NotificationHandler) GetNotifications(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value(utils.UserIDKey).(interface{}).(string)
-	if !ok || userId == "" {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
+	query := r.URL.Query()
+
+	// Parse `sort` with default value
+	userId := query.Get("user_id")
+	if userId == "" {
+		http.Error(w, "user id is required", http.StatusBadRequest)
 	}
 
 	limit, page := utils.ParsePagination(r)
