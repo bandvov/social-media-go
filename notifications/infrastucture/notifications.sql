@@ -14,7 +14,8 @@ CREATE TABLE notifications (
         'new_reaction_wow',
         'new_direct_message',
         'new_post_comment',
-        'new_comment_reply' 
+        'new_comment_reply',
+        'new_mention' 
         )),
         message TEXT NOT NULL,
         entity_type VARCHAR(50) NOT NULL CHECK (
@@ -27,5 +28,5 @@ CREATE TABLE notifications (
         entity_id INT NOT NULL, -- ID of the related post, comment, reaction, or user
         actor_ids INT[], -- Array o user IDs who triggered the event
         created_at TIMESTAMP DEFAULT NOW (),
-        is_read BOOLEAN DEFAULT FALSE;
+        is_read BOOLEAN DEFAULT FALSE
 );
