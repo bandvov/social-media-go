@@ -41,6 +41,7 @@ type BaseNotification struct {
 
 type Notification struct {
 	BaseNotification
+	Message   string `json:"message"`
 	ActorIDs  []int  `json:"actor_ids"` // array of users who reacted during half hour
 	CreatedAt string `json:"created_at"`
 }

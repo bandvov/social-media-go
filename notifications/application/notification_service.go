@@ -1,6 +1,7 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"n/domain"
 	"strconv"
@@ -25,10 +26,18 @@ func (s *NotificationService) SendNotification(n domain.NotificationRequest) err
 
 	if existing != nil {
 		existing.ActorIDs = append(existing.ActorIDs, n.SenderId)
+		existing.Message = existing.GenerateMessage()
 		s.repo.Update(existing)
+
+		jsonNotification, err := json.Marshal(existing)
+		if err != nil {
+			return fmt.Errorf("Failed to marshal: %v", err)
+		}
+
 		strUserId := strconv.Itoa(n.UserID)
+
 		// Publish event to Redis
-		if err := s.events.Publish("notifications:"+strUserId, "grouped notification"); err != nil {
+		if err := s.events.Publish("notifications:"+strUserId, string(jsonNotification)); err != nil {
 			return fmt.Errorf("Failed to publish event: %v", err)
 		}
 
@@ -43,14 +52,22 @@ func (s *NotificationService) SendNotification(n domain.NotificationRequest) err
 			ActorIDs:  []int{n.SenderId},
 			CreatedAt: time.Now().Format(time.RFC3339),
 		}
+		notification.Message = notification.GenerateMessage()
 
 		if err := s.repo.Save(notification); err != nil {
 			return err
 		}
+
+		jsonNotification, err := json.Marshal(notification)
+		if err != nil {
+			return fmt.Errorf("Failed to marshal: %v", err)
+		}
+
 		strUserId := strconv.Itoa(n.UserID)
 		// Publish event to Redis
-		if err := s.events.Publish("notifications:"+strUserId, "send notification"); err != nil {
-			return fmt.Errorf("Failed to publish event: %v", err)		}
+		if err := s.events.Publish("notifications:"+strUserId, string(jsonNotification)); err != nil {
+			return fmt.Errorf("Failed to publish event: %v", err)
+		}
 	}
 
 	return nil

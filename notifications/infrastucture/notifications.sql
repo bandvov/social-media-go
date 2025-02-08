@@ -6,17 +6,18 @@ CREATE TABLE notifications (
     type VARCHAR(50) NOT NULL CHECK (
     type IN (
         'new_follower',
-        "new_reaction_like",
-        "new_reaction_dislike",
-        "new_reaction_love",
-        "new_reaction_laugh",
-        "new_reaction_angry",
-        "new_reaction_wow",
+        'new_reaction_like',
+        'new_reaction_dislike',
+        'new_reaction_love',
+        'new_reaction_laugh',
+        'new_reaction_angry',
+        'new_reaction_wow',
         'new_direct_message',
         'new_post_comment',
         'new_comment_reply' 
         )),
-         entity_type VARCHAR(50) NOT NULL CHECK (
+        message TEXT NOT NULL,
+        entity_type VARCHAR(50) NOT NULL CHECK (
         entity_type IN (
             'user',
             'post',
@@ -24,6 +25,6 @@ CREATE TABLE notifications (
             'reaction'
         )), 
         entity_id INT NOT NULL, -- ID of the related post, comment, reaction, or user
-        actor_ids INT[], -- Array of user IDs who triggered the event
+        actor_ids INT[], -- Array o user IDs who triggered the event
         created_at TIMESTAMP DEFAULT NOW (),
         is_read BOOLEAN DEFAULT FALSE);
