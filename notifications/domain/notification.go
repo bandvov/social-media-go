@@ -48,6 +48,7 @@ type Notification struct {
 	Message   string        `json:"message"`
 	ActorIDs  pq.Int64Array `json:"actor_ids"` // array of users who reacted during half hour
 	CreatedAt string        `json:"created_at"`
+	IsRead    bool          `json:"is_read"`
 }
 
 // GenerateMessage generates a notification message based on the type

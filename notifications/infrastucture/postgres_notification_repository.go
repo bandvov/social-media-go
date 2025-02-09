@@ -43,7 +43,7 @@ func (r *PostgresNotificationRepository) Update(notification *domain.Notificatio
 func (r *PostgresNotificationRepository) GetNotifications(userID string, limit, offset int) ([]domain.Notification, error) {
 	// Use prepared statement
 	stmt, err := r.db.Prepare(`
-		SELECT id, user_id, actor_ids, message, type, entity_type, entity_id, created_at
+		SELECT id, user_id, actor_ids, message, type, entity_type, entity_id, is_read, created_at
 		FROM notifications
 		WHERE user_id = $1 AND is_read = false
 		ORDER BY created_at DESC
@@ -62,7 +62,7 @@ func (r *PostgresNotificationRepository) GetNotifications(userID string, limit, 
 	var notifications []domain.Notification
 	for rows.Next() {
 		var msg domain.Notification
-		if err := rows.Scan(&msg.ID, &msg.UserID, &msg.ActorIDs, &msg.Message, &msg.Type, &msg.EntityType, &msg.EntityID, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(&msg.ID, &msg.UserID, &msg.ActorIDs, &msg.Message, &msg.Type, &msg.EntityType, &msg.EntityID, &msg.IsRead, &msg.CreatedAt); err != nil {
 			return nil, err
 		}
 		notifications = append(notifications, msg)
