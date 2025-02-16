@@ -105,37 +105,37 @@ func main() {
 	// seeds.Seed(db, "./seeds/seed_comments.sql")
 
 	// Define routes
-	router.HandleFunc("/admin/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.IsAdminMiddleware(userHandler.GetAdminProfiles))))
+	router.HandleFunc("/api/admin/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.IsAdminMiddleware(userHandler.GetAdminProfiles))))
 
-	router.HandleFunc("GET /users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetPublicProfiles)))
-	router.HandleFunc("GET /users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
-	router.HandleFunc("POST /users", interfaces.LoggerMiddleware(userHandler.RegisterUser))
-	router.HandleFunc("PUT /users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
-	router.HandleFunc("POST /users/login", interfaces.LoggerMiddleware(userHandler.Login))
-	router.HandleFunc("PUT /users/{id}/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
+	router.HandleFunc("GET /api/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetPublicProfiles)))
+	router.HandleFunc("GET /api/users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
+	router.HandleFunc("POST /api/users", interfaces.LoggerMiddleware(userHandler.RegisterUser))
+	router.HandleFunc("PUT /api/users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
+	router.HandleFunc("POST /api/users/login", interfaces.LoggerMiddleware(userHandler.Login))
+	router.HandleFunc("PUT /api/users/{id}/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
 
-	router.HandleFunc("GET /users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
-	router.HandleFunc("GET /users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
-	router.HandleFunc("GET /users/{id}/followees", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowees)))
+	router.HandleFunc("GET /api/users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
+	router.HandleFunc("GET /api/users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
+	router.HandleFunc("GET /api/users/{id}/followees", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowees)))
 
-	router.HandleFunc("GET /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPost)))
-	router.HandleFunc("POST /posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.CreatePost)))
-	router.HandleFunc("PUT /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.UpdatePost)))
+	router.HandleFunc("GET /api/posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPost)))
+	router.HandleFunc("POST /api/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.CreatePost)))
+	router.HandleFunc("PUT /api/posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.UpdatePost)))
 	// this is mocked. Implement soft delete. make visibility = none
-	router.HandleFunc("DELETE /posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.DeletePost)))
+	router.HandleFunc("DELETE /api/posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.DeletePost)))
 
-	router.HandleFunc("POST /followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.AddFollower)))
-	router.HandleFunc("DELETE /followers/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.RemoveFollower)))
+	router.HandleFunc("POST /api/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.AddFollower)))
+	router.HandleFunc("DELETE /api/followers/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.RemoveFollower)))
 
 	router.HandleFunc("GET /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.GetTags)))
 	router.HandleFunc("POST /tags", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.CreateTag)))
 	router.HandleFunc("DELETE /tags/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(tagHandler.DeleteTag)))
 
-	router.HandleFunc("POST /comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
-	router.HandleFunc("GET /comments/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetCommentsByEntityID)))
+	router.HandleFunc("POST /api/comments", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.AddComment)))
+	router.HandleFunc("GET /api/comments/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(commentHandler.GetCommentsByEntityID)))
 
-	router.HandleFunc("GET /reaction", reactionHandler.AddOrUpdateReaction)
-	router.HandleFunc("DELETE /reaction", reactionHandler.RemoveReaction)
+	router.HandleFunc("GET /api/reaction", reactionHandler.AddOrUpdateReaction)
+	router.HandleFunc("DELETE /api/reaction", reactionHandler.RemoveReaction)
 
 	// router.HandleFunc("/seed", seeds.SeedData(db))
 
