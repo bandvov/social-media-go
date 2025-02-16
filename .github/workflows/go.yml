@@ -1,0 +1,60 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "users/**"
+      - "posts/**"
+      - "notifications/**"
+      - "*.go"  # Includes Go files in root or any other relevant folder
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "users/**"
+      - "posts/**"
+      - "notifications/**"
+      - "*.go"  # Includes Go files in root or any other relevant folder
+
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [users, posts, notifications, "*.go"]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Set environment variable for the service
+        run: echo "SERVICE=${{ matrix.service }}" >> $GITHUB_ENV
+
+      - name: Build changed service
+        run: |
+          if [[ -d "$SERVICE" ]]; then
+            echo "Building $SERVICE"
+            cd $SERVICE && go build -v .
+          else
+            echo "$SERVICE not changed, skipping build"
+          fi
+
+      - name: Test changed service
+        run: |
+          if [[ -d "$SERVICE" ]]; then
+            echo "Testing $SERVICE"
+            cd $SERVICE && go test -v .
+          else
+            echo "$SERVICE not changed, skipping tests"
+          fi

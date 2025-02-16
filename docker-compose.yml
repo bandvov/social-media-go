@@ -11,7 +11,8 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_sm_data:/var/lib/postgresql/data
-  
+    networks:
+      - app-network
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -24,14 +25,38 @@ services:
       - postgres
     volumes:
       - pgadmin-data:/var/lib/pgadmin  
+    networks:
+      - app-network
   redis:
     image: redis:latest
     container_name: redis-container
     ports:
       - "6379:6379"
     restart: unless-stopped
+    networks:
+      - app-network  
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
 volumes:
   postgres_sm_data:
     driver: local
   pgadmin-data:
     driver: local
+  caddy_data:
+    driver: local
+  caddy_config:  
+    driver: local
+networks:
+  app-network:
+    driver: bridge
