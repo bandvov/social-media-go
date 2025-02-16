@@ -1,0 +1,26 @@
+# API Gateway with Load Balancing
+
+# Route for user service
+https://sm.com:443 {
+    reverse_proxy /api/users/* user-service:8080 {
+        # Load balancing between multiple user-service instances
+        lb_policy round_robin
+        # Health check for user-service
+        health_uri /
+        health_status 2xx
+        health_interval 5s
+        health_timeout 2s    }
+}
+
+# Route for posts service
+https://sm.com:443 {
+    reverse_proxy /api/posts/* posts-service:8081 {
+        # Load balancing between multiple posts-service instances
+        lb_policy round_robin
+        # Health check for posts-service
+        health_uri /
+        health_status 2xx
+        health_interval 5s
+        health_timeout 2s
+    }  
+}
