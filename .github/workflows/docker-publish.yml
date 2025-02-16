@@ -49,3 +49,4 @@ jobs:
           docker build -t $IMAGE_NAME:$VERSION_TAG -t $IMAGE_NAME:latest ${{ matrix.service }}
           docker push $IMAGE_NAME:$VERSION_TAG
           docker push $IMAGE_NAME:latest
+        continue-on-error: false
