@@ -29,7 +29,7 @@ COPY --from=builder /app/main .
 COPY --from=builder /app/version.txt .
 
 # Expose necessary ports
-EXPOSE 8085
+EXPOSE 8082
 
 # Run the application
 CMD ["./main"]
