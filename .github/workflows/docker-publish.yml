@@ -20,7 +20,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Log Workflow Conclusion
-        run: echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"  
+        run: |
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"  
 
       - name: Check if ${{ matrix.service }} has changed
         id: check_changes
