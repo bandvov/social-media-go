@@ -61,7 +61,7 @@ services:
     env_file:
       - ./notifications/.env
     ports:
-      - "8085:8080"    
+      - "8082:8080"    
 volumes:
   postgres_sm_data:
     driver: local

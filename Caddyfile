@@ -1,39 +1,47 @@
-# API Gateway with Load Balancing
+use {
+    admin off
+}
 
-# Route for user service
 https://sm.com:443 {
+    # Define routes that require JWT verification
+    @protected_routes {
+        not path /login /public/*  # Exclude login and public routes from verification
+    }
+
+    # Validate JWT from cookies before forwarding the request
+    reverse_proxy @protected_routes http://localhost:8080/verify {
+        header_up Cookie {http.request.header.Cookie}
+    }
+
+    # Handle 401 Unauthorized (JWT invalid or missing)
+    handle_response 401 {
+        redir https://auth.example.com/login
+    }
+
+    # Route for user service
     reverse_proxy /api/users/* user-service:8080 {
-        # Load balancing between multiple user-service instances
         lb_policy round_robin
-        # Health check for user-service
         health_uri /
         health_status 2xx
         health_interval 5s
-        health_timeout 2s    
+        health_timeout 2s
     }
-}
 
-# Route for posts service
-https://sm.com:443 {
+    # Route for posts service
     reverse_proxy /api/posts/* posts-service:8081 {
-        # Load balancing between multiple posts-service instances
         lb_policy round_robin
-        # Health check for posts-service
-        health_uri /
-        health_status 2xx
-        health_interval 5s
-        health_timeout 2s
-    }  
-}
-
-https://sm.com:443 {
-    reverse_proxy /api/notifications/* notifications-service:8081 {
-        # Load balancing between multiple notifications-service instances
-        lb_policy round_robin
-        # Health check for notifications-service
         health_uri /
         health_status 2xx
         health_interval 5s
         health_timeout 2s
     }
-}      
+
+    # Route for notifications service
+    reverse_proxy /api/notifications/* notifications-service:8082 {
+        lb_policy round_robin
+        health_uri /
+        health_status 2xx
+        health_interval 5s
+        health_timeout 2s
+    }
+}
