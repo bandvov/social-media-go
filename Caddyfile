@@ -9,7 +9,8 @@ https://sm.com:443 {
         health_uri /
         health_status 2xx
         health_interval 5s
-        health_timeout 2s    }
+        health_timeout 2s    
+    }
 }
 
 # Route for posts service
@@ -24,3 +25,15 @@ https://sm.com:443 {
         health_timeout 2s
     }  
 }
+
+https://sm.com:443 {
+    reverse_proxy /api/notifications/* notifications-service:8081 {
+        # Load balancing between multiple notifications-service instances
+        lb_policy round_robin
+        # Health check for notifications-service
+        health_uri /
+        health_status 2xx
+        health_interval 5s
+        health_timeout 2s
+    }
+}      
