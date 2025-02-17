@@ -44,4 +44,13 @@ https://sm.com:443 {
         health_interval 5s
         health_timeout 2s
     }
+    
+    # Route for activities service
+    reverse_proxy /api/activities/* activities-service:8083 {
+        lb_policy round_robin
+        health_uri /
+        health_status 2xx
+        health_interval 5s
+        health_timeout 2s
+    }
 }
