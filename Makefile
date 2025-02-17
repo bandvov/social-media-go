@@ -1,4 +1,4 @@
-export VERSION_1 := $(shell cat notifications/VERSION)
+export NOTIFICATIONS_VERSION=$(cat ./notifications/VERSION)
 
 up:
 	docker-compose up --build
