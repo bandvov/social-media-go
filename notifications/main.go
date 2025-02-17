@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -54,7 +55,24 @@ func main() {
 	r.HandleFunc("/send", handler.SendNotification)
 	r.HandleFunc("/listen", handler.ListenNotifications)
 	r.HandleFunc("/mark_as_read", handler.MarkAsRead)
+	r.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// Check the database connection
+		if err := db.Ping(); err != nil {
+			http.Error(w, "Database unreachable", http.StatusInternalServerError)
+			return
+		}
 
-	log.Println("Server running on port 8081")
-	log.Fatal(http.ListenAndServe(":8081", middlewares.CorsMiddleware(r)))
+		// Check the Redis connection
+		if err := redis.Ping(context.Background()).Err(); err != nil {
+			http.Error(w, "Redis unreachable", http.StatusInternalServerError)
+			return
+		}
+
+		// Everything is OK, return a 200 status
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
+
+	log.Println("Server running on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", middlewares.CorsMiddleware(r)))
 }
