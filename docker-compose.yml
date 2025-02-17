@@ -52,8 +52,8 @@ services:
     build:
       context: ./notifications
       args:
-        VERSION: ${VERSION_1}
-    container_name: notifications_${VERSION_1}
+        VERSION: ${NOTIFICATIONS_VERSION}
+    container_name: notifications_${NOTIFICATIONS_VERSION}
     restart: always
     depends_on:
       - postgres
