@@ -48,6 +48,20 @@ services:
       - caddy_config:/config
     networks:
       - app-network
+  notifications:
+    build:
+      context: ./notifications
+      args:
+        VERSION: ${VERSION_1}
+    container_name: notifications_${VERSION_1}
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./notifications/.env
+    ports:
+      - "8085:8080"    
 volumes:
   postgres_sm_data:
     driver: local
