@@ -58,3 +58,6 @@ jobs:
           else
             echo "$SERVICE not changed, skipping tests"
           fi
+      - name: Log Workflow Conclusion
+        run: |
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"  
