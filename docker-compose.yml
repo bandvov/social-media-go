@@ -46,6 +46,16 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+    expose:
+      - 2019  # Caddy admin API port
+  caddy-ui:
+    image: qmcgaw/caddy-ui:latest
+    ports:
+      - "4000:8000"  # Change as needed
+    environment:
+      - CADDY_API_ENDPOINT=http://caddy:2019
+    depends_on:
+      - caddy
     networks:
       - app-network
   notifications:
