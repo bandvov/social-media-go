@@ -11,36 +11,40 @@
 }
 
 localhost:443 {
-    @users {
-        path /users*
+    @api_users {
+        path /api/users*
     }
-    @posts {
-        path /posts*
+    @api_posts {
+        path /api/posts*
+    }
+    @exclude_login {
+        path /login
     }
 
-    # Authentication
-    forward_auth @users users-service:8080 {
+    # Authentication - exclude /login for users service
+    forward_auth @api_users users-service:8080 {
         uri /verify
         copy_headers Authorization Cookie
+        not @exclude_login
     }
-    forward_auth @posts users-service:8080 {
+    forward_auth @api_posts users-service:8080 {
         uri /verify
         copy_headers Authorization Cookie
     }
 
     # CORS Headers
-    header @users Access-Control-Allow-Origin "your-frontend-domain.com"
-    header @users Access-Control-Allow-Credentials "true"
-    header @users Access-Control-Allow-Headers "Authorization, Cookie"
-    header @users Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header @api_users Access-Control-Allow-Origin "https://localhost:3000"
+    header @api_users Access-Control-Allow-Credentials "true"
+    header @api_users Access-Control-Allow-Headers "Authorization, Cookie"
+    header @api_users Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 
-    header @posts Access-Control-Allow-Origin "your-frontend-domain.com"
-    header @posts Access-Control-Allow-Credentials "true"
-    header @posts Access-Control-Allow-Headers "Authorization, Cookie"
-    header @posts Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header @api_posts Access-Control-Allow-Origin "https://localhost:3000"
+    header @api_posts Access-Control-Allow-Credentials "true"
+    header @api_posts Access-Control-Allow-Headers "Authorization, Cookie"
+    header @api_posts Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 
-    # Users Service with Health Check
-    handle_path /users* {
+    # Users Service with Health Check, exclude /login from auth
+    handle_path /api/users* {
         reverse_proxy localhost:8080 {
             health_uri /healthz
             health_interval 10s
@@ -50,7 +54,7 @@ localhost:443 {
     }
 
     # Posts Service with Health Check
-    handle_path /posts* {
+    handle_path /api/posts* {
         reverse_proxy localhost:8081 {
             health_uri /healthz
             health_interval 10s
