@@ -16,7 +16,7 @@ COPY . .
 # Build the binary
 ARG VERSION
 RUN echo "$VERSION" > /app/version.txt
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./cmd/app
+RUN CGO_ENABLED=0 go build -o main .
 
 # Stage 2: Run
 FROM alpine:latest
