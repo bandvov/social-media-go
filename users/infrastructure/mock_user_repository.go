@@ -2,8 +2,7 @@ package infrastructure
 
 import (
 	"context"
-
-	"github.com/bandvov/social-media-go/domain"
+	"users/domain"
 )
 
 type MockUserRepository struct {
@@ -15,7 +14,7 @@ type MockUserRepository struct {
 	GetAdminProfilesFunc   func(limit, offset int) ([]domain.User, error)
 	GetUserProfileInfoFunc func(id, authenticatedUser int) (*domain.User, error)
 	UpdateUserFunc         func(user *domain.User) error
-	GetUsersByIDFunc       func(ctx context.Context, userIDs []int) ([]domain.User, error)
+	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) ([]domain.User, error)
 }
 
 func (m *MockUserRepository) CreateUser(user *domain.User) error {
@@ -73,9 +72,9 @@ func (m *MockUserRepository) UpdateUser(user *domain.User) error {
 	return nil
 }
 
-func (m *MockUserRepository) GetUsersByID(ctx context.Context, userIDs []int) ([]domain.User, error) {
-	if m.GetUsersByIDFunc != nil {
-		return m.GetUsersByIDFunc(ctx, userIDs)
+func (m *MockUserRepository) GetUsersByIDs(ctx context.Context, userIDs []int) ([]domain.User, error) {
+	if m.GetUsersByIDsFunc != nil {
+		return m.GetUsersByIDsFunc(ctx, userIDs)
 	}
 	return nil, nil
 }

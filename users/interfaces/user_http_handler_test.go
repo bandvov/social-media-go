@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"users/application"
+	"users/domain"
+	"users/utils"
 
-	"github.com/bandvov/social-media-go/application"
-	"github.com/bandvov/social-media-go/domain"
-	"github.com/bandvov/social-media-go/utils"
 	"github.com/lib/pq"
 )
 
@@ -70,7 +70,7 @@ func TestLogin_Success(t *testing.T) {
 	}{
 		{
 			name:        "Valid Login",
-			requestBody:string(reqJSON),
+			requestBody: string(reqJSON),
 			mockUserService: &application.MockUserService{
 				AuthenticateFunc: func(email, password string) (*domain.User, error) {
 					return &expectedUser, nil

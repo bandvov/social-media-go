@@ -9,11 +9,19 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"users/application"
+	"users/domain"
+	"users/utils"
 
-	"github.com/bandvov/social-media-go/application"
-	"github.com/bandvov/social-media-go/domain"
-	"github.com/bandvov/social-media-go/utils"
 	"github.com/lib/pq"
+)
+
+// Define keys for context
+type contextKey string
+
+const (
+	userIDKey  contextKey = "userID"
+	isAdminKey contextKey = "isAdmin"
 )
 
 type UserHTTPHandler struct {
@@ -248,4 +256,55 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 
 func (h *UserHTTPHandler) IsAdmin(ctx context.Context) bool {
 	return ctx.Value(isAdminKey).(bool)
+}
+
+func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
+	cookieName := "access_token"
+	// Extract the cookie
+	cookie, err := r.Cookie(cookieName)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	fmt.Println("here========================")
+	// Parse userID from cookie
+	var token string
+	_, err = fmt.Sscanf(cookie.Value, "%s", &token)
+	if err != nil {
+		http.Error(w, "Invalid access token", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("here1========================")
+	claims, err := utils.ValidateJWT(token)
+	if err != nil {
+		http.SetCookie(w, &http.Cookie{
+			Name:     cookieName,
+			Path:     "/",
+			Value:    "",
+			HttpOnly: true,
+			Secure:   true,
+			Expires:  time.Unix(0, 0),
+		})
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	fmt.Println("here2========================")
+	// Retrieve user from the database
+	user, err := h.UserService.GetUserByID(claims.UserID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+	fmt.Println("here4========================")
+
+	isAdmin := user.Role == "admin"
+
+	response := map[string]interface{}{
+		string(userIDKey):  user.ID,
+		string(isAdminKey): isAdmin,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

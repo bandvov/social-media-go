@@ -54,14 +54,14 @@ func main() {
 	})
 	cache := infrastructure.NewRedisCache(redisClient)
 
-	// Initialize PostgreSQL repository
-	userRepo := infrastructure.NewUserRepository(db, cache)
+	// // Initialize PostgreSQL repository
+	// userRepo := infrastructure.NewUserRepository(db, cache)
 
-	// Initialize service
-	userService := application.NewUserService(userRepo)
+	// // Initialize service
+	// userService := application.NewUserService(userRepo)
 
-	// Initialize HTTP handler
-	userHandler := interfaces.NewUserHTTPHandler(userService)
+	// // Initialize HTTP handler
+	// userHandler := interfaces.NewUserHTTPHandler(userService)
 
 	commentRepo := infrastructure.NewPostgresCommentRepository(db)
 	commentService := application.NewCommentService(commentRepo)
@@ -73,7 +73,7 @@ func main() {
 
 	postRepo := infrastructure.NewPostRepository(db)
 	postService := application.NewPostService(postRepo)
-	postHandler := interfaces.NewPostHTTPHandler(postService, commentService, userService, reactionService)
+	postHandler := interfaces.NewPostHTTPHandler(postService, commentService, nil, reactionService)
 
 	followerRepo := infrastructure.NewFollowerRepository(db)
 	Followerservice := application.NewFollowerService(followerRepo)
@@ -107,16 +107,16 @@ func main() {
 	// Define routes
 	router.HandleFunc("/api/admin/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.IsAdminMiddleware(userHandler.GetAdminProfiles))))
 
-	router.HandleFunc("GET /api/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetPublicProfiles)))
-	router.HandleFunc("GET /api/users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
-	router.HandleFunc("POST /api/users", interfaces.LoggerMiddleware(userHandler.RegisterUser))
-	router.HandleFunc("PUT /api/users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
-	router.HandleFunc("POST /api/users/login", interfaces.LoggerMiddleware(userHandler.Login))
-	router.HandleFunc("PUT /api/users/{id}/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
+	// router.HandleFunc("GET /api/users", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetPublicProfiles)))
+	// router.HandleFunc("GET /api/users/{id}/profile", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.GetUserProfile)))
+	// router.HandleFunc("POST /api/users", interfaces.LoggerMiddleware(userHandler.RegisterUser))
+	// router.HandleFunc("PUT /api/users/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.UpdateUser)))
+	// router.HandleFunc("POST /api/users/login", interfaces.LoggerMiddleware(userHandler.Login))
+	// router.HandleFunc("PUT /api/users/{id}/role", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(userHandler.ChangeUserRole)))
 
-	router.HandleFunc("GET /api/users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
-	router.HandleFunc("GET /api/users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
-	router.HandleFunc("GET /api/users/{id}/followees", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowees)))
+	// router.HandleFunc("GET /api/users/{id}/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPostsByUser)))
+	// router.HandleFunc("GET /api/users/{id}/followers", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowers)))
+	// router.HandleFunc("GET /api/users/{id}/followees", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(followerHandler.GetFollowees)))
 
 	router.HandleFunc("GET /api/posts/{id}", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.GetPost)))
 	router.HandleFunc("POST /api/posts", interfaces.LoggerMiddleware(userHandler.AuthMiddleware(postHandler.CreatePost)))

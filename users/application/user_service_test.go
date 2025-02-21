@@ -3,9 +3,9 @@ package application
 import (
 	"errors"
 	"testing"
+	"users/domain"
+	"users/infrastructure"
 
-	"github.com/bandvov/social-media-go/domain"
-	"github.com/bandvov/social-media-go/infrastructure"
 	"golang.org/x/crypto/bcrypt"
 )
 

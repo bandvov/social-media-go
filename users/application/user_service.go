@@ -3,8 +3,8 @@ package application
 import (
 	"context"
 	"errors"
+	"users/domain"
 
-	"github.com/bandvov/social-media-go/domain"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -105,7 +105,7 @@ func (s *UserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error
 func (s *UserService) GetUsersByIDs(userIDs []int) (map[int]domain.User, error) {
 	userMap := make(map[int]domain.User)
 
-	userDetails, err := s.userRepo.GetUsersByID(context.Background(), userIDs)
+	userDetails, err := s.userRepo.GetUsersByIDs(context.Background(), userIDs)
 	if err != nil {
 		return nil, err
 	}

@@ -11,5 +11,5 @@ type UserRepository interface {
 	GetAdminProfiles(limit, offset int) ([]User, error)
 	GetUserProfileInfo(id, otherUser int) (*User, error)
 	UpdateUser(user *User) error
-	GetUsersByID(ctx context.Context, userIDs []int) ([]User, error)
+	GetUsersByIDs(ctx context.Context, userIDs []int) ([]User, error)
 }
