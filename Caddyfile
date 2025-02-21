@@ -11,18 +11,22 @@
 }
 
 https://localhost:443 {
+    tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
+    root * .
+    file_server
+        
     @users {
-        path /users*
+        path /api/users*
         not path /login
     }
     @posts {
-        path /posts*
+        path /api/posts*
     }
 
     # Authentication
     forward_auth @users users-service:8000 {
         uri /verify
-        copy_headers Authorization Cookie
+        copy_headers Cookie
     }
     forward_auth @posts users-service:8000 {
         uri /verify
@@ -41,7 +45,7 @@ https://localhost:443 {
     header @posts Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 
     # Users Service with Health Check
-    handle_path /users* {
+    handle_path /api/users* {
         reverse_proxy localhost:8080 {
             health_uri /healthz
             health_interval 10s
@@ -51,7 +55,7 @@ https://localhost:443 {
     }
 
     # Posts Service with Health Check
-    handle_path /posts* {
+    handle_path /api/posts* {
         reverse_proxy localhost:8081 {
             health_uri /healthz
             health_interval 10s
