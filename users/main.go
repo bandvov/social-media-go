@@ -52,7 +52,7 @@ func main() {
 	userService := application.NewUserService(userRepo)
 
 	// Initialize HTTP handler
-	userHandler := interfaces.NewUserHTTPHandler(userService)
+	userHandler := interfaces.NewUserHTTPHandler(userService, db)
 
 	// Create a custom router
 	router := utils.NewRouter()
@@ -77,7 +77,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		slog.Info(fmt.Sprintf("Starting server on %v", ":8080"))
+		slog.Info(fmt.Sprintf("Starting server on %v", PORT))
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("HTTP server error", "error", err)
 			os.Exit(1)

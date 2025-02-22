@@ -12,7 +12,6 @@ import (
 	"time"
 	"users/application"
 	"users/domain"
-	"users/infrastructure"
 	"users/utils"
 
 	"github.com/lib/pq"
@@ -29,11 +28,10 @@ const (
 type UserHTTPHandler struct {
 	UserService application.UserServiceInterface
 	db          *sql.DB
-	cache       infrastructure.Cache
 }
 
-func NewUserHTTPHandler(userService application.UserServiceInterface) *UserHTTPHandler {
-	return &UserHTTPHandler{UserService: userService}
+func NewUserHTTPHandler(userService application.UserServiceInterface, db *sql.DB) *UserHTTPHandler {
+	return &UserHTTPHandler{UserService: userService, db: db}
 }
 
 func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {

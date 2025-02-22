@@ -13,7 +13,7 @@ import (
 func InitPostgres() *sql.DB {
 	cfg := config.LoadConfig()
 
-	connStr := fmt.Sprintf("postgresql://%v:%v@localhost:%v/%v?sslmode=disable", cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresPort, cfg.PostgresDB)
+	connStr := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable", cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresHost, cfg.PostgresPort, cfg.PostgresDB)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {

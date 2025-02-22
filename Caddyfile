@@ -24,11 +24,11 @@ https://localhost:443 {
     }
 
     # Authentication
-    forward_auth @users users-service:8000 {
+    forward_auth @users {$USERS_CONTAINER}:8000 {
         uri /verify
         copy_headers Cookie
     }
-    forward_auth @posts users-service:8000 {
+    forward_auth @posts {$USERS_CONTAINER}:8000 {
         uri /verify
         copy_headers Authorization Cookie
     }
@@ -46,7 +46,7 @@ https://localhost:443 {
 
     # Users Service with Health Check
     handle_path /api/users* {
-        reverse_proxy localhost:8080 {
+        reverse_proxy {$USERS_CONTAINER}:8080 {
             health_uri /healthz
             health_interval 10s
             health_timeout 2s

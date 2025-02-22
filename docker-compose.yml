@@ -42,6 +42,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - USERS_CONTAINER=USERS_${USERS_VERSION} # or directly in .env file  
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -73,8 +75,9 @@ services:
       - redis
     env_file:
       - ./users/.env
-    ports:
-      - "8080:8080"
+    # Uncomment below to test in postman  
+    # ports:
+    #   - "8080:8080"
     networks:
       - app-network      
   notifications:
@@ -88,8 +91,9 @@ services:
       - users
     env_file:
       - ./notifications/.env
-    ports:
-      - "8082:8080"
+    # Uncomment below to test in postman    
+    # ports:
+    #   - "8082:8080"
     networks:
       - app-network      
 volumes:
