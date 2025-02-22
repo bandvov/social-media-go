@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 	"users/application"
 	"users/domain"
+	"users/infrastructure"
 	"users/utils"
 
 	"github.com/lib/pq"
@@ -26,6 +28,8 @@ const (
 
 type UserHTTPHandler struct {
 	UserService application.UserServiceInterface
+	db          *sql.DB
+	cache       infrastructure.Cache
 }
 
 func NewUserHTTPHandler(userService application.UserServiceInterface) *UserHTTPHandler {
@@ -307,4 +311,19 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *UserHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := h.db.PingContext(ctx); err != nil {
+		slog.Warn("PostgreSQL health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+
+	slog.Info("Health check passed")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Ok")
 }
