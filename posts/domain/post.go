@@ -13,20 +13,15 @@ type CreatePostRequest struct {
 }
 
 type Post struct {
-	ID                  int             `json:"id,omitempty"`
-	AuthorID            int             `json:"author_id,omitempty"` // ID of the user who created the post
-	Content             string          `json:"content,omitempty"`
-	AuthorName          string          `json:"author_name,omitempty"`
-	Pinned              bool            `json:"pinned,omitempty"`
-	Tags                string          `json:"tags,omitempty"`
-	Visibility          *PostVisibility `json:"visibility,omitempty"`
-	CreatedAt           time.Time       `json:"created_at,omitempty"`
-	UpdatedAt           time.Time       `json:"updated_at,omitempty"`
-	Reactions           []Reaction      `json:"reactions,omitempty"`
-	Comments            []Comment       `json:"comments,omitempty"`
-	TotaReactionslCount int             `json:"total_reactions_count,omitempty"`
-	TotalCommentsCount  int             `json:"total_comments_count,omitempty"`
-	UserReaction        string          `json:"user_reaction,omitempty"`
+	ID         int             `json:"id,omitempty"`
+	AuthorID   int             `json:"author_id,omitempty"` // ID of the user who created the post
+	Content    string          `json:"content,omitempty"`
+	AuthorName string          `json:"author_name,omitempty"`
+	Pinned     bool            `json:"pinned,omitempty"`
+	Tags       string          `json:"tags,omitempty"`
+	Visibility *PostVisibility `json:"visibility,omitempty"`
+	CreatedAt  time.Time       `json:"created_at,omitempty"`
+	UpdatedAt  time.Time       `json:"updated_at,omitempty"`
 }
 
 // PostVisibility represents the visibility of a post

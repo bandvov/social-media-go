@@ -1,8 +1,6 @@
 package application
 
-import (
-	"github.com/bandvov/social-media-go/domain"
-)
+import "posts/domain"
 
 type PostServiceInterface interface {
 	CreatePost(post *domain.CreatePostRequest) error

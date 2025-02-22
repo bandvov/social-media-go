@@ -75,7 +75,25 @@ services:
     # ports:
     #   - "8080:8080"
     networks:
-      - app-network      
+      - app-network
+  posts:
+    build:
+      context: ./posts
+      args:
+        VERSION: ${POSTS_VERSION}
+    container_name: posts-${POSTS_VERSION}
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - users
+    env_file:
+      - ./posts/.env
+    # Uncomment below to test in postman  
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - app-network          
   notifications:
     build:
       context: ./notifications

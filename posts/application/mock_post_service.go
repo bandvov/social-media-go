@@ -1,6 +1,6 @@
 package application
 
-import "github.com/bandvov/social-media-go/domain"
+import "posts/domain"
 
 type MockPostService struct {
 	CreatePostFunc   func(post *domain.CreatePostRequest) error
