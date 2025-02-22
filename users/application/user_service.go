@@ -17,7 +17,7 @@ type UserServiceInterface interface {
 	GetUserByID(id int) (*domain.User, error)
 	GetPublicProfiles(limit, offset int) ([]domain.User, error)
 	GetAdminProfiles(limit, offset int) ([]domain.User, error)
-	GetUserProfileInfo(id, otherUser int) (*domain.User, error)
+	GetUserProfileInfo(id int) (*domain.User, error)
 	GetUsersByIDs(userIDs []int) (map[int]domain.User, error)
 }
 type UserService struct {
@@ -98,8 +98,8 @@ func (s *UserService) GetAdminProfiles(limit, offset int) ([]domain.User, error)
 	return s.userRepo.GetAdminProfiles(limit, offset)
 }
 
-func (s *UserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {
-	return s.userRepo.GetUserProfileInfo(id, otherUser)
+func (s *UserService) GetUserProfileInfo(id int) (*domain.User, error) {
+	return s.userRepo.GetUserProfileInfo(id)
 }
 
 func (s *UserService) GetUsersByIDs(userIDs []int) (map[int]domain.User, error) {

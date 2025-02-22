@@ -11,7 +11,7 @@ type MockUserService struct {
 	GetUserByIDFunc        func(id int) (*domain.User, error)
 	GetPublicProfilesFunc  func(limit, offset int) ([]domain.User, error)
 	GetAdminProfilesFunc   func(limit, offset int) ([]domain.User, error)
-	GetUserProfileInfoFunc func(id, otherUser int) (*domain.User, error)
+	GetUserProfileInfoFunc func(id int) (*domain.User, error)
 	GetUsersByIDsFunc      func(userIDs []int) (map[int]domain.User, error)
 }
 
@@ -41,8 +41,8 @@ func (m *MockUserService) GetAdminProfiles(limit, offset int) ([]domain.User, er
 	return m.GetAdminProfilesFunc(limit, offset)
 }
 
-func (m *MockUserService) GetUserProfileInfo(id, otherUser int) (*domain.User, error) {
-	return m.GetUserProfileInfoFunc(id, otherUser)
+func (m *MockUserService) GetUserProfileInfo(id int) (*domain.User, error) {
+	return m.GetUserProfileInfoFunc(id)
 }
 
 func (m *MockUserService) GetUsersByIDs(userIDs []int) (map[int]domain.User, error) {

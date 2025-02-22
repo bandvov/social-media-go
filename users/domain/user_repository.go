@@ -9,7 +9,7 @@ type UserRepository interface {
 	GetUserByID(id int) (*User, error)
 	GetPublicProfiles(offset, limit int) ([]User, error)
 	GetAdminProfiles(limit, offset int) ([]User, error)
-	GetUserProfileInfo(id, otherUser int) (*User, error)
+	GetUserProfileInfo(id int) (*User, error)
 	UpdateUser(user *User) error
 	GetUsersByIDs(ctx context.Context, userIDs []int) ([]User, error)
 }

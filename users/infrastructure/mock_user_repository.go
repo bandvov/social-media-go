@@ -12,7 +12,7 @@ type MockUserRepository struct {
 	GetUserByIDFunc        func(id int) (*domain.User, error)
 	GetPublicProfilesFunc  func(limit, offset int) ([]domain.User, error)
 	GetAdminProfilesFunc   func(limit, offset int) ([]domain.User, error)
-	GetUserProfileInfoFunc func(id, authenticatedUser int) (*domain.User, error)
+	GetUserProfileInfoFunc func(id int) (*domain.User, error)
 	UpdateUserFunc         func(user *domain.User) error
 	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) ([]domain.User, error)
 }
@@ -51,9 +51,9 @@ func (m *MockUserRepository) GetAdminProfiles(limit, offset int) ([]domain.User,
 	return nil, nil
 }
 
-func (m *MockUserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
+func (m *MockUserRepository) GetUserProfileInfo(id int) (*domain.User, error) {
 	if m.GetUserProfileInfoFunc != nil {
-		return m.GetUserProfileInfoFunc(id, authenticatedUser)
+		return m.GetUserProfileInfoFunc(id)
 	}
 	return nil, nil
 }

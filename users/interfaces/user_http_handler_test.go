@@ -36,7 +36,6 @@ func TestLogin_Success(t *testing.T) {
 		ProfilePic: &p,
 		Bio:        &b,
 		Role:       "user",
-		PostsCount: 0,
 		CreatedAt:  tn,
 		UpdatedAt:  tn,
 		Status:     "active",
@@ -216,7 +215,7 @@ func TestRegisterUser(t *testing.T) {
 				},
 			}
 
-			handler := NewUserHTTPHandler(mockService)
+			handler := NewUserHTTPHandler(mockService, nil)
 
 			var body []byte
 			var err error
@@ -412,7 +411,7 @@ func TestGetUserProfile(t *testing.T) {
 			}
 
 			// Create handler with mock service
-			handler := NewUserHTTPHandler(mockService)
+			handler := NewUserHTTPHandler(mockService, nil)
 
 			// Create the request
 			req := httptest.NewRequest(http.MethodGet, "/users/{id}/profile", nil)

@@ -226,21 +226,15 @@ func (h *UserHTTPHandler) GetAdminProfiles(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	if !ok || userId == 0 {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
-
 	id := r.PathValue("id")
-	userIDFromUrl, err := strconv.Atoi(id)
+	userID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		http.Error(w, "{\"message\": \"invalid user ID\"}", http.StatusBadRequest)
 		return
 	}
 
 	// Ensure user lookup happens after authorization checks
-	user, err := h.UserService.GetUserProfileInfo(userIDFromUrl, userId)
+	user, err := h.UserService.GetUserProfileInfo(userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "User not found", http.StatusNotFound)

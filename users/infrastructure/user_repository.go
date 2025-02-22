@@ -64,46 +64,27 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	}
 
 	stmt, err := r.db.Prepare(`	
-	WITH 
-	post_counts AS (
-		SELECT
-			p.author_id,
-			COUNT(*) AS post_count
-		FROM posts p
-		GROUP BY p.author_id
-	),
-	follower_stats AS (
-    SELECT
-        f.followee_id,
-        COUNT(f.follower_id) AS follower_count,
-        COUNT(DISTINCT f.follower_id) FILTER (WHERE f.followee_id IS NOT NULL) AS followee_count
-    FROM followers f
-    GROUP BY f.followee_id
-	)
 	SELECT
-		u.id,
-		u.username,
-		u.password,
-		u.email,
-		u.status,
-		u.role,
-		u.profile_pic,
-		u.created_at,
-		u.updated_at,
-		COALESCE(pc.post_count, 0) AS post_count,
-		COALESCE(fs.follower_count, 0) AS followers_count,
-		COALESCE(fs.followee_count, 0) AS followees_count
-	FROM users u
-	LEFT JOIN post_counts pc ON u.id = pc.author_id
-	LEFT JOIN follower_stats fs ON u.id = fs.followee_id
-	WHERE u.id = $1;`)
+		id,
+		username,
+		first_name,
+		last_name,
+		email,
+		status,
+		role,
+		profile_pic,
+		created_at,
+		updated_at
+	FROM public.users
+	WHERE id = $1;
+	`)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
 	}
 	defer stmt.Close()
 
 	err = stmt.QueryRow(id).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount)
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -217,10 +198,10 @@ func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, err
 	return users, nil
 }
 
-func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.User, error) {
+func (r *UserRepository) GetUserProfileInfo(id int) (*domain.User, error) {
 	var user domain.User
 
-	cacheKey := fmt.Sprintf("public-user:%v:authenticatedUser:%v", id, authenticatedUser)
+	cacheKey := fmt.Sprintf("user-profile-info:%v", id)
 	ctx := context.Background()
 	cachedUser, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedUser != "" {
@@ -231,61 +212,27 @@ func (r *UserRepository) GetUserProfileInfo(id, authenticatedUser int) (*domain.
 
 	// Prepare the statement
 	stmt, err := r.db.Prepare(`	
-	WITH 
-    post_counts AS (
-        SELECT
-            author_id,
-            COUNT(*) AS post_count
-        FROM posts
-        WHERE author_id = $1 -- Filter early to reduce computation
-        GROUP BY author_id
-    ),
-    follower_stats AS (
-        SELECT
-            $1 AS user_id,
-            COUNT(DISTINCT follower_id) FILTER (WHERE followee_id = $1) AS followers_count, -- Count of users who follow the current user
-            COUNT(DISTINCT followee_id) FILTER (WHERE follower_id = $1) AS followees_count -- Count of users the current user follows
-        FROM followers
-    ),
-    relationship_flags AS (
-        SELECT 
-            MAX(CASE WHEN follower_id = $1 AND followee_id = $2 THEN 1 ELSE 0 END)::BOOLEAN AS is_followee,
-            MAX(CASE WHEN followee_id = $1 AND follower_id = $2 THEN 1 ELSE 0 END)::BOOLEAN AS is_follower
-        FROM followers
-        WHERE 
-            (follower_id = $1 AND followee_id = $2)
-            OR (followee_id = $1 AND follower_id = $2)
-    )
 	SELECT
-    u.id,
-    u.username,
-    u.first_name,
-    u.last_name,
-    u.email,
-    u.status,
-    u.role,
-    u.profile_pic,
-    u.created_at,
-    u.updated_at,
-    COALESCE(pc.post_count, 0) AS post_count,
-    COALESCE(fs.followers_count, 0) AS followers_count,
-    COALESCE(fs.followees_count, 0) AS followees_count,
-    COALESCE(rf.is_follower, FALSE) AS is_follower,
-    COALESCE(rf.is_followee, FALSE) AS is_followee
-	FROM users u
-	LEFT JOIN post_counts pc ON u.id = pc.author_id
-	LEFT JOIN follower_stats fs ON u.id = fs.user_id
-	LEFT JOIN relationship_flags rf ON TRUE
-	WHERE u.id = $1;
-;
+		id,
+		username,
+		first_name,
+		last_name,
+		email,
+		role,
+		profile_pic,
+		created_at,
+		updated_at
+	FROM public.users
+	WHERE status != 'banned'
+	AND id = $1;
 `)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(id, authenticatedUser).
-		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt, &user.PostsCount, &user.FollowersCount, &user.FolloweesCount, &user.IsFollower, &user.IsFollowee)
+	err = stmt.QueryRow(id).
+		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -310,14 +257,14 @@ func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	}
 
 	// Prepare the statement
-	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role, profile_pic, created_at, updated_at FROM users WHERE email = $1;")
+	stmt, err := r.db.Prepare("SELECT password, email, FROM users WHERE email = $1;")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
 	}
 	defer stmt.Close()
 
 	err = stmt.QueryRow(email).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
+		Scan(&user.Password, &user.Email)
 	if err != nil {
 		return nil, err
 	}
