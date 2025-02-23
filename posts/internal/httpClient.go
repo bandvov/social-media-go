@@ -9,6 +9,7 @@ import (
 
 type ClientInterface interface {
 	Do(req *http.Request) (*http.Response, error)
+	GetJSON(req *http.Request, target interface{}) error
 }
 
 // HTTPClient wraps an HTTP client with timeout settings.

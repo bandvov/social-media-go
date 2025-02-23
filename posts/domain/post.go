@@ -4,6 +4,18 @@ import (
 	"time"
 )
 
+type Reaction struct {
+	EntityId int    `json:"entity_id"`
+	Reaction string `json:"reaction_type_id"`
+	Count    int    `json:"count"`
+}
+
+type Comment struct {
+	EntityID     int `json:"entity_id"`
+	CommentCount int `json:"comment_count"`
+	ReplyCount   int `json:"reply_count"`
+}
+
 type CreatePostRequest struct {
 	AuthorID   int            `json:"author_id,omitempty"` // ID of the user who created the post
 	Content    string         `json:"content,omitempty"`
@@ -13,15 +25,18 @@ type CreatePostRequest struct {
 }
 
 type Post struct {
-	ID         int             `json:"id,omitempty"`
-	AuthorID   int             `json:"author_id,omitempty"` // ID of the user who created the post
-	Content    string          `json:"content,omitempty"`
-	AuthorName string          `json:"author_name,omitempty"`
-	Pinned     bool            `json:"pinned,omitempty"`
-	Tags       string          `json:"tags,omitempty"`
-	Visibility *PostVisibility `json:"visibility,omitempty"`
-	CreatedAt  time.Time       `json:"created_at,omitempty"`
-	UpdatedAt  time.Time       `json:"updated_at,omitempty"`
+	ID                  int             `json:"id,omitempty"`
+	AuthorID            int             `json:"author_id,omitempty"` // ID of the user who created the post
+	Content             string          `json:"content,omitempty"`
+	AuthorName          string          `json:"author_name,omitempty"`
+	Pinned              bool            `json:"pinned,omitempty"`
+	Tags                string          `json:"tags,omitempty"`
+	Visibility          *PostVisibility `json:"visibility,omitempty"`
+	Reactions           []Reaction      `json:"reactions,omitempty"`
+	TotalReactionsCount int             `json:"total_reactions_count,omitempty"`
+	TotalCommentsCount  int             `json:"total_comments_count,omitempty"`
+	CreatedAt           time.Time       `json:"created_at,omitempty"`
+	UpdatedAt           time.Time       `json:"updated_at,omitempty"`
 }
 
 // PostVisibility represents the visibility of a post

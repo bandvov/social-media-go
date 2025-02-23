@@ -44,21 +44,26 @@ func main() {
 	}()
 
 	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments-%v:8080", "../comments/VERSION"))
+	reactionsClient := internal.NewHTTPClient(fmt.Sprintf("http://reactions-%v:8080", "../reactions/VERSION"))
 	cache := infrastructure.NewRedisCache(rdb)
 
 	postRepo := infrastructure.NewPostRepository(db, cache)
 	postService := application.NewPostService(postRepo)
-	postHandler := interfaces.NewPostHTTPHandler(postService, commentsClient)
+	postHandler := interfaces.NewPostHTTPHandler(postService, commentsClient, reactionsClient)
 
 	// Create a custom router
 	router := utils.NewRouter()
 
 	// Define routes
-	router.HandleFunc("GET /{id}", interfaces.LoggerMiddleware(postHandler.GetPost))
-	router.HandleFunc("PUT /{id}", interfaces.LoggerMiddleware(postHandler.UpdatePost))
-	router.HandleFunc("DELETE /{id}", interfaces.LoggerMiddleware(postHandler.DeletePost))
+	// create post
 	router.HandleFunc("POST /", interfaces.LoggerMiddleware(postHandler.CreatePost))
+	// Get post by id
+	router.HandleFunc("GET /{id}", interfaces.LoggerMiddleware(postHandler.GetPost))
+	// Update post
+	router.HandleFunc("PUT /{id}", interfaces.LoggerMiddleware(postHandler.UpdatePost))
+	// Delete post
 	// this is mocked. Implement soft delete. make visibility = none
+	router.HandleFunc("DELETE /{id}", interfaces.LoggerMiddleware(postHandler.DeletePost))
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}

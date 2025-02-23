@@ -1,12 +1,17 @@
 package interfaces
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"posts/application"
 	"posts/domain"
+	"posts/internal"
 	"strconv"
+	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // Define keys for context
@@ -18,14 +23,21 @@ const (
 )
 
 type PostHTTPHandler struct {
-	postService application.PostServiceInterface
+	postService     application.PostServiceInterface
+	commentsClient  internal.ClientInterface
+	reactionsClient internal.ClientInterface
 }
 
 func NewPostHTTPHandler(
 	postService application.PostServiceInterface,
+	commentsClient internal.ClientInterface,
+	reactionsClient internal.ClientInterface,
+
 ) *PostHTTPHandler {
 	return &PostHTTPHandler{
-		postService: postService,
+		postService:     postService,
+		commentsClient:  commentsClient,
+		reactionsClient: reactionsClient,
 	}
 }
 
@@ -92,13 +104,6 @@ func (p *PostHTTPHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	if !ok || userID == 0 {
-		http.Error(w, "unauthenticated", http.StatusBadRequest)
-		return
-	}
-
-	isAdmin := r.Context().Value(isAdminKey).(bool)
 
 	id := r.PathValue("id")
 	postID, err := strconv.Atoi(id)
@@ -109,185 +114,139 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := p.postService.GetPostByID(postID)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println("here")
-	if !isAdmin || (*post.Visibility == domain.Private && post.AuthorID != userID) {
-		fmt.Println("here1")
-		http.Error(w, "Access forbidden", http.StatusForbidden)
-		return
-	}
-	fmt.Println("here2")
+
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
 }
 
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
-	// 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	// 	if !ok || userID == 0 {
-	// 		http.Error(w, "unauthenticated", http.StatusBadRequest)
-	// 		return
-	// 	}
 
-	// 	idStr := r.PathValue("id")
-	// 	userIDFromUrl, err := strconv.Atoi(idStr)
-	// 	if err != nil {
-	// 		http.Error(w, "invalid user ID", http.StatusBadRequest)
-	// 		return
-	// 	}
+	s := time.Now()
+	idStr := r.PathValue("id")
+	authorIDFromUrl, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
 
-	// 	query := r.URL.Query()
+	query := r.URL.Query()
 
-	// 	// Parse `limit` and `offset` with default values
-	// 	page, err := strconv.Atoi(query.Get("page"))
-	// 	if err != nil || page < 1 {
-	// 		page = 1 // Default offset
-	// 	}
+	// Parse `limit` and `offset` with default values
+	page, err := strconv.Atoi(query.Get("page"))
+	if err != nil || page < 1 {
+		page = 1 // Default offset
+	}
 
-	// 	limit, err := strconv.Atoi(query.Get("limit"))
-	// 	if err != nil || limit <= 0 {
-	// 		limit = 10 // Default limit
-	// 	}
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10 // Default limit
+	}
 
-	// 	offset := (page - 1) * limit
+	offset := (page - 1) * limit
 
-	// 	var posts []domain.Post
-	// 	var postsCount int
+	posts, postIDs, err := h.postService.GetPostsByUser(authorIDFromUrl, offset, limit)
+	if err != nil || len(posts) == 0 {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
 
-	// 	// Create a new errgroup
-	// 	var g errgroup.Group
-	// 	// First task: Fetch posts
-	// 	g.Go(func() error {
-	// 		var err error
-	// 		posts, err = h.postService.GetPostsByUser(userIDFromUrl, userID, offset, limit)
-	// 		if err != nil {
-	// 			if errors.Is(err, sql.ErrNoRows) {
-	// 				http.Error(w, "No posts", http.StatusNotFound)
-	// 				return nil // No posts is not an error; early return
-	// 			}
-	// 			return err // Return other errors
-	// 		}
-	// 		return nil
-	// 	})
+	var (
+		reactionMap map[int][]domain.Reaction
+		postsCount  int
+		eg          errgroup.Group
+	)
+	commentsCountsMap := make(map[int]domain.Comment)
+	reactionsCountsMap := make(map[int]domain.Reaction)
 
-	// 	// Second task: Fetch posts count
-	// 	g.Go(func() error {
-	// 		var err error
-	// 		postsCount, err = h.postService.GetCountPostsByUser(userIDFromUrl)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		return nil
-	// 	})
+	eg.Go(func() error {
+		// figure out if it is better to move it into outer scope
+		jsonData, err := json.Marshal(postIDs)
+		if err != nil {
+			return err
+		}
 
-	// 	// Wait for both goroutines to finish
-	// 	if err := g.Wait(); err != nil {
-	// 		http.Error(w, "could not complete request", http.StatusInternalServerError)
-	// 		return
-	// 	}
+		req, err := http.NewRequest("GET", "/count", bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
 
-	// 	response := map[string]interface{}{
-	// 		"data":    posts,
-	// 		"hasMore": postsCount > offset+limit,
-	// 	}
+		var counts []domain.Comment
+		err = h.commentsClient.GetJSON(req, counts)
+		if err != nil {
+			return err
+		}
 
-	// 	w.Header().Set("Content-Type", "application/json")
-	// 	json.NewEncoder(w).Encode(response)
-	// }
+		for _, count := range counts {
+			commentsCountsMap[count.EntityID] = count
+		}
+		return nil
+	})
 
-	// func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
-	// 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	// 	if !ok || userID == 0 {
-	// 		http.Error(w, "unauthenticated", http.StatusBadRequest)
-	// 		return
-	// 	}
-	// 	s := time.Now()
-	// 	idStr := r.PathValue("id")
-	// 	authorIDFromUrl, err := strconv.Atoi(idStr)
-	// 	if err != nil {
-	// 		http.Error(w, "invalid user ID", http.StatusBadRequest)
-	// 		return
-	// 	}
+	eg.Go(func() error {
+		jsonData, err := json.Marshal(postIDs)
+		if err != nil {
+			return err
+		}
 
-	// 	query := r.URL.Query()
+		req, err := http.NewRequest("GET", "/counts", bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
 
-	// 	// Parse `limit` and `offset` with default values
-	// 	page, err := strconv.Atoi(query.Get("page"))
-	// 	if err != nil || page < 1 {
-	// 		page = 1 // Default offset
-	// 	}
+		var counts []domain.Reaction
+		err = h.reactionsClient.GetJSON(req, counts)
+		if err != nil {
+			return err
 
-	// 	limit, err := strconv.Atoi(query.Get("limit"))
-	// 	if err != nil || limit <= 0 {
-	// 		limit = 10 // Default limit
-	// 	}
+		}
 
-	// 	offset := (page - 1) * limit
+		for _, count := range counts {
+			reactionsCountsMap[count.EntityId] = count
+		}
+		return nil
+	})
 
-	// 	posts, postIDs, err := h.postService.GetPostsByUser(authorIDFromUrl, offset, limit)
-	// 	if err != nil || len(posts) == 0 {
-	// 		http.Error(w, "invalid user ID", http.StatusBadRequest)
-	// 		return
-	// 	}
+	eg.Go(func() error {
+		jsonData, err := json.Marshal(postIDs)
+		if err != nil {
+			return err
+		}
+		req, err := http.NewRequest("GET", "/", bytes.NewBuffer(jsonData))
+		err = h.reactionsClient.GetJSON(req, reactionMap)
+		return err
+	})
 
-	// 	var (
-	// 		reactionMap map[int][]domain.Reaction
-	// 		postsCount  int
-	// 		eg          errgroup.Group
-	// 	)
-	// 	commentsCountsMap := make(map[int]domain.CommentCount)
-	// 	reactionsCountsMap := make(map[int]domain.Reaction)
+	// Second task: Fetch posts count
+	eg.Go(func() error {
+		var err error
+		postsCount, err = h.postService.GetCountPostsByUser(authorIDFromUrl)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 
-	// 	eg.Go(func() error {
-	// 		counts, err := h.commentService.GetCommentsAndRepliesCount(postIDs)
-	// 		for _, count := range counts {
-	// 			commentsCountsMap[count.EntityID] = count
-	// 		}
-	// 		return err
-	// 	})
+	if err := eg.Wait(); err != nil {
+		fmt.Println(err)
+		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
+		return
+	}
 
-	// 	eg.Go(func() error {
-	// 		counts, err := h.reactionService.GetReactionsCount(postIDs)
-	// 		fmt.Println(counts)
-	// 		for _, count := range counts {
-	// 			reactionsCountsMap[count.EntityId] = count
-	// 		}
-	// 		return err
-	// 	})
+	for i, post := range posts {
+		posts[i].Reactions = reactionMap[post.ID]
+		posts[i].TotalCommentsCount = commentsCountsMap[post.ID].CommentCount + commentsCountsMap[post.ID].CommentCount
+		posts[i].TotalReactionsCount = reactionsCountsMap[post.ID].Count
+	}
 
-	// 	eg.Go(func() error {
-	// 		reactionMap, err = h.reactionService.GetReactions(postIDs)
-	// 		return err
-	// 	})
-
-	// 	// Second task: Fetch posts count
-	// 	eg.Go(func() error {
-	// 		var err error
-	// 		postsCount, err = h.postService.GetCountPostsByUser(authorIDFromUrl)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		return nil
-	// 	})
-
-	// 	if err := eg.Wait(); err != nil {
-	// 		fmt.Println(err)
-	// 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	for i, post := range posts {
-	// 		posts[i].Reactions = reactionMap[post.ID]
-	// 		posts[i].TotalCommentsCount = commentsCountsMap[post.ID].CommentCount + commentsCountsMap[post.ID].CommentCount
-	// 		posts[i].TotaReactionslCount = reactionsCountsMap[post.ID].Count
-	// 	}
-
-	// 	response := map[string]interface{}{
-	// 		"data":    posts,
-	// 		"hasMore": postsCount > offset+limit,
-	// 	}
-	// 	fmt.Println(time.Since(s))
-	// 	w.Header().Set("Content-Type", "application/json")
-	// 	json.NewEncoder(w).Encode(response)
+	response := map[string]interface{}{
+		"data":    posts,
+		"hasMore": postsCount > offset+limit,
+	}
+	fmt.Println(time.Since(s))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
