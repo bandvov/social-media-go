@@ -38,6 +38,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "2019:2019"
     environment:
       - USERS_CONTAINER=users-${USERS_VERSION} # or directly in .env file  
       - POSTS_CONTAINER=posts-${USERS_VERSION} # or directly in .env file  
@@ -46,10 +47,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./certs:/etc/caddy/certs
-    expose:
-      - 2019  # Caddy admin API port
     networks:
-      - app-network  
+      - app-network
+      - monitoring      
   caddy-ui:
     image: qmcgaw/caddy-ui:latest
     ports:
@@ -60,6 +60,31 @@ services:
       - caddy
     networks:
       - app-network
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring    
   users:
     build:
       context: ./users
@@ -120,6 +145,10 @@ volumes:
     driver: local
   caddy_config:  
     driver: local
+  grafana_data:
+    driver: local  
 networks:
   app-network:
+    driver: bridge
+  monitoring:      
     driver: bridge

@@ -8,6 +8,9 @@
         }
         format console
     }
+    servers {
+        metrics
+    }
 }
 
 https://localhost:443 {
