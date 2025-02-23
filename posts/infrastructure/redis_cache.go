@@ -3,10 +3,10 @@ package infrastructure
 import (
 	"context"
 	"encoding/json"
+	"posts/internal"
 	"time"
 
 	"github.com/go-redis/cache/v8"
-	"github.com/go-redis/redis/v8"
 )
 
 type Cache interface {
@@ -19,7 +19,7 @@ type RedisCache struct {
 	cache *cache.Cache
 }
 
-func NewRedisCache(redisClient *redis.Client) *RedisCache {
+func NewRedisCache(redisClient internal.RedisClient) *RedisCache {
 	return &RedisCache{
 		cache: cache.New(&cache.Options{
 			Redis:      redisClient,

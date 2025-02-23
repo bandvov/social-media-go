@@ -1,11 +1,15 @@
 package interfaces
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"posts/application"
 	"posts/domain"
+	"posts/internal"
 	"strconv"
 	"time"
 )
@@ -20,14 +24,18 @@ const (
 
 type PostHTTPHandler struct {
 	postService application.PostServiceInterface
+	db          *sql.DB
+	rdb         internal.RedisClient
 }
 
 func NewPostHTTPHandler(
 	postService application.PostServiceInterface,
+	rdb internal.RedisClient,
 
 ) *PostHTTPHandler {
 	return &PostHTTPHandler{
 		postService: postService,
+		rdb:         rdb,
 	}
 }
 
@@ -146,4 +154,24 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	fmt.Println(time.Since(s))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *PostHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := h.db.PingContext(ctx); err != nil {
+		slog.Warn("PostgreSQL health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+	if err := h.rdb.Ping(ctx).Err(); err != nil {
+		slog.Warn("Redis health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+
+	slog.Info("Health check passed")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Ok")
 }

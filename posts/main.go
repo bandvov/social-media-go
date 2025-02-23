@@ -49,7 +49,7 @@ func main() {
 
 	postRepo := infrastructure.NewPostRepository(db, cache)
 	postService := application.NewPostService(postRepo, commentsClient, reactionsClient)
-	postHandler := interfaces.NewPostHTTPHandler(postService)
+	postHandler := interfaces.NewPostHTTPHandler(postService, rdb)
 
 	// Create a custom router
 	router := utils.NewRouter()
@@ -64,6 +64,8 @@ func main() {
 	// Delete post
 	// this is mocked. Implement soft delete. make visibility = none
 	router.HandleFunc("DELETE /{id}", interfaces.LoggerMiddleware(postHandler.DeletePost))
+	
+	router.HandleFunc("GET /healthz", interfaces.LoggerMiddleware(postHandler.HealthCheckHandler))
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}
