@@ -48,8 +48,8 @@ func main() {
 	cache := infrastructure.NewRedisCache(rdb)
 
 	postRepo := infrastructure.NewPostRepository(db, cache)
-	postService := application.NewPostService(postRepo)
-	postHandler := interfaces.NewPostHTTPHandler(postService, commentsClient, reactionsClient)
+	postService := application.NewPostService(postRepo, commentsClient, reactionsClient)
+	postHandler := interfaces.NewPostHTTPHandler(postService)
 
 	// Create a custom router
 	router := utils.NewRouter()
