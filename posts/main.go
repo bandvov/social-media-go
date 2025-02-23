@@ -43,11 +43,12 @@ func main() {
 		rdb.Close()
 	}()
 
+	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments-%v:8080", "../comments/VERSION"))
 	cache := infrastructure.NewRedisCache(rdb)
 
-	postRepo := infrastructure.NewPostRepository(db)
+	postRepo := infrastructure.NewPostRepository(db, cache)
 	postService := application.NewPostService(postRepo)
-	postHandler := interfaces.NewPostHTTPHandler(postService)
+	postHandler := interfaces.NewPostHTTPHandler(postService, commentsClient)
 
 	// Create a custom router
 	router := utils.NewRouter()
