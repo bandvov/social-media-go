@@ -12,6 +12,7 @@ import (
 	"time"
 	"users/application"
 	"users/domain"
+	"users/internal"
 	"users/utils"
 
 	"github.com/lib/pq"
@@ -28,10 +29,11 @@ const (
 type UserHTTPHandler struct {
 	UserService application.UserServiceInterface
 	db          *sql.DB
+	rdb         internal.RedisClient
 }
 
-func NewUserHTTPHandler(userService application.UserServiceInterface, db *sql.DB) *UserHTTPHandler {
-	return &UserHTTPHandler{UserService: userService, db: db}
+func NewUserHTTPHandler(userService application.UserServiceInterface, db *sql.DB, rdb internal.RedisClient) *UserHTTPHandler {
+	return &UserHTTPHandler{UserService: userService, db: db, rdb: rdb}
 }
 
 func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -311,6 +313,11 @@ func (h *UserHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Requ
 
 	if err := h.db.PingContext(ctx); err != nil {
 		slog.Warn("PostgreSQL health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+	if err := h.rdb.Ping(ctx).Err(); err != nil {
+		slog.Warn("Redis health check failed", "error", err)
 		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
 		return
 	}

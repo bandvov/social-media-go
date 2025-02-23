@@ -215,7 +215,7 @@ func TestRegisterUser(t *testing.T) {
 				},
 			}
 
-			handler := NewUserHTTPHandler(mockService, nil)
+			handler := NewUserHTTPHandler(mockService)
 
 			var body []byte
 			var err error

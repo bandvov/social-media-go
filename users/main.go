@@ -52,7 +52,7 @@ func main() {
 	userService := application.NewUserService(userRepo)
 
 	// Initialize HTTP handler
-	userHandler := interfaces.NewUserHTTPHandler(userService, db)
+	userHandler := interfaces.NewUserHTTPHandler(userService, db, rdb)
 
 	// Create a custom router
 	router := utils.NewRouter()
