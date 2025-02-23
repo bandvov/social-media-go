@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+type AggregatedResponse struct {
+	UserID         string    `json:"id"`
+	Email          string    `json:"email,omitempty"`
+	Username       string    `json:"username"`
+	PostCount      int       `json:"post_count"`
+	FollowersCount int       `json:"followers_count"`
+	FolloweesCount int       `json:"followees_count"`
+	ProfilePic     *string   `json:"profile_pic,omitempty"` // URL to profile picture
+	Bio            *string   `json:"bio,omitempty"`         // Short biography
+	CreatedAt      time.Time `json:"created_at,omitempty"`  // Account creation timestamp
+}
 type User struct {
 	ID         int       `json:"id"`
 	Username   *string   `json:"username,omitempty"`
