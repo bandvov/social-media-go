@@ -40,6 +40,7 @@ services:
       - "443:443"
     environment:
       - USERS_CONTAINER=users-${USERS_VERSION} # or directly in .env file  
+      - POSTS_CONTAINER=posts-${USERS_VERSION} # or directly in .env file  
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

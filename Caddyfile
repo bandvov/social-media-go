@@ -56,7 +56,7 @@ https://localhost:443 {
 
     # Posts Service with Health Check
     handle_path /api/posts* {
-        reverse_proxy localhost:8081 {
+        reverse_proxy {$POSTS_CONTAINER}:8081 {
             health_uri /healthz
             health_interval 10s
             health_timeout 2s
