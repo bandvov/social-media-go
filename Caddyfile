@@ -1,4 +1,5 @@
 {
+    admin caddy:2019
     # Global options for logging
     log {
         output file /var/log/caddy/access.log {
@@ -6,11 +7,9 @@
             roll_keep 5
             roll_keep_for 7d
         }
-        format console
+        format json
     }
-    servers {
-        metrics
-    }
+    metrics    
 }
 
 https://localhost:443 {

@@ -30,7 +30,20 @@ services:
     container_name: redis-container
     restart: unless-stopped
     networks:
-      - app-network  
+      - app-network
+      - monitoring
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis_exporter
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis:6379"
+    depends_on:
+      - redis
+    networks:
+      - app-network
+      - monitoring        
   caddy:
     image: caddy:latest
     container_name: caddy
@@ -38,7 +51,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "2019:2019"
     environment:
       - USERS_CONTAINER=users-${USERS_VERSION} # or directly in .env file  
       - POSTS_CONTAINER=posts-${USERS_VERSION} # or directly in .env file  
@@ -60,6 +72,7 @@ services:
       - caddy
     networks:
       - app-network
+      - monitoring      
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -68,8 +81,10 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - --config.file=/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
+    # ports:
+    #   - "9090:9090"
+    depends_on:
+      - redis_exporter  
     networks:
       - monitoring
 
@@ -83,6 +98,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus  
     networks:
       - monitoring    
   users:
