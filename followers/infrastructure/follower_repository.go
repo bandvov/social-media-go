@@ -3,16 +3,16 @@ package infrastructure
 import (
 	"database/sql"
 	"fmt"
-
-	"github.com/bandvov/social-media-go/domain"
+	"followers/domain"
 )
 
 type FollowerRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	cache *RedisCache
 }
 
-func NewFollowerRepository(db *sql.DB) *FollowerRepository {
-	return &FollowerRepository{db: db}
+func NewFollowerRepository(db *sql.DB, cache *RedisCache) *FollowerRepository {
+	return &FollowerRepository{db: db, cache: cache}
 }
 
 func (r *FollowerRepository) AddFollower(follower *domain.Follower) error {

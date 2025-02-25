@@ -2,8 +2,7 @@ package application
 
 import (
 	"errors"
-
-	"github.com/bandvov/social-media-go/domain"
+	"followers/domain"
 )
 
 // FollowerServiceInterface defines methods for tags-related operations.
@@ -41,7 +40,7 @@ func (s *FollowerService) RemoveFollower(followerID, followeeID int) error {
 
 // GetFollowers retrieves all followers for a user
 func (s *FollowerService) GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error) {
-	return s.repo.GetFollowers(userID,otherUser, limit, offset, sort, orderBy, search)
+	return s.repo.GetFollowers(userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
 // GetFollowers retrieves all followers for a user

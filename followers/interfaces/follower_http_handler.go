@@ -1,20 +1,23 @@
 package interfaces
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"followers/application"
+	"followers/internal"
 	"net/http"
 	"strconv"
-
-	"github.com/bandvov/social-media-go/application"
 )
 
 type FollowerHandler struct {
 	service application.FollowerServiceInterface
+	db      *sql.DB
+	client  internal.RedisClient
 }
 
-func NewFollowerHandler(service application.FollowerServiceInterface) *FollowerHandler {
-	return &FollowerHandler{service: service}
+func NewFollowerHandler(service application.FollowerServiceInterface, db *sql.DB, client internal.RedisClient) *FollowerHandler {
+	return &FollowerHandler{service: service, db: db, client: client}
 }
 
 func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +110,7 @@ func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	orderBy := query.Get("order_by")
 
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userIDFromUrl,userId, limit, offset, sort, orderBy, search)
+	followers, err := h.service.GetFollowers(userIDFromUrl, userId, limit, offset, sort, orderBy, search)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -117,7 +120,7 @@ func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(followers)
 }
-func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {	
+func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -152,7 +155,7 @@ func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 	orderBy := query.Get("order_by")
 
 	// Call the service to get followers
-	followers, err := h.service.GetFollowees(userIDFromUrl,userId, limit, offset, sort, orderBy, search)
+	followers, err := h.service.GetFollowees(userIDFromUrl, userId, limit, offset, sort, orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
