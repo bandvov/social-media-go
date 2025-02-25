@@ -6,16 +6,16 @@ import (
 	"followers/domain"
 )
 
-type FollowerRepository struct {
+type FollowRepository struct {
 	db    *sql.DB
 	cache *RedisCache
 }
 
-func NewFollowerRepository(db *sql.DB, cache *RedisCache) *FollowerRepository {
-	return &FollowerRepository{db: db, cache: cache}
+func NewFollowerRepository(db *sql.DB, cache *RedisCache) *FollowRepository {
+	return &FollowRepository{db: db, cache: cache}
 }
 
-func (r *FollowerRepository) AddFollower(follower *domain.Follower) error {
+func (r *FollowRepository) AddFollower(follower *domain.Follower) error {
 	query := "INSERT INTO followers (follower_id, followee_id) VALUES ($1, $2)"
 	_, err := r.db.Exec(query, follower.FollowerID, follower.FolloweeID)
 	if err != nil {
@@ -24,7 +24,7 @@ func (r *FollowerRepository) AddFollower(follower *domain.Follower) error {
 	return nil
 }
 
-func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error {
+func (r *FollowRepository) RemoveFollower(follower *domain.Follower) error {
 	query := "DELETE FROM followers WHERE follower_id = $1 AND followee_id = $2"
 	_, err := r.db.Exec(query, follower.FollowerID, follower.FolloweeID)
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *FollowerRepository) RemoveFollower(follower *domain.Follower) error {
 	return nil
 }
 
-func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -89,7 +89,7 @@ func (r *FollowerRepository) GetFollowers(userID, otherUser, limit, offset int, 
 	return users, nil
 }
 
-func (r *FollowerRepository) GetFollowees(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -145,4 +145,18 @@ func (r *FollowerRepository) GetFollowees(userID, otherUser, limit, offset int, 
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+func (r *FollowRepository) GetFollowerStats(userID int) (int, int, error) {
+	var followersCount, followeesCount int
+	query := `
+        SELECT 
+            COUNT(DISTINCT follower_id) FILTER (WHERE followee_id = $1) AS followers_count,
+            COUNT(DISTINCT followee_id) FILTER (WHERE follower_id = $1) AS followees_count
+        FROM followers`
+	err := r.db.QueryRow(query, userID).Scan(&followersCount, &followeesCount)
+	if err != nil {
+		return 0, 0, err
+	}
+	return followersCount, followeesCount, nil
 }

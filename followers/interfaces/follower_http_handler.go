@@ -13,17 +13,17 @@ import (
 	"time"
 )
 
-type FollowerHandler struct {
+type FollowHandler struct {
 	service application.FollowerServiceInterface
 	db      *sql.DB
 	rdb     internal.RedisClient
 }
 
-func NewFollowerHandler(service application.FollowerServiceInterface, db *sql.DB, rdb internal.RedisClient) *FollowerHandler {
-	return &FollowerHandler{service: service, db: db, rdb: rdb}
+func NewFollowerHandler(service application.FollowerServiceInterface, db *sql.DB, rdb internal.RedisClient) *FollowHandler {
+	return &FollowHandler{service: service, db: db, rdb: rdb}
 }
 
-func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	// Parse the URL parameters to get the follower and followee IDs
 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userID == 0 {
@@ -50,7 +50,7 @@ func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Follower added successfully")
 }
 
-func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
 	// Parse the URL parameters to get the follower and followee IDs
 	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userID == 0 {
@@ -77,7 +77,7 @@ func (h *FollowerHandler) RemoveFollower(w http.ResponseWriter, r *http.Request)
 	fmt.Fprintf(w, "Follower removed successfully")
 }
 
-func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -123,7 +123,7 @@ func (h *FollowerHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(followers)
 }
-func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
 	if !ok || userId == 0 {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -168,7 +168,27 @@ func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(followers)
 }
 
-func (h *FollowerHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func (h *FollowHandler) GetFollowerStats(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	userIDFromUrl, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
+	followersCount, followeesCount, err := h.service.GetFollowerStats(userIDFromUrl)
+	if err != nil {
+		http.Error(w, "Error fetching follower stats", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int{
+		"followers_count": followersCount,
+		"followees_count": followeesCount,
+	})
+}
+
+func (h *FollowHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 

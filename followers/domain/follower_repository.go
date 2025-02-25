@@ -5,4 +5,5 @@ type FollowerRepository interface {
 	RemoveFollower(follower *Follower) error
 	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]User, error)
 	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]User, error)
+	GetFollowerStats(userID int) (int, int, error)
 }

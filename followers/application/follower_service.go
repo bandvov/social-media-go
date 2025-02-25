@@ -11,6 +11,7 @@ type FollowerServiceInterface interface {
 	RemoveFollower(followerID, followeeID int) error
 	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
 	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
+	GetFollowerStats(userID int) (int, int, error)
 }
 
 type FollowerService struct {
@@ -46,4 +47,8 @@ func (s *FollowerService) GetFollowers(userID, otherUser, limit, offset int, sor
 // GetFollowers retrieves all followers for a user
 func (s *FollowerService) GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error) {
 	return s.repo.GetFollowees(userID, otherUser, limit, offset, sort, orderBy, search)
+}
+
+func (s *FollowerService) GetFollowerStats(userID int) (int, int, error) {
+	return s.repo.GetFollowerStats(userID)
 }
