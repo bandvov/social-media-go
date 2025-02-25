@@ -119,6 +119,23 @@ services:
     #   - "8080:8080"
     networks:
       - app-network
+  followers:
+    build:
+      context: ./followers
+      args:
+        VERSION: ${FOLLOWERS_VERSION}
+    container_name: followers-${FOLLOWERS_VERSION}
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./followers/.env
+    # Uncomment below to test in postman  
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - app-network    
   posts:
     build:
       context: ./posts

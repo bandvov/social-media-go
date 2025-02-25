@@ -1,23 +1,26 @@
 package interfaces
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"followers/application"
 	"followers/internal"
+	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type FollowerHandler struct {
 	service application.FollowerServiceInterface
 	db      *sql.DB
-	client  internal.RedisClient
+	rdb     internal.RedisClient
 }
 
-func NewFollowerHandler(service application.FollowerServiceInterface, db *sql.DB, client internal.RedisClient) *FollowerHandler {
-	return &FollowerHandler{service: service, db: db, client: client}
+func NewFollowerHandler(service application.FollowerServiceInterface, db *sql.DB, rdb internal.RedisClient) *FollowerHandler {
+	return &FollowerHandler{service: service, db: db, rdb: rdb}
 }
 
 func (h *FollowerHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
@@ -163,4 +166,24 @@ func (h *FollowerHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(followers)
+}
+
+func (h *FollowerHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := h.db.PingContext(ctx); err != nil {
+		slog.Warn("PostgreSQL health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+	if err := h.rdb.Ping(ctx).Err(); err != nil {
+		slog.Warn("Redis health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+
+	slog.Info("Health check passed")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Ok")
 }

@@ -65,4 +65,13 @@ https://localhost:443 {
             health_status 200
         }
     }
+    # Followers Service with Health Check
+    handle_path /api/followers* {
+        reverse_proxy {$FOLLOWERS_CONTAINER}:8082 {
+            health_uri /healthz
+            health_interval 10s
+            health_timeout 2s
+            health_status 200
+        }
+    }
 }
