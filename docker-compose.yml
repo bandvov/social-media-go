@@ -54,6 +54,9 @@ services:
     environment:
       - USERS_CONTAINER=users-${USERS_VERSION} # or directly in .env file  
       - POSTS_CONTAINER=posts-${USERS_VERSION} # or directly in .env file  
+      - FOLLOWERS_CONTAINER=followers-${FOLLOWERS_VERSION} # or directly in .env file
+      - COMMENTS_CONTAINER=comments-${COMMENTS_VERSION} # or directly in .env file
+      - REACTIONS_CONTAINER=reactions-${COMMENTS_VERSION} # or directly in .env file
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -154,7 +157,45 @@ services:
     # ports:
     #   - "8080:8080"
     networks:
-      - app-network          
+      - app-network
+  comments:
+    build:
+      context: ./comments
+      args:
+        VERSION: ${COMMENTS_VERSION}
+    container_name: comments-${COMMENTS_VERSION}
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - users
+      - posts
+    env_file:
+      - ./comments/.env
+    # Uncomment below to test in postman  
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - app-network
+  reactions:
+    build:
+      context: ./reactions
+      args:
+        VERSION: ${REACTIONS_VERSION}
+    container_name: REACTIONS-${REACTIONS_VERSION}
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - posts
+      - comments
+    env_file:
+      - ./posts/.env
+    # Uncomment below to test in postman  
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - app-network                    
   notifications:
     build:
       context: ./notifications
