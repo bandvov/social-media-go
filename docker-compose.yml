@@ -129,6 +129,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - users
     env_file:
       - ./followers/.env
     # Uncomment below to test in postman  

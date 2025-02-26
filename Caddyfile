@@ -58,7 +58,7 @@ https://localhost:443 {
 
     # Posts Service with Health Check
     handle_path /api/posts* {
-        reverse_proxy {$POSTS_CONTAINER}:8081 {
+        reverse_proxy {$POSTS_CONTAINER}:8080 {
             health_uri /healthz
             health_interval 10s
             health_timeout 2s
@@ -67,7 +67,7 @@ https://localhost:443 {
     }
     # Followers Service with Health Check
     handle_path /api/followers* {
-        reverse_proxy {$FOLLOWERS_CONTAINER}:8082 {
+        reverse_proxy {$FOLLOWERS_CONTAINER}:8080 {
             health_uri /healthz
             health_interval 10s
             health_timeout 2s
