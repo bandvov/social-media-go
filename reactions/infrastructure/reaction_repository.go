@@ -3,17 +3,17 @@ package infrastructure
 import (
 	"database/sql"
 	"fmt"
-
-	"github.com/bandvov/social-media-go/domain"
-	"github.com/bandvov/social-media-go/utils"
+	"reactions/domain"
+	"reactions/utils"
 )
 
 type ReactionRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	cache Cache
 }
 
-func NewReactionRepository(db *sql.DB) *ReactionRepository {
-	return &ReactionRepository{db: db}
+func NewReactionRepository(db *sql.DB, cache Cache) *ReactionRepository {
+	return &ReactionRepository{db: db, cache: cache}
 }
 
 func (r *ReactionRepository) AddOrUpdateReaction(userID int, reaction domain.Reaction) error {

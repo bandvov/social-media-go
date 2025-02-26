@@ -1,6 +1,6 @@
 package application
 
-import "github.com/bandvov/social-media-go/domain"
+import "reactions/domain"
 
 type ReactionServiceInterface interface {
 	AddOrUpdateReaction(userID int, reaction domain.Reaction) error

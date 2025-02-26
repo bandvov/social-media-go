@@ -1,19 +1,25 @@
 package interfaces
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"log/slog"
 	"net/http"
-
-	"github.com/bandvov/social-media-go/application"
-	"github.com/bandvov/social-media-go/domain"
+	"reactions/application"
+	"reactions/domain"
+	"reactions/internal"
+	"time"
 )
 
 type ReactionHandler struct {
 	service application.ReactionServiceInterface
+	db      *sql.DB
+	rdb     internal.RedisClient
 }
 
-func NewReactionHandler(service application.ReactionServiceInterface) *ReactionHandler {
-	return &ReactionHandler{service: service}
+func NewReactionHandler(service application.ReactionServiceInterface, db *sql.DB, rdb internal.RedisClient) *ReactionHandler {
+	return &ReactionHandler{service: service, db: db, rdb: rdb}
 }
 
 func (h *ReactionHandler) AddOrUpdateReaction(w http.ResponseWriter, r *http.Request) {
@@ -51,4 +57,24 @@ func (h *ReactionHandler) RemoveReaction(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *ReactionHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := h.db.PingContext(ctx); err != nil {
+		slog.Warn("PostgreSQL health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+	if err := h.rdb.Ping(ctx).Err(); err != nil {
+		slog.Warn("Redis health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+
+	slog.Info("Health check passed")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Ok")
 }

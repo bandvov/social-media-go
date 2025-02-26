@@ -215,7 +215,7 @@ func TestRegisterUser(t *testing.T) {
 				},
 			}
 
-			handler := NewUserHTTPHandler(mockService)
+			handler := NewUserHTTPHandler(mockService, nil, nil)
 
 			var body []byte
 			var err error
@@ -411,7 +411,7 @@ func TestGetUserProfile(t *testing.T) {
 			}
 
 			// Create handler with mock service
-			handler := NewUserHTTPHandler(mockService, nil)
+			handler := NewUserHTTPHandler(mockService, nil, nil)
 
 			// Create the request
 			req := httptest.NewRequest(http.MethodGet, "/users/{id}/profile", nil)

@@ -1,4 +1,4 @@
-CREATE TYPE entity_type AS ENUM ('comment', 'reply');
+CREATE TYPE entity_type AS ENUM ('comment', 'post');
 
 CREATE TYPE status_type AS ENUM ('approved', 'rejected');
 
