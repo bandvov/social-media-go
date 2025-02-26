@@ -1,6 +1,6 @@
 package application
 
-import "github.com/bandvov/social-media-go/domain"
+import "comments/domain"
 
 // CommentServiceInterface defines methods for tags-related operations.
 type CommentServiceInterface interface {

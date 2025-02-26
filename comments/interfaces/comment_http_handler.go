@@ -1,13 +1,14 @@
 package interfaces
 
 import (
+	"comments/application"
+	"comments/domain"
+	"comments/internal"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/bandvov/social-media-go/application"
-	"github.com/bandvov/social-media-go/domain"
 )
 
 type EntityIDsRequest struct {
@@ -16,10 +17,12 @@ type EntityIDsRequest struct {
 
 type CommentHandler struct {
 	service *application.CommentService
+	db      *sql.DB
+	rdb     internal.RedisClient
 }
 
-func NewCommentHandler(service *application.CommentService) *CommentHandler {
-	return &CommentHandler{service: service}
+func NewCommentHandler(service *application.CommentService, db *sql.DB, rdb internal.RedisClient) *CommentHandler {
+	return &CommentHandler{service: service, db: db, rdb: rdb}
 }
 
 func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
@@ -44,12 +47,6 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	if !ok || userID == 0 {
-		http.Error(w, "unauthenticated", http.StatusBadRequest)
-		return
-	}
-
 	idStr := r.PathValue("id")
 	entityID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -72,7 +69,7 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	offset := (page - 1) * limit
 
-	comments, err := h.service.GetCommentsByEntityID(entityID, userID, offset, limit)
+	comments, err := h.service.GetCommentsByEntityID(entityID, 0, offset, limit)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)

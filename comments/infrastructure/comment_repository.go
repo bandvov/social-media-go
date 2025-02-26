@@ -1,19 +1,19 @@
 package infrastructure
 
 import (
+	"comments/domain"
+	"comments/utils"
 	"database/sql"
 	"fmt"
-
-	"github.com/bandvov/social-media-go/domain"
-	"github.com/bandvov/social-media-go/utils"
 )
 
 type PostgresCommentRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	cache Cache
 }
 
-func NewPostgresCommentRepository(db *sql.DB) *PostgresCommentRepository {
-	return &PostgresCommentRepository{db: db}
+func NewPostgresCommentRepository(db *sql.DB, cache Cache) *PostgresCommentRepository {
+	return &PostgresCommentRepository{db: db, cache: cache}
 }
 
 func (r *PostgresCommentRepository) AddComment(comment domain.Comment) error {
