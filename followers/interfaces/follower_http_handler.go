@@ -112,8 +112,11 @@ func (h *FollowHandler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	search := query.Get("search")
 	orderBy := query.Get("order_by")
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Call the service to get followers
-	followers, err := h.service.GetFollowers(userIDFromUrl, targetUserIDFromUrl, limit, offset, sort, orderBy, search)
+	followers, err := h.service.GetFollowers(ctx, userIDFromUrl, targetUserIDFromUrl, limit, offset, sort, orderBy, search)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -157,8 +160,11 @@ func (h *FollowHandler) GetFollowees(w http.ResponseWriter, r *http.Request) {
 	search := query.Get("search")
 	orderBy := query.Get("order_by")
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Call the service to get followers
-	followers, err := h.service.GetFollowees(userIDFromUrl, targetUserIDFromUrl, limit, offset, sort, orderBy, search)
+	followers, err := h.service.GetFollowees(ctx, userIDFromUrl, targetUserIDFromUrl, limit, offset, sort, orderBy, search)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

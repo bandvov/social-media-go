@@ -34,7 +34,7 @@ func (r *FollowRepository) RemoveFollower(follower *domain.Follower) error {
 	return nil
 }
 
-func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.Follow, error) {
+func (r *FollowRepository) GetFollowers(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, searchTerm string) ([]domain.Follow, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -47,9 +47,10 @@ func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, so
 		limit = 24
 	}
 
+	// Start building the query
 	query := `
 	SELECT 
-   		follower_id AS id,
+		follower_id AS id,
 		CASE 
 			WHEN follower_id = $2 THEN TRUE      
 			ELSE FALSE                            
@@ -58,22 +59,39 @@ func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, so
 			WHEN followee_id = $2 THEN TRUE      
 			ELSE FALSE                            
 		END AS followed_by_follower
-	FROM followers
-	WHERE followee_id = $1                         
-`
+	FROM followers 
+	WHERE followee_id = $1
+	`
 
+	// Add search term condition if searchTerm is provided
 	if searchTerm != "" {
-		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
+		query += " AND follower_id::text LIKE $5 "
 	}
 
-	query += "\nLIMIT $3 OFFSET $4"
+	// Add order by, limit, and offset clauses
+	query += fmt.Sprintf(" ORDER BY %s %s LIMIT $3 OFFSET $4", orderBy, sort)
 
-	rows, err := r.db.Query(query, userID, otherUser, limit, offset)
+	// Prepare the query
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %v", err)
+	}
+	defer stmt.Close()
+
+	// Set up query parameters: userID, otherUser, limit, offset, and searchTerm (if provided)
+	params := []interface{}{userID, otherUser, limit, offset}
+	if searchTerm != "" {
+		params = append(params, "%"+searchTerm+"%")
+	}
+
+	// Execute the query
+	rows, err := stmt.QueryContext(ctx, params...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followers: %v", err)
 	}
 	defer rows.Close()
 
+	// Parse the results
 	var followers []domain.Follow
 	for rows.Next() {
 		var follower domain.Follow
@@ -82,10 +100,12 @@ func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, so
 		}
 		followers = append(followers, follower)
 	}
+
+	// Return the followers
 	return followers, nil
 }
 
-func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.Follow, error) {
+func (r *FollowRepository) GetFollowees(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, searchTerm string) ([]domain.Follow, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -100,6 +120,7 @@ func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, so
 		limit = 24
 	}
 
+	// Base query
 	query := `
 	SELECT 
 		followee_id AS id,
@@ -112,21 +133,38 @@ func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, so
 			ELSE FALSE                            
 		END AS followed_by_follower
 	FROM followers 
-	WHERE follower_id = $1                         
-`
+	WHERE follower_id = $1
+	`
 
+	// Add search term condition if searchTerm is not empty
 	if searchTerm != "" {
-		query += fmt.Sprintf("\nWHERE position('%v' IN id) > 0 \n", searchTerm)
+		query += " AND followee_id::text LIKE $5 "
 	}
 
-	query += fmt.Sprintf("\nORDER BY %s %s\nLIMIT $3 OFFSET $4", orderBy, sort)
+	// Add sorting, limit, and offset
+	query += fmt.Sprintf(" ORDER BY %s %s LIMIT $3 OFFSET $4", orderBy, sort)
 
-	rows, err := r.db.Query(query, userID, otherUser, limit, offset)
+	// Prepare the query
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %v", err)
+	}
+	defer stmt.Close()
+
+	// Parameters: userID, otherUser, limit, offset, searchTerm (if provided)
+	params := []interface{}{userID, otherUser, limit, offset}
+	if searchTerm != "" {
+		params = append(params, "%"+searchTerm+"%")
+	}
+
+	// Execute the query
+	rows, err := stmt.QueryContext(ctx, params...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followees: %v", err)
 	}
 	defer rows.Close()
 
+	// Parse the results
 	var followees []domain.Follow
 	for rows.Next() {
 		var followee domain.Follow
@@ -135,6 +173,8 @@ func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, so
 		}
 		followees = append(followees, followee)
 	}
+
+	// Return the results
 	return followees, nil
 }
 

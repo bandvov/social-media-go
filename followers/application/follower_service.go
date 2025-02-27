@@ -10,8 +10,8 @@ import (
 type FollowServiceInterface interface {
 	AddFollower(followerID, followeeID int) error
 	RemoveFollower(followerID, followeeID int) error
-	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
-	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
+	GetFollowers(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
+	GetFollowees(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowerStats(ctx context.Context, userID int) (int, int, error)
 	CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error)
 }
@@ -42,13 +42,13 @@ func (s *FollowService) RemoveFollower(followerID, followeeID int) error {
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowService) GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
-	return s.repo.GetFollowers(userID, otherUser, limit, offset, sort, orderBy, search)
+func (s *FollowService) GetFollowers(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
+	return s.repo.GetFollowers(ctx, userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowService) GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
-	return s.repo.GetFollowees(userID, otherUser, limit, offset, sort, orderBy, search)
+func (s *FollowService) GetFollowees(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
+	return s.repo.GetFollowees(ctx, userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
 func (s *FollowService) GetFollowerStats(ctx context.Context, userID int) (int, int, error) {
