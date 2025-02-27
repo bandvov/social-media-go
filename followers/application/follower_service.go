@@ -9,8 +9,8 @@ import (
 type FollowerServiceInterface interface {
 	AddFollower(followerID, followeeID int) error
 	RemoveFollower(followerID, followeeID int) error
-	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
-	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error)
+	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
+	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowerStats(userID int) (int, int, error)
 }
 
@@ -40,12 +40,12 @@ func (s *FollowerService) RemoveFollower(followerID, followeeID int) error {
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowerService) GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error) {
+func (s *FollowerService) GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
 	return s.repo.GetFollowers(userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowerService) GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.User, error) {
+func (s *FollowerService) GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
 	return s.repo.GetFollowees(userID, otherUser, limit, offset, sort, orderBy, search)
 }
 

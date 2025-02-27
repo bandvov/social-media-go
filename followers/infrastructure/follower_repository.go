@@ -33,7 +33,7 @@ func (r *FollowRepository) RemoveFollower(follower *domain.Follower) error {
 	return nil
 }
 
-func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.Follow, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -48,22 +48,17 @@ func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, so
 
 	query := `
 	SELECT 
-    u.id,
-	u.username,
-	u.email,
-	u.bio,
-	u.profile_pic,
-    CASE 
-        WHEN f.follower_id = $2 THEN TRUE      
-        ELSE FALSE                            
-    END AS follows_follower,
-	 CASE 
-        WHEN f.followee_id = $2 THEN TRUE      
-        ELSE FALSE                            
-    END AS followed_by_follower
-	FROM followers f
-	LEFT JOIN users u ON u.id = f.follower_id
-	WHERE f.followee_id = $1                          
+   		follower_id AS id,
+		CASE 
+			WHEN follower_id = $2 THEN TRUE      
+			ELSE FALSE                            
+		END AS follows_follower,
+		CASE 
+			WHEN followee_id = $2 THEN TRUE      
+			ELSE FALSE                            
+		END AS followed_by_follower
+	FROM followers
+	WHERE followee_id = $1;                          
 `
 
 	if searchTerm != "" {
@@ -78,18 +73,18 @@ func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, so
 	}
 	defer rows.Close()
 
-	var users []domain.User
+	var followers []domain.Follow
 	for rows.Next() {
-		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.ProfilePic, &user.FollowsFollower, &user.FollowedByFollower); err != nil {
+		var follower domain.Follow
+		if err := rows.Scan(&follower.ID, &follower.FollowsFollower, &follower.FollowedByFollower); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
-		users = append(users, user)
+		followers = append(followers, follower)
 	}
-	return users, nil
+	return followers, nil
 }
 
-func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.User, error) {
+func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, sort string, orderBy string, searchTerm string) ([]domain.Follow, error) {
 	// Validate and set default sorting
 	if sort == "" || sort == "desc" {
 		sort = "DESC"
@@ -106,22 +101,17 @@ func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, so
 
 	query := `
 	SELECT 
-    u.id,
-	u.username,
-	u.email,
-	u.bio,
-	u.profile_pic,
-    CASE 
-        WHEN f.follower_id = $2 THEN TRUE      
-        ELSE FALSE                            
-    END AS follows_follower,
-	 CASE 
-        WHEN f.followee_id = $2 THEN TRUE      
-        ELSE FALSE                            
-    END AS followed_by_follower
-	FROM followers f
-	LEFT JOIN users u ON u.id = f.followee_id
-	WHERE f.follower_id = $1                         
+		followee_id AS id,
+		CASE 
+			WHEN follower_id = $2 THEN TRUE      
+			ELSE FALSE                            
+		END AS follows_follower,
+		CASE 
+			WHEN followee_id = $2 THEN TRUE      
+			ELSE FALSE                            
+		END AS followed_by_follower
+	FROM followers 
+	WHERE follower_id = $1                         
 `
 
 	if searchTerm != "" {
@@ -136,15 +126,15 @@ func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, so
 	}
 	defer rows.Close()
 
-	var users []domain.User
+	var followees []domain.Follow
 	for rows.Next() {
-		var user domain.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.ProfilePic, &user.FollowsFollower, &user.FollowedByFollower); err != nil {
+		var followee domain.Follow
+		if err := rows.Scan(&followee.ID, &followee.FollowsFollower, &followee.FollowedByFollower); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %v", err)
 		}
-		users = append(users, user)
+		followees = append(followees, followee)
 	}
-	return users, nil
+	return followees, nil
 }
 
 func (r *FollowRepository) GetFollowerStats(userID int) (int, int, error) {
