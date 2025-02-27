@@ -38,8 +38,11 @@ func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Call the service to add the follower
-	err = h.service.AddFollower(userID, followeeID)
+	err = h.service.AddFollower(ctx, userID, followeeID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -66,8 +69,11 @@ func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Call the service to remove the follower
-	err = h.service.RemoveFollower(targetUserIDFromUrl, followeeID)
+	err = h.service.RemoveFollower(ctx, targetUserIDFromUrl, followeeID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

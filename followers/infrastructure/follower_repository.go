@@ -16,21 +16,43 @@ func NewFollowRepository(db *sql.DB, cache *RedisCache) *FollowRepository {
 	return &FollowRepository{db: db, cache: cache}
 }
 
-func (r *FollowRepository) AddFollower(follower *domain.Follower) error {
+func (r *FollowRepository) AddFollower(ctx context.Context, follower *domain.Follower) error {
+	// Prepare the query for adding a follower relationship
 	query := "INSERT INTO followers (follower_id, followee_id) VALUES ($1, $2)"
-	_, err := r.db.Exec(query, follower.FollowerID, follower.FolloweeID)
+
+	// Prepare the query statement
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare query: %v", err)
+	}
+	defer stmt.Close()
+
+	// Execute the query with parameters
+	_, err = stmt.ExecContext(ctx, follower.FollowerID, follower.FolloweeID)
 	if err != nil {
 		return fmt.Errorf("failed to add follower: %v", err)
 	}
+
 	return nil
 }
 
-func (r *FollowRepository) RemoveFollower(follower *domain.Follower) error {
+func (r *FollowRepository) RemoveFollower(ctx context.Context, follower *domain.Follower) error {
+	// Prepare the query for removing a follower relationship
 	query := "DELETE FROM followers WHERE follower_id = $1 AND followee_id = $2"
-	_, err := r.db.Exec(query, follower.FollowerID, follower.FolloweeID)
+
+	// Prepare the query statement
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare query: %v", err)
+	}
+	defer stmt.Close()
+
+	// Execute the query with parameters
+	_, err = stmt.ExecContext(ctx, follower.FollowerID, follower.FolloweeID)
 	if err != nil {
 		return fmt.Errorf("failed to remove follower: %v", err)
 	}
+
 	return nil
 }
 
