@@ -14,12 +14,12 @@ import (
 )
 
 type FollowHandler struct {
-	service application.FollowerServiceInterface
+	service application.FollowServiceInterface
 	db      *sql.DB
 	rdb     internal.RedisClient
 }
 
-func NewFollowerHandler(service application.FollowerServiceInterface, db *sql.DB, rdb internal.RedisClient) *FollowHandler {
+func NewFollowHandler(service application.FollowServiceInterface, db *sql.DB, rdb internal.RedisClient) *FollowHandler {
 	return &FollowHandler{service: service, db: db, rdb: rdb}
 }
 
@@ -186,6 +186,26 @@ func (h *FollowHandler) GetFollowerStats(w http.ResponseWriter, r *http.Request)
 		"followers_count": followersCount,
 		"followees_count": followeesCount,
 	})
+}
+
+func (h *FollowHandler) CheckFollowStatus(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.ParseInt(r.URL.Query().Get("user_id"), 10, 64)
+	targetUserID, err2 := strconv.ParseInt(r.URL.Query().Get("target_user_id"), 10, 64)
+	if err != nil || err2 != nil {
+		http.Error(w, "Invalid user_id or target_user_id", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	result, err := h.service.CheckFollowStatus(ctx, userID, targetUserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
 }
 
 func (h *FollowHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {

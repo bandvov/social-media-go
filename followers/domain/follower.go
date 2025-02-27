@@ -1,5 +1,9 @@
 package domain
 
+type UserRelationship struct {
+	IsFollower bool
+	IsFollowed bool
+}
 type Follower struct {
 	FollowerID int
 	FolloweeID int

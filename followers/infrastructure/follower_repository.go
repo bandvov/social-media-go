@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"followers/domain"
@@ -11,7 +12,7 @@ type FollowRepository struct {
 	cache *RedisCache
 }
 
-func NewFollowerRepository(db *sql.DB, cache *RedisCache) *FollowRepository {
+func NewFollowRepository(db *sql.DB, cache *RedisCache) *FollowRepository {
 	return &FollowRepository{db: db, cache: cache}
 }
 
@@ -149,4 +150,23 @@ func (r *FollowRepository) GetFollowerStats(userID int) (int, int, error) {
 		return 0, 0, err
 	}
 	return followersCount, followeesCount, nil
+}
+func (r *FollowRepository) CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error) {
+	stmt, err := r.db.PrepareContext(ctx, `
+    SELECT 
+        EXISTS (SELECT 1 FROM followers WHERE follower_id = $1 AND followee_id = $2) AS is_follower,
+        EXISTS (SELECT 1 FROM followers WHERE follower_id = $2 AND followee_id = $1) AS is_followed
+`)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close() // Close the statement when done
+
+	var relationship domain.UserRelationship
+	err = stmt.QueryRowContext(ctx, userID, targetUserID).Scan(&relationship.IsFollower, &relationship.IsFollowed)
+	if err != nil {
+		return nil, err
+	}
+
+	return &relationship, nil
 }

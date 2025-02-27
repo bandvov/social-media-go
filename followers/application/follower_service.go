@@ -1,29 +1,31 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"followers/domain"
 )
 
-// FollowerServiceInterface defines methods for tags-related operations.
-type FollowerServiceInterface interface {
+// FollowServiceInterface defines methods for tags-related operations.
+type FollowServiceInterface interface {
 	AddFollower(followerID, followeeID int) error
 	RemoveFollower(followerID, followeeID int) error
 	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowerStats(userID int) (int, int, error)
+	CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error)
 }
 
-type FollowerService struct {
-	repo domain.FollowerRepository
+type FollowService struct {
+	repo domain.FollowRepository
 }
 
-func NewFollowerService(repo domain.FollowerRepository) *FollowerService {
-	return &FollowerService{repo: repo}
+func NewFollowService(repo domain.FollowRepository) *FollowService {
+	return &FollowService{repo: repo}
 }
 
 // AddFollower adds a follower for a given user
-func (s *FollowerService) AddFollower(followerID, followeeID int) error {
+func (s *FollowService) AddFollower(followerID, followeeID int) error {
 	// Business logic to prevent self-following
 	if followerID == followeeID {
 		return errors.New("user cannot follow themselves")
@@ -34,21 +36,27 @@ func (s *FollowerService) AddFollower(followerID, followeeID int) error {
 }
 
 // RemoveFollower removes a follower from a given user
-func (s *FollowerService) RemoveFollower(followerID, followeeID int) error {
+func (s *FollowService) RemoveFollower(followerID, followeeID int) error {
 	follower := domain.NewFollower(followerID, followeeID)
 	return s.repo.RemoveFollower(follower)
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowerService) GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
+func (s *FollowService) GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
 	return s.repo.GetFollowers(userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
 // GetFollowers retrieves all followers for a user
-func (s *FollowerService) GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
+func (s *FollowService) GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error) {
 	return s.repo.GetFollowees(userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
-func (s *FollowerService) GetFollowerStats(userID int) (int, int, error) {
+func (s *FollowService) GetFollowerStats(userID int) (int, int, error) {
 	return s.repo.GetFollowerStats(userID)
+}
+func (s *FollowService) CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error) {
+	if userID == targetUserID {
+		return nil, errors.New("user cannot check relationship with themselves")
+	}
+	return s.repo.CheckFollowStatus(ctx, userID, targetUserID)
 }

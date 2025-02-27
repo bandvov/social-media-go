@@ -45,9 +45,9 @@ func main() {
 
 	cache := infrastructure.NewRedisCache(rdb)
 
-	followerRepo := infrastructure.NewFollowerRepository(db, cache)
-	Followerservice := application.NewFollowerService(followerRepo)
-	followerHandler := interfaces.NewFollowerHandler(Followerservice, db, rdb)
+	followerRepo := infrastructure.NewFollowRepository(db, cache)
+	Followerservice := application.NewFollowService(followerRepo)
+	followerHandler := interfaces.NewFollowHandler(Followerservice, db, rdb)
 
 	// Create a custom router
 	router := utils.NewRouter()
