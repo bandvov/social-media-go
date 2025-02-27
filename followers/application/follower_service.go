@@ -12,7 +12,7 @@ type FollowServiceInterface interface {
 	RemoveFollower(followerID, followeeID int) error
 	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
-	GetFollowerStats(userID int) (int, int, error)
+	GetFollowerStats(ctx context.Context, userID int) (int, int, error)
 	CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error)
 }
 
@@ -51,8 +51,8 @@ func (s *FollowService) GetFollowees(userID, otherUser, limit, offset int, sort,
 	return s.repo.GetFollowees(userID, otherUser, limit, offset, sort, orderBy, search)
 }
 
-func (s *FollowService) GetFollowerStats(userID int) (int, int, error) {
-	return s.repo.GetFollowerStats(userID)
+func (s *FollowService) GetFollowerStats(ctx context.Context, userID int) (int, int, error) {
+	return s.repo.GetFollowerStats(ctx, userID)
 }
 func (s *FollowService) CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error) {
 	if userID == targetUserID {

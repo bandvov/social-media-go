@@ -175,7 +175,11 @@ func (h *FollowHandler) GetFollowerStats(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-	followersCount, followeesCount, err := h.service.GetFollowerStats(userIDFromUrl)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	followersCount, followeesCount, err := h.service.GetFollowerStats(ctx, userIDFromUrl)
 	if err != nil {
 		http.Error(w, "Error fetching follower stats", http.StatusInternalServerError)
 		return

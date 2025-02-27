@@ -7,6 +7,6 @@ type FollowRepository interface {
 	RemoveFollower(follower *Follower) error
 	GetFollowers(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]Follow, error)
 	GetFollowees(userID, otherUser, limit, offset int, sort, orderBy, search string) ([]Follow, error)
-	GetFollowerStats(userID int) (int, int, error)
+	GetFollowerStats(ctx context.Context, userID int) (int, int, error)
 	CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*UserRelationship, error)
 }

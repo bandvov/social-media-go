@@ -138,19 +138,29 @@ func (r *FollowRepository) GetFollowees(userID, otherUser, limit, offset int, so
 	return followees, nil
 }
 
-func (r *FollowRepository) GetFollowerStats(userID int) (int, int, error) {
+func (r *FollowRepository) GetFollowerStats(ctx context.Context, userID int) (int, int, error) {
 	var followersCount, followeesCount int
+
 	query := `
         SELECT 
             COUNT(DISTINCT follower_id) FILTER (WHERE followee_id = $1) AS followers_count,
             COUNT(DISTINCT followee_id) FILTER (WHERE follower_id = $1) AS followees_count
         FROM followers`
-	err := r.db.QueryRow(query, userID).Scan(&followersCount, &followeesCount)
+
+	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return 0, 0, err
 	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx, userID).Scan(&followersCount, &followeesCount)
+	if err != nil {
+		return 0, 0, err
+	}
+
 	return followersCount, followeesCount, nil
 }
+
 func (r *FollowRepository) CheckFollowStatus(ctx context.Context, userID, targetUserID int64) (*domain.UserRelationship, error) {
 	stmt, err := r.db.PrepareContext(ctx, `
     SELECT 
