@@ -58,7 +58,7 @@ func (r *FollowRepository) GetFollowers(userID, otherUser, limit, offset int, so
 			ELSE FALSE                            
 		END AS followed_by_follower
 	FROM followers
-	WHERE followee_id = $1;                          
+	WHERE followee_id = $1                         
 `
 
 	if searchTerm != "" {
