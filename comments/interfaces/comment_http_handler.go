@@ -55,6 +55,12 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	}
 
 	query := r.URL.Query()
+	targetUserId := query.Get("target_id")
+	targetUserIDFromUrl, err := strconv.Atoi(targetUserId)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
 
 	// Parse `limit` and `offset` with default values
 	page, err := strconv.Atoi(query.Get("page"))
@@ -69,7 +75,7 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	offset := (page - 1) * limit
 
-	comments, err := h.service.GetCommentsByEntityID(entityID, 0, offset, limit)
+	comments, err := h.service.GetCommentsByEntityID(entityID, targetUserIDFromUrl, offset, limit)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)
