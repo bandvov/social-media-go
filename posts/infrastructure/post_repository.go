@@ -15,26 +15,58 @@ type PostRepository struct {
 func NewPostRepository(db *sql.DB, cache *RedisCache) *PostRepository {
 	return &PostRepository{db: db, cache: cache}
 }
+func (r *PostRepository) Create(ctx context.Context, post *domain.CreatePostRequest) error {
+	// Prepare the insert query using a prepared statement with context
+	stmt, err := r.db.PrepareContext(ctx, `
+		INSERT INTO posts (author_id, content, visibility, pinned)
+		VALUES ($1, $2, $3, $4);
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
 
-func (r *PostRepository) Create(post *domain.CreatePostRequest) error {
-	_, err := r.db.Exec("INSERT INTO posts (author_id, content, visibility, pinned) VALUES ($1, $2, $3, $4);",
-		post.AuthorID, post.Content, post.Visibility, post.Pinned)
+	// Execute the prepared statement with the context and parameters
+	_, err = stmt.ExecContext(ctx, post.AuthorID, post.Content, post.Visibility, post.Pinned)
 	return err
 }
 
-func (r *PostRepository) Update(postId int, post *domain.Post) error {
-	_, err := r.db.Exec("UPDATE posts SET content = $1, visibility = $2, pinned = $3, WHERE id = $4",
-		post.Content, post.Visibility, post.Pinned, postId)
-	return err
-}
-func (r *PostRepository) Delete(id int) error {
-	_, err := r.db.Exec("DELETE from posts WHERE id = $1;", id)
+func (r *PostRepository) Update(ctx context.Context, postId int, post *domain.Post) error {
+	// Prepare the update query using a prepared statement with context
+	stmt, err := r.db.PrepareContext(ctx, `
+		UPDATE posts 
+		SET content = $1, visibility = $2, pinned = $3
+		WHERE id = $4;
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Execute the prepared statement with the context and parameters
+	_, err = stmt.ExecContext(ctx, post.Content, post.Visibility, post.Pinned, postId)
 	return err
 }
 
-func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
+func (r *PostRepository) Delete(ctx context.Context, id int) error {
+	// Prepare the delete query using a prepared statement with context
+	stmt, err := r.db.PrepareContext(ctx, `
+		DELETE FROM posts 
+		WHERE id = $1;
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Execute the prepared statement with the context and parameter
+	_, err = stmt.ExecContext(ctx, id)
+	return err
+}
+func (r *PostRepository) GetByID(ctx context.Context, id int) (*domain.Post, error) {
 	var post domain.Post
-	err := r.db.QueryRow(`
+
+	query := `
 		SELECT
 			id AS post_id,
 			author_id,
@@ -43,10 +75,18 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
 			visibility,
 			created_at,
 			updated_at
-	    FROM posts 
+		FROM posts
 		WHERE id = $1;
-	`, id).
-		Scan(&post.ID, &post.AuthorID, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt)
+	`
+	// Prepare the select query using a prepared statement with context
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// Execute the prepared statement with context and parameters
+	err = stmt.QueryRowContext(ctx, id).Scan(&post.ID, &post.AuthorID, &post.Content, &post.Pinned, &post.Visibility, &post.CreatedAt, &post.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +143,7 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID, offset, limit 
 	return posts, nil
 }
 
-func (r *PostRepository) GetCountPostsByUser(authorID int) (int, error) {
+func (r *PostRepository) GetCountPostsByUser(ctx context.Context, authorID int) (int, error) {
 	var postsCount int
 
 	stmt, err := r.db.Prepare(`

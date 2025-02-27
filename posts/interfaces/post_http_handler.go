@@ -60,7 +60,10 @@ func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	newPost.Data.AuthorID = authorID
 
-	err := p.postService.CreatePost(&newPost.Data)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	err := p.postService.CreatePost(ctx, &newPost.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -90,7 +93,10 @@ func (p *PostHTTPHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.postService.UpdatePost(postID, &domain.Post{
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	err = p.postService.UpdatePost(ctx, postID, &domain.Post{
 		Content: post.Content, Visibility: &post.Visibility, Tags: post.Tags, Pinned: post.Pinned,
 	})
 
@@ -109,7 +115,7 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
 	post, err := p.postService.GetPostByID(ctx, postID)
@@ -142,8 +148,11 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	}
 	offset := (page - 1) * limit
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Move the logic to the service layer
-	posts, postsCount, err := h.postService.GetPostsByUser(authorIDFromUrl, offset, limit)
+	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, offset, limit)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
@@ -159,7 +168,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *PostHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
 	if err := h.db.PingContext(ctx); err != nil {

@@ -11,6 +11,20 @@ services:
       - postgres_sm_data:/var/lib/postgresql/data
     networks:
       - app-network
+      - monitoring
+  postgres-exporter:
+    image: wrouesnel/postgres_exporter
+    environment:
+      - PG_USER=${POSTGRES_USER}
+      - PG_PASSWORD=${POSTGRES_PASSWORD}
+      - PG_HOST=${POSTGRES_HOST}
+      - PG_PORT=${POSTGRES_PORT}
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    networks:
+      - monitoring    
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin

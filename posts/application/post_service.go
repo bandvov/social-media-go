@@ -12,12 +12,12 @@ import (
 )
 
 type PostServiceInterface interface {
-	CreatePost(post *domain.CreatePostRequest) error
-	DeletePost(id int) error
-	UpdatePost(id int, post *domain.Post) error
+	CreatePost(ctx context.Context, post *domain.CreatePostRequest) error
+	DeletePost(ctx context.Context, id int) error
+	UpdatePost(ctx context.Context, id int, post *domain.Post) error
 	GetPostByID(ctx context.Context, id int) (*domain.Post, error)
-	GetPostsByUser(userID, offset, limit int) ([]domain.Post, int, error)
-	GetCountPostsByUser(userID int) (int, error)
+	GetPostsByUser(ctx context.Context, userID, offset, limit int) ([]domain.Post, int, error)
+	GetCountPostsByUser(ctx context.Context, userID int) (int, error)
 }
 
 type PostService struct {
@@ -27,7 +27,7 @@ type PostService struct {
 }
 
 // GetPostsByUser implements PostServiceInterface.
-func (s *PostService) GetPostsByUser(userID int, offset int, limit int) ([]domain.Post, int, error) {
+func (s *PostService) GetPostsByUser(ctx context.Context, userID int, offset int, limit int) ([]domain.Post, int, error) {
 	panic("unimplemented")
 }
 
@@ -42,24 +42,24 @@ func NewPostService(
 	}
 }
 
-func (s *PostService) CreatePost(post *domain.CreatePostRequest) error {
-	return s.postRepo.Create(post)
+func (s *PostService) CreatePost(ctx context.Context, post *domain.CreatePostRequest) error {
+	return s.postRepo.Create(ctx, post)
 }
 
-func (s *PostService) DeletePost(id int) error {
-	return s.postRepo.Delete(id)
+func (s *PostService) DeletePost(ctx context.Context, id int) error {
+	return s.postRepo.Delete(ctx, id)
 }
 
-func (s *PostService) UpdatePost(id int, post *domain.Post) error {
-	return s.postRepo.Update(id, post)
+func (s *PostService) UpdatePost(ctx context.Context, id int, post *domain.Post) error {
+	return s.postRepo.Update(ctx, id, post)
 }
 
-func (s *PostService) GetPostByID(id int) (*domain.Post, error) {
-	return s.postRepo.GetByID(id)
+func (s *PostService) GetPostByID(ctx context.Context, id int) (*domain.Post, error) {
+	return s.postRepo.GetByID(ctx, id)
 }
 
-func (s *PostService) GetCountPostsByUser(userID int) (int, error) {
-	return s.postRepo.GetCountPostsByUser(userID)
+func (s *PostService) GetCountPostsByUser(ctx context.Context, userID int) (int, error) {
+	return s.postRepo.GetCountPostsByUser(ctx, userID)
 }
 
 func (s *PostService) FetchPostsByUser(ctx context.Context, authorID int, offset, limit int) ([]domain.Post, int, error) {
@@ -143,7 +143,7 @@ func (s *PostService) FetchPostsByUser(ctx context.Context, authorID int, offset
 	// Second task: Fetch posts count
 	eg.Go(func() error {
 		var err error
-		postsCount, err = s.GetCountPostsByUser(authorID)
+		postsCount, err = s.GetCountPostsByUser(ctx, authorID)
 		if err != nil {
 			return err
 		}
