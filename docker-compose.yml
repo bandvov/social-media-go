@@ -182,7 +182,7 @@ services:
       context: ./reactions
       args:
         VERSION: ${REACTIONS_VERSION}
-    container_name: REACTIONS-${REACTIONS_VERSION}
+    container_name: reactions-${REACTIONS_VERSION}
     restart: always
     depends_on:
       - postgres
