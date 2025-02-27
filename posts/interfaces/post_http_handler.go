@@ -109,8 +109,10 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	post, err := p.postService.GetPostByID(postID)
+	post, err := p.postService.GetPostByID(ctx, postID)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)

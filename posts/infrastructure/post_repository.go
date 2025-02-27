@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"posts/domain"
@@ -53,33 +54,50 @@ func (r *PostRepository) GetByID(id int) (*domain.Post, error) {
 	return &post, nil
 }
 
-func (r *PostRepository) GetByUserID(userID, offset, limit int) ([]domain.Post, error) {
-	rows, err := r.db.Query(`
-	SELECT
-		id AS post_id,
-		author_id,
-		username AS author_name,
-		content,
-		visibility,
-		pinned,
-		created_at,
-		updated_at	
-	WHERE author_id = $1 -- Author ID
-	ORDER BY id DESC
-	OFFSET $2
-	LIMIT $3;`, userID, offset, limit)
+func (r *PostRepository) GetByUserID(ctx context.Context, userID, offset, limit int) ([]domain.Post, error) {
+
+	query := `
+		SELECT
+			id AS post_id,
+			author_id,
+			username AS author_name,
+			content,
+			visibility,
+			pinned,
+			created_at,
+			updated_at
+		FROM posts
+		WHERE author_id = $1
+		ORDER BY id DESC
+		OFFSET $2
+		LIMIT $3;`
+	// Prepare the query using a prepared statement.
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// Execute the query with context and parameters
+	rows, err := stmt.QueryContext(ctx, userID, offset, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	// Collect the posts
 	var posts []domain.Post
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.ID, &post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt, &post.Reactions); err != nil {
+		if err := rows.Scan(&post.ID, &post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)
+	}
+
+	// Check for any errors that may have occurred during iteration
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return posts, nil

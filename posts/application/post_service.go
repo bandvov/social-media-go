@@ -2,6 +2,7 @@ package application
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"posts/domain"
@@ -14,7 +15,7 @@ type PostServiceInterface interface {
 	CreatePost(post *domain.CreatePostRequest) error
 	DeletePost(id int) error
 	UpdatePost(id int, post *domain.Post) error
-	GetPostByID(id int) (*domain.Post, error)
+	GetPostByID(ctx context.Context, id int) (*domain.Post, error)
 	GetPostsByUser(userID, offset, limit int) ([]domain.Post, int, error)
 	GetCountPostsByUser(userID int) (int, error)
 }
@@ -61,8 +62,8 @@ func (s *PostService) GetCountPostsByUser(userID int) (int, error) {
 	return s.postRepo.GetCountPostsByUser(userID)
 }
 
-func (s *PostService) FetchPostsByUser(authorID int, offset, limit int) ([]domain.Post, int, error) {
-	posts, err := s.postRepo.GetByUserID(authorID, offset, limit)
+func (s *PostService) FetchPostsByUser(ctx context.Context, authorID int, offset, limit int) ([]domain.Post, int, error) {
+	posts, err := s.postRepo.GetByUserID(ctx, authorID, offset, limit)
 	if err != nil {
 		return nil, 0, err
 	}
