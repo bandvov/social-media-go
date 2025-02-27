@@ -56,6 +56,7 @@ func main() {
 	router.HandleFunc("DELETE /{id}", interfaces.LoggerMiddleware(followerHandler.RemoveFollower))
 	router.HandleFunc("GET /{id}/followers", interfaces.LoggerMiddleware(followerHandler.GetFollowers))
 	router.HandleFunc("GET /{id}/followees", interfaces.LoggerMiddleware(followerHandler.GetFollowees))
+	router.HandleFunc("GET /{id}/stats", interfaces.LoggerMiddleware(followerHandler.GetFollowerStats))
 	router.HandleFunc("GET /healthz", interfaces.LoggerMiddleware(followerHandler.HealthCheckHandler))
 
 	// Start server
