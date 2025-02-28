@@ -54,8 +54,10 @@ func main() {
 
 	// Define routes
 
-	router.HandleFunc("GET /api/reaction", reactionHandler.AddOrUpdateReaction)
-	router.HandleFunc("DELETE /api/reaction", reactionHandler.RemoveReaction)
+	router.HandleFunc("GET /", reactionHandler.GetReactionsHandler)
+	router.HandleFunc("POST /", reactionHandler.AddOrUpdateReaction)
+	router.HandleFunc("DELETE /{id}", reactionHandler.RemoveReaction)
+	router.HandleFunc("GET /count", reactionHandler.GetReactionsCount)
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}

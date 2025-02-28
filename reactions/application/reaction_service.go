@@ -1,12 +1,15 @@
 package application
 
-import "reactions/domain"
+import (
+	"context"
+	"reactions/domain"
+)
 
 type ReactionServiceInterface interface {
-	AddOrUpdateReaction(userID int, reaction domain.Reaction) error
-	RemoveReaction(userID, contentID string) error
-	GetReactions(entityIDs []int) (map[int][]domain.Reaction, error)
-	GetReactionsCount(entityIDs []int) ([]domain.Reaction, error)
+	AddOrUpdateReaction(ctx context.Context, userID int, reaction domain.Reaction) error
+	RemoveReaction(ctx context.Context, userID, contentID string) error
+	GetReactions(ctx context.Context, entityIDs []int) ([]domain.Reaction, error)
+	GetReactionsCount(ctx context.Context, entityIDs []int) ([]domain.Reaction, error)
 }
 type ReactionService struct {
 	reactionRepo domain.ReactionRepository
@@ -16,28 +19,18 @@ func NewReactionService(reactionRepo domain.ReactionRepository) *ReactionService
 	return &ReactionService{reactionRepo: reactionRepo}
 }
 
-func (s *ReactionService) AddOrUpdateReaction(userID int, reaction domain.Reaction) error {
-	return s.reactionRepo.AddOrUpdateReaction(userID, reaction)
+func (s *ReactionService) AddOrUpdateReaction(ctx context.Context, userID int, reaction domain.Reaction) error {
+	return s.reactionRepo.AddOrUpdateReaction(ctx, userID, reaction)
 }
 
-func (s *ReactionService) RemoveReaction(userID, contentID string) error {
-	return s.reactionRepo.RemoveReaction(userID, contentID)
+func (s *ReactionService) RemoveReaction(ctx context.Context, userID, contentID string) error {
+	return s.reactionRepo.RemoveReaction(ctx, userID, contentID)
 }
 
-func (s *ReactionService) GetReactions(entityIDs []int) (map[int][]domain.Reaction, error) {
-	reactionMap := make(map[int][]domain.Reaction)
-
-	reactions, err := s.reactionRepo.GetReactionsByEntityIDs(entityIDs)
-	if err != nil {
-		return nil, err
-	}
-	for _, reaction := range reactions {
-		reactionMap[reaction.EntityId] = append(reactionMap[reaction.EntityId], reaction)
-	}
-
-	return reactionMap, nil
+func (s *ReactionService) GetReactions(ctx context.Context, entityIDs []int) ([]domain.Reaction, error) {
+	return s.reactionRepo.GetReactionsByEntityIDs(ctx, entityIDs)
 }
 
-func (s *ReactionService) GetReactionsCount(entityIDs []int) ([]domain.Reaction, error) {
-	return s.reactionRepo.CountByEntityIDs(entityIDs)
+func (s *ReactionService) GetReactionsCount(ctx context.Context, entityIDs []int) ([]domain.Reaction, error) {
+	return s.reactionRepo.CountByEntityIDs(ctx, entityIDs)
 }

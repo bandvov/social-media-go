@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reactions/domain"
@@ -16,25 +17,37 @@ func NewReactionRepository(db *sql.DB, cache Cache) *ReactionRepository {
 	return &ReactionRepository{db: db, cache: cache}
 }
 
-func (r *ReactionRepository) AddOrUpdateReaction(userID int, reaction domain.Reaction) error {
+func (r *ReactionRepository) AddOrUpdateReaction(ctx context.Context, userID int, reaction domain.Reaction) error {
 	query := `
         INSERT INTO reactions (user_id, entity_id, reaction_type_id)
         VALUES ($1, $2, $3)
         ON CONFLICT (user_id, entity_id)
-        DO UPDATE SET reaction_type_id = $3
+        DO UPDATE SET reaction_type_id = EXCLUDED.reaction_type_id
     `
-	_, err := r.db.Exec(query, userID, reaction.EntityId, reaction.Reaction)
+
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, userID, reaction.EntityId, reaction.Reaction)
 	return err
 }
-
-func (r *ReactionRepository) RemoveReaction(userID, entityID string) error {
+func (r *ReactionRepository) RemoveReaction(ctx context.Context, userID, entityID string) error {
 	query := `DELETE FROM reactions WHERE user_id = $1 AND entity_id = $2`
-	_, err := r.db.Exec(query, userID, entityID)
+
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, userID, entityID)
 	return err
 }
 
-// Fetch reactions by post IDs
-func (r *ReactionRepository) GetReactionsByEntityIDs(postIDs []int) ([]domain.Reaction, error) {
+func (r *ReactionRepository) GetReactionsByEntityIDs(ctx context.Context, postIDs []int) ([]domain.Reaction, error) {
 	if len(postIDs) == 0 {
 		return nil, nil
 	}
@@ -46,7 +59,13 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(postIDs []int) ([]domain.Re
         WHERE r.entity_id IN (%s)
         GROUP BY r.entity_id, rt.name`, utils.Placeholders(len(postIDs)))
 
-	rows, err := r.db.Query(query, utils.ToInterface(postIDs)...)
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, utils.ToInterface(postIDs)...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,20 +80,27 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(postIDs []int) ([]domain.Re
 		reactions = append(reactions, reaction)
 	}
 
-	return reactions, nil
+	return reactions, rows.Err() // Ensure any potential iteration errors are returned
 }
 
-func (r *ReactionRepository) CountByEntityIDs(entityIDs []int) ([]domain.Reaction, error) {
+func (r *ReactionRepository) CountByEntityIDs(ctx context.Context, entityIDs []int) ([]domain.Reaction, error) {
+	if len(entityIDs) == 0 {
+		return nil, nil
+	}
 
 	query := fmt.Sprintf(`
-        SELECT
-			entity_id,
-            COUNT(*) AS count
+        SELECT entity_id, COUNT(*) AS count
         FROM reactions
         WHERE entity_id IN (%s)
-		GROUP BY entity_id`, utils.Placeholders(len(entityIDs)))
+        GROUP BY entity_id`, utils.Placeholders(len(entityIDs)))
 
-	rows, err := r.db.Query(query, utils.ToInterface(entityIDs)...)
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, utils.ToInterface(entityIDs)...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,5 +115,5 @@ func (r *ReactionRepository) CountByEntityIDs(entityIDs []int) ([]domain.Reactio
 		counts = append(counts, count)
 	}
 
-	return counts, nil
+	return counts, rows.Err() // Ensure any potential iteration errors are returned
 }
