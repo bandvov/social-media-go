@@ -4,11 +4,13 @@ import (
 	"comments/application"
 	"comments/domain"
 	"comments/internal"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type EntityIDsRequest struct {
@@ -37,7 +39,10 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 	}
 
-	if err := h.service.AddComment(req.Data); err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	if err := h.service.AddComment(ctx, req.Data); err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
 		return
@@ -75,7 +80,10 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	offset := (page - 1) * limit
 
-	comments, err := h.service.GetCommentsByEntityID(entityID, targetUserIDFromUrl, offset, limit)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	comments, err := h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, offset, limit)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)
@@ -98,7 +106,10 @@ func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *ht
 		return
 	}
 
-	counts, err := h.service.GetCommentsAndRepliesCount(request.EntityIDs)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	counts, err := h.service.GetCommentsAndRepliesCount(ctx, request.EntityIDs)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
