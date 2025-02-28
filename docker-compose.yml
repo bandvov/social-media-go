@@ -14,13 +14,11 @@ services:
       - monitoring
   postgres-exporter:
     image: wrouesnel/postgres_exporter
-    environment:
-      - PG_USER=${POSTGRES_USER}
-      - PG_PASSWORD=${POSTGRES_PASSWORD}
-      - PG_HOST=${POSTGRES_HOST}
-      - PG_PORT=${POSTGRES_PORT}
-    ports:
-      - "9187:9187"
+    container_name: postgres-exporter
+    env_file:
+      - .env
+    # ports:
+    #   - "9187:9187"
     depends_on:
       - postgres
     networks:
@@ -49,8 +47,8 @@ services:
   redis_exporter:
     image: oliver006/redis_exporter:latest
     container_name: redis_exporter
-    ports:
-      - "9121:9121"
+    # ports:
+    #   - "9121:9121"
     environment:
       REDIS_ADDR: "redis:6379"
     depends_on:
