@@ -136,23 +136,25 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := &domain.User{}
-	req.ID = userID
+	var req struct {
+		Data domain.User `json:"data"`
+	}
+	req.Data.ID = userID
 
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
 		return
 	}
 
-	if req.Email != "" {
-		if err := ValidateEmail(req.Email); err != nil {
+	if req.Data.Email != "" {
+		if err := ValidateEmail(req.Data.Email); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 	}
 
-	if req.Password != "" {
-		if err := ValidatePassword(req.Password); err != nil {
+	if req.Data.Password != "" {
+		if err := ValidatePassword(req.Data.Password); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -160,9 +162,13 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
+	// we don't want to update the role
+	// rele is updated by the admin in a different endpoint
+	req.Data.Role = ""
 
-	err = h.UserService.UpdateUserData(ctx, req)
+	err = h.UserService.UpdateUserData(ctx, &req.Data)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -170,6 +176,20 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
+	headerValue := r.Header.Get("is_admin")
+
+	// Convert string to boolean
+	isAdmin, err := strconv.ParseBool(headerValue)
+	if err != nil {
+		http.Error(w, "Invalid boolean header value", http.StatusBadRequest)
+		return
+	}
+
+	if !isAdmin {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
@@ -178,7 +198,9 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req struct {
-		Role string `json:"role"`
+		Data struct {
+			Role string `json:"role"`
+		} `json:"data"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -186,22 +208,15 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := ValidateRole(req.Role); err != nil {
+	if err := ValidateRole(req.Data.Role); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	isAdmin := r.Context().Value(isAdminKey).(bool)
-
-	if !isAdmin {
-		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	err = h.UserService.ChangeUserRole(ctx, userID, req.Role, isAdmin)
+	err = h.UserService.ChangeUserRole(ctx, userID, req.Data.Role)
 	if err != nil {
 		http.Error(w, "error changing user role: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -215,8 +230,9 @@ func (h *UserHTTPHandler) GetPublicProfiles(w http.ResponseWriter, r *http.Reque
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	limit, offset := utils.ParsePagination(r)
-	users, err := h.UserService.GetPublicProfiles(ctx, limit, offset)
+	p := utils.ParsePagination(r)
+
+	users, err := h.UserService.GetPublicProfiles(ctx, p)
 	if err != nil {
 		http.Error(w, "Failed to fetch public profiles", http.StatusInternalServerError)
 		return
@@ -235,8 +251,8 @@ func (h *UserHTTPHandler) GetAdminProfiles(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	limit, offset := utils.ParsePagination(r)
-	users, err := h.UserService.GetAdminProfiles(ctx, limit, offset)
+	p := utils.ParsePagination(r)
+	users, err := h.UserService.GetAdminProfiles(ctx, p)
 	if err != nil {
 		http.Error(w, "Failed to fetch admin profiles", http.StatusInternalServerError)
 		return
@@ -311,7 +327,7 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
-	
+
 	fmt.Println("here2========================")
 	// Retrieve user from the database
 	user, err := h.UserService.GetUserByID(ctx, claims.UserID)
@@ -333,10 +349,12 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler for getting users by IDs
-func (h *UserHTTPHandler) GetUsersByIDsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserHTTPHandler) GetUsersByIDs(w http.ResponseWriter, r *http.Request) {
 	// Decode the JSON request body
 	var request struct {
-		UserIDs []int `json:"user_ids"`
+		Data struct {
+			UserIDs []int `json:"user_ids"`
+		} `json:"data"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -348,7 +366,7 @@ func (h *UserHTTPHandler) GetUsersByIDsHandler(w http.ResponseWriter, r *http.Re
 	defer cancel()
 
 	// Call GetUsersByIDs function
-	users, err := h.UserService.GetUsersByIDs(ctx, request.UserIDs)
+	users, err := h.UserService.GetUsersByIDs(ctx, request.Data.UserIDs)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error fetching users: %v", err), http.StatusInternalServerError)
 		return

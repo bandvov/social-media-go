@@ -3,7 +3,10 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"users/domain"
+	"users/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -13,10 +16,10 @@ type UserServiceInterface interface {
 	Authenticate(ctx context.Context, email, password string) (*domain.User, error)
 	RegisterUser(ctx context.Context, user domain.CreateUserRequest) error
 	UpdateUserData(ctx context.Context, user *domain.User) error
-	ChangeUserRole(ctx context.Context, userID int, newRole string, isAdmin bool) error
+	ChangeUserRole(ctx context.Context, userID int, newRole string) error
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
-	GetPublicProfiles(ctx context.Context, limit, offset int) ([]domain.User, error)
-	GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error)
+	GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error)
+	GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error)
 	GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error)
 	GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error)
 }
@@ -77,7 +80,7 @@ func (s *UserService) UpdateUserData(ctx context.Context, userData *domain.User)
 	return s.userRepo.UpdateUser(ctx, userData)
 }
 
-func (s *UserService) ChangeUserRole(ctx context.Context, userID int, newRole string, isAdmin bool) error {
+func (s *UserService) ChangeUserRole(ctx context.Context, userID int, newRole string) error {
 	return s.userRepo.UpdateUser(ctx, &domain.User{
 		ID:   userID,
 		Role: newRole,
@@ -89,13 +92,13 @@ func (s *UserService) GetUserByID(ctx context.Context, id int) (*domain.User, er
 }
 
 // GetPublicProfiles retrieves public profiles with pagination
-func (s *UserService) GetPublicProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
-	return s.userRepo.GetPublicProfiles(ctx, limit, offset)
+func (s *UserService) GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+	return s.userRepo.GetPublicProfiles(ctx, p)
 }
 
 // GetAdminProfiles retrieves admin profiles with pagination
-func (s *UserService) GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
-	return s.userRepo.GetAdminProfiles(ctx, limit, offset)
+func (s *UserService) GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+	return s.userRepo.GetAdminProfiles(ctx, p)
 }
 
 func (s *UserService) GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error) {
@@ -104,7 +107,7 @@ func (s *UserService) GetUserProfileInfo(ctx context.Context, id int) (*domain.U
 
 func (s *UserService) GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error) {
 	userMap := make(map[int]domain.User)
-
+	fmt.Fprintln(os.Stdout, userIDs)
 	userDetails, err := s.userRepo.GetUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, err

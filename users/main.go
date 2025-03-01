@@ -69,6 +69,7 @@ func main() {
 	router.HandleFunc("GET /{id}/profile", interfaces.LoggerMiddleware(userHandler.GetUserProfile))
 	router.HandleFunc("PUT /{id}/role", interfaces.LoggerMiddleware(userHandler.ChangeUserRole))
 	router.HandleFunc("POST /login", interfaces.LoggerMiddleware(userHandler.Login))
+	router.HandleFunc("GET /by-ids", interfaces.LoggerMiddleware(userHandler.GetUsersByIDs))
 	router.HandleFunc("GET /healthz", interfaces.LoggerMiddleware(userHandler.HealthCheckHandler))
 	// router.HandleFunc("/seed", seeds.SeedData(db))
 

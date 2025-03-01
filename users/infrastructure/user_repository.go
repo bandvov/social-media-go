@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 	"users/domain"
+	"users/utils"
 )
 
 type UserRepository struct {
@@ -91,7 +93,17 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*domain.User,
 
 	// Execute the query
 	err = stmt.QueryRowContext(ctx, id).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
+		Scan(
+			&user.ID,
+			&user.Username,
+			&user.FirstName,
+			&user.LastName,
+			&user.Email,
+			&user.Status,
+			&user.Role,
+			&user.ProfilePic,
+			&user.CreatedAt,
+			&user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +117,8 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*domain.User,
 	return &user, nil
 }
 
-func (r *UserRepository) GetPublicProfiles(ctx context.Context, offset, limit int) ([]domain.User, error) {
-	cacheKey := fmt.Sprintf("public_profiles:limit:%d:offset:%d", limit, offset)
+func (r *UserRepository) GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+	cacheKey := fmt.Sprintf("public_profiles:offset:%d:limit:%d", p.Offset, p.Limit)
 
 	// Try to get the data from cache
 	cachedData, err := r.cache.Get(ctx, cacheKey)
@@ -125,7 +137,7 @@ func (r *UserRepository) GetPublicProfiles(ctx context.Context, offset, limit in
 	defer stmt.Close()
 
 	// Execute the prepared statement with parameters
-	rows, err := stmt.QueryContext(ctx, offset, limit)
+	rows, err := stmt.QueryContext(ctx, p.Offset, p.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch public profiles: %w", err)
 	}
@@ -152,8 +164,8 @@ func (r *UserRepository) GetPublicProfiles(ctx context.Context, offset, limit in
 
 	return users, nil
 }
-func (r *UserRepository) GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
-	cacheKey := fmt.Sprintf("admin_profiles:limit:%d:offset:%d", limit, offset)
+func (r *UserRepository) GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+	cacheKey := fmt.Sprintf("admin_profiles:offset:%d:limit:%d", p.Offset, p.Limit)
 
 	// Try to get the data from the cache
 	cachedData, err := r.cache.Get(ctx, cacheKey)
@@ -176,7 +188,7 @@ func (r *UserRepository) GetAdminProfiles(ctx context.Context, limit, offset int
 	defer stmt.Close()
 
 	// Execute the prepared statement with parameters
-	rows, err := stmt.QueryContext(ctx, limit, offset)
+	rows, err := stmt.QueryContext(ctx, p.Offset, p.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch admin profiles: %w", err)
 	}
@@ -275,7 +287,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 	}
 
 	// Prepare the statement for querying the database
-	stmt, err := r.db.PrepareContext(ctx, "SELECT password, email FROM users WHERE email = $1;")
+	stmt, err := r.db.PrepareContext(ctx, "SELECT id, password, email FROM users WHERE email = $1;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -283,7 +295,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 
 	// Execute the query with the context
 	err = stmt.QueryRowContext(ctx, email).
-		Scan(&user.Password, &user.Email)
+		Scan(&user.ID, &user.Password, &user.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +314,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) erro
 	if err != nil {
 		return err
 	}
-
+	fmt.Fprintln(os.Stderr, query)
 	// Prepare the statement with context
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {

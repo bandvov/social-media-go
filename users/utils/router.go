@@ -5,6 +5,11 @@ import (
 	"strconv"
 )
 
+type Pagination struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
 // Router wraps the default ServeMux to add method-based routing.
 type Router struct {
 	mux *http.ServeMux
@@ -59,7 +64,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // parsePagination extracts limit and offset from query parameters with defaults
-func ParsePagination(r *http.Request) (int, int) {
+func ParsePagination(r *http.Request) Pagination {
 	query := r.URL.Query()
 	limit, err := strconv.Atoi(query.Get("limit"))
 	if err != nil || limit <= 0 {
@@ -69,5 +74,8 @@ func ParsePagination(r *http.Request) (int, int) {
 	if err != nil || offset < 0 {
 		offset = 0
 	}
-	return limit, offset
+	return Pagination{
+		Limit:  limit,
+		Offset: offset,
+	}
 }
