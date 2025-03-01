@@ -10,6 +10,7 @@ import (
 	"posts/application"
 	"posts/domain"
 	"posts/internal"
+	"posts/utils"
 	"strconv"
 	"time"
 )
@@ -137,22 +138,12 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	query := r.URL.Query()
-	page, _ := strconv.Atoi(query.Get("page"))
-	if page < 1 {
-		page = 1
-	}
-	limit, _ := strconv.Atoi(query.Get("limit"))
-	if limit <= 0 {
-		limit = 10
-	}
-	offset := (page - 1) * limit
-
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
+	p := utils.ParsePagination(r)
 	// Move the logic to the service layer
-	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, offset, limit)
+	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, p)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
@@ -160,7 +151,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	response := map[string]interface{}{
 		"data":    posts,
-		"hasMore": postsCount > offset+limit,
+		"hasMore": postsCount > p.Offset+p.Limit,
 	}
 	fmt.Println(time.Since(s))
 	w.Header().Set("Content-Type", "application/json")

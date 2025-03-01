@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 	"users/domain"
-	"users/utils"
 )
 
 type MockUserService struct {
@@ -13,8 +12,8 @@ type MockUserService struct {
 	ChangeUserRoleFunc     func(ctx context.Context, userID int, newRole string) error
 	FindByEmailFunc        func(ctx context.Context, email string) (*domain.User, error)
 	GetUserByIDFunc        func(ctx context.Context, id int) (*domain.User, error)
-	GetPublicProfilesFunc  func(ctx context.Context, p utils.Pagination) ([]domain.User, error)
-	GetAdminProfilesFunc   func(ctx context.Context, p utils.Pagination) ([]domain.User, error)
+	GetPublicProfilesFunc  func(ctx context.Context, p domain.Pagination) ([]domain.User, error)
+	GetAdminProfilesFunc   func(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetUserProfileInfoFunc func(ctx context.Context, id int) (*domain.User, error)
 	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) (map[int]domain.User, error)
 }
@@ -38,10 +37,10 @@ func (m *MockUserService) FindByEmail(ctx context.Context, email string) (*domai
 func (m *MockUserService) GetUserByID(ctx context.Context, id int) (*domain.User, error) {
 	return m.GetUserByIDFunc(ctx, id)
 }
-func (m *MockUserService) GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (m *MockUserService) GetPublicProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	return m.GetPublicProfilesFunc(ctx, p)
 }
-func (m *MockUserService) GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (m *MockUserService) GetAdminProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	return m.GetAdminProfilesFunc(ctx, p)
 }
 

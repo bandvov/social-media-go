@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+type Pagination struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
 type Reaction struct {
 	EntityId int    `json:"entity_id"`
 	Reaction string `json:"reaction_type_id"`

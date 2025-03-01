@@ -16,7 +16,7 @@ type PostServiceInterface interface {
 	DeletePost(ctx context.Context, id int) error
 	UpdatePost(ctx context.Context, id int, post *domain.Post) error
 	GetPostByID(ctx context.Context, id int) (*domain.Post, error)
-	GetPostsByUser(ctx context.Context, userID, offset, limit int) ([]domain.Post, int, error)
+	GetPostsByUser(ctx context.Context, userID int, p domain.Pagination) ([]domain.Post, int, error)
 	GetCountPostsByUser(ctx context.Context, userID int) (int, error)
 }
 
@@ -24,11 +24,6 @@ type PostService struct {
 	postRepo        domain.PostRepository
 	commentsClient  internal.ClientInterface
 	reactionsClient internal.ClientInterface
-}
-
-// GetPostsByUser implements PostServiceInterface.
-func (s *PostService) GetPostsByUser(ctx context.Context, userID int, offset int, limit int) ([]domain.Post, int, error) {
-	panic("unimplemented")
 }
 
 func NewPostService(
@@ -62,8 +57,8 @@ func (s *PostService) GetCountPostsByUser(ctx context.Context, userID int) (int,
 	return s.postRepo.GetCountPostsByUser(ctx, userID)
 }
 
-func (s *PostService) FetchPostsByUser(ctx context.Context, authorID int, offset, limit int) ([]domain.Post, int, error) {
-	posts, err := s.postRepo.GetByUserID(ctx, authorID, offset, limit)
+func (s *PostService) GetPostsByUser(ctx context.Context, authorID int, p domain.Pagination) ([]domain.Post, int, error) {
+	posts, err := s.postRepo.GetByUserID(ctx, authorID, p)
 	if err != nil {
 		return nil, 0, err
 	}

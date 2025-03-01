@@ -237,8 +237,15 @@ func (h *UserHTTPHandler) GetPublicProfiles(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Failed to fetch public profiles", http.StatusInternalServerError)
 		return
 	}
+
+	// use users count to determine if there are more profiles
+	response := map[string]interface{}{
+		"data":    users,
+		"hasMore": 20 > p.Offset+p.Limit,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *UserHTTPHandler) GetAdminProfiles(w http.ResponseWriter, r *http.Request) {

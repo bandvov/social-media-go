@@ -3,7 +3,6 @@ package infrastructure
 import (
 	"context"
 	"users/domain"
-	"users/utils"
 )
 
 type MockUserRepository struct {
@@ -11,8 +10,8 @@ type MockUserRepository struct {
 	GetUserByUsernameFunc  func(ctx context.Context, username string) (*domain.User, error)
 	GetUserByEmailFunc     func(ctx context.Context, email string) (*domain.User, error)
 	GetUserByIDFunc        func(ctx context.Context, id int) (*domain.User, error)
-	GetPublicProfilesFunc  func(ctx context.Context, p utils.Pagination) ([]domain.User, error)
-	GetAdminProfilesFunc   func(ctx context.Context, p utils.Pagination) ([]domain.User, error)
+	GetPublicProfilesFunc  func(ctx context.Context, p domain.Pagination) ([]domain.User, error)
+	GetAdminProfilesFunc   func(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetUserProfileInfoFunc func(ctx context.Context, id int) (*domain.User, error)
 	UpdateUserFunc         func(ctx context.Context, user *domain.User) error
 	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) ([]domain.User, error)
@@ -39,13 +38,13 @@ func (m *MockUserRepository) GetUserByID(ctx context.Context, id int) (*domain.U
 	return nil, nil
 }
 
-func (m *MockUserRepository) GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (m *MockUserRepository) GetPublicProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	if m.GetPublicProfilesFunc != nil {
 		return m.GetPublicProfilesFunc(ctx, p)
 	}
 	return nil, nil
 }
-func (m *MockUserRepository) GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (m *MockUserRepository) GetAdminProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	if m.GetAdminProfilesFunc != nil {
 		return m.GetAdminProfilesFunc(ctx, p)
 	}

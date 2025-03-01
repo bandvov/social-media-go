@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 	"users/domain"
-	"users/utils"
 )
 
 type UserRepository struct {
@@ -117,7 +116,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*domain.User,
 	return &user, nil
 }
 
-func (r *UserRepository) GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (r *UserRepository) GetPublicProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	cacheKey := fmt.Sprintf("public_profiles:offset:%d:limit:%d", p.Offset, p.Limit)
 
 	// Try to get the data from cache
@@ -167,7 +166,7 @@ func (r *UserRepository) GetPublicProfiles(ctx context.Context, p utils.Paginati
 
 	return users, nil
 }
-func (r *UserRepository) GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (r *UserRepository) GetAdminProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	cacheKey := fmt.Sprintf("admin_profiles:offset:%d:limit:%d", p.Offset, p.Limit)
 
 	// Try to get the data from the cache

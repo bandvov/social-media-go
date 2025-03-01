@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"users/domain"
-	"users/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,8 +17,8 @@ type UserServiceInterface interface {
 	UpdateUserData(ctx context.Context, user *domain.User) error
 	ChangeUserRole(ctx context.Context, userID int, newRole string) error
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
-	GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error)
-	GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error)
+	GetPublicProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error)
+	GetAdminProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error)
 	GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error)
 }
@@ -92,12 +91,12 @@ func (s *UserService) GetUserByID(ctx context.Context, id int) (*domain.User, er
 }
 
 // GetPublicProfiles retrieves public profiles with pagination
-func (s *UserService) GetPublicProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (s *UserService) GetPublicProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	return s.userRepo.GetPublicProfiles(ctx, p)
 }
 
 // GetAdminProfiles retrieves admin profiles with pagination
-func (s *UserService) GetAdminProfiles(ctx context.Context, p utils.Pagination) ([]domain.User, error) {
+func (s *UserService) GetAdminProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error) {
 	return s.userRepo.GetAdminProfiles(ctx, p)
 }
 

@@ -94,7 +94,7 @@ func (r *PostRepository) GetByID(ctx context.Context, id int) (*domain.Post, err
 	return &post, nil
 }
 
-func (r *PostRepository) GetByUserID(ctx context.Context, userID, offset, limit int) ([]domain.Post, error) {
+func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.Pagination) ([]domain.Post, error) {
 
 	query := `
 		SELECT
@@ -119,7 +119,7 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID, offset, limit 
 	defer stmt.Close()
 
 	// Execute the query with context and parameters
-	rows, err := stmt.QueryContext(ctx, userID, offset, limit)
+	rows, err := stmt.QueryContext(ctx, userID, p.Offset, p.Limit)
 	if err != nil {
 		return nil, err
 	}

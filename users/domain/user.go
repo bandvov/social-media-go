@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+type Pagination struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
 type AggregatedResponse struct {
 	UserID         string    `json:"id"`
 	Email          string    `json:"email,omitempty"`
