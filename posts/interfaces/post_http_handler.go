@@ -41,15 +41,19 @@ func NewPostHTTPHandler(
 }
 
 func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
-	authorID, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	if !ok || authorID == 0 {
-		http.Error(w, "unauthenticated", http.StatusBadRequest)
+
+	hv := r.Header.Get("user_id")
+
+	authorID, err := strconv.Atoi(hv)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
 
 	var newPost struct {
 		Data domain.CreatePostRequest `json:"data"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
@@ -64,7 +68,7 @@ func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	err := p.postService.CreatePost(ctx, &newPost.Data)
+	err = p.postService.CreatePost(ctx, &newPost.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -75,6 +79,24 @@ func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHTTPHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	postID, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		return
+	}
+	if postID == 0 {
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	err = p.postService.DeletePost(ctx, postID)
+	if err != nil {
+		http.Error(w, "error deleting post: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]string{"message": "post deleted successfully"})
 }

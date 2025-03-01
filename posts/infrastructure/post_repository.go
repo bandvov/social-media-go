@@ -50,10 +50,10 @@ func (r *PostRepository) Update(ctx context.Context, postId int, post *domain.Po
 
 func (r *PostRepository) Delete(ctx context.Context, id int) error {
 	// Prepare the delete query using a prepared statement with context
-	stmt, err := r.db.PrepareContext(ctx, `
-		DELETE FROM posts 
-		WHERE id = $1;
-	`)
+	stmt, err := r.db.PrepareContext(ctx,
+		`UPDATE posts
+		SET visibility = 5 
+		WHERE id = $1;`)
 	if err != nil {
 		return err
 	}
