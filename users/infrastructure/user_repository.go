@@ -20,42 +20,47 @@ func NewUserRepository(db *sql.DB, cache Cache) *UserRepository {
 	return &UserRepository{db: db, cache: cache}
 }
 
-func (r *UserRepository) CreateUser(user *domain.User) error {
+func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) error {
 	// Prepare the statement
-	stmt, err := r.db.Prepare("INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)")
+	stmt, err := r.db.PrepareContext(ctx, "INSERT INTO users (password, email, status, role) VALUES ($1, $2, $3, $4)")
 	if err != nil {
-		return fmt.Errorf("Failed to prepare statement: %v", err)
+		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user.Password, user.Email, user.Status, user.Role)
-	return err
-}
+	// Execute the statement
+	_, err = stmt.ExecContext(ctx, user.Password, user.Email, user.Status, user.Role)
+	if err != nil {
+		return fmt.Errorf("failed to execute statement: %w", err)
+	}
 
-func (r *UserRepository) GetUserByUsername(username string) (*domain.User, error) {
+	return nil
+}
+func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*domain.User, error) {
 	user := &domain.User{}
 
 	// Prepare the statement
-	stmt, err := r.db.Prepare("SELECT id, username, password, email, status, role FROM users WHERE username = $1")
+	stmt, err := r.db.PrepareContext(ctx, "SELECT id, username, password, email, status, role FROM users WHERE username = $1")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(username).
+	// Execute the statement
+	err = stmt.QueryRowContext(ctx, username).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role)
 	if err != nil {
 		return nil, err
 	}
+
 	return user, nil
 }
-
-func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*domain.User, error) {
 	var user domain.User
 
 	cacheKey := fmt.Sprintf("user:%d", id)
 
-	ctx := context.Background()
+	// Try to get the user from cache
 	cachedUser, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedUser != "" {
 		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
@@ -63,7 +68,8 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 		}
 	}
 
-	stmt, err := r.db.Prepare(`	
+	// Prepare the statement for querying the database
+	stmt, err := r.db.PrepareContext(ctx, `
 	SELECT
 		id,
 		username,
@@ -79,26 +85,30 @@ func (r *UserRepository) GetUserByID(id int) (*domain.User, error) {
 	WHERE id = $1;
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(id).
+	// Execute the query
+	err = stmt.QueryRowContext(ctx, id).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Status, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
+
+	// Cache the result
 	data, err := json.Marshal(user)
 	if err == nil {
 		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
 	}
+
 	return &user, nil
 }
 
-func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, error) {
+func (r *UserRepository) GetPublicProfiles(ctx context.Context, offset, limit int) ([]domain.User, error) {
 	cacheKey := fmt.Sprintf("public_profiles:limit:%d:offset:%d", limit, offset)
 
-	ctx := context.Background()
+	// Try to get the data from cache
 	cachedData, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedData != "" {
 		var users []domain.User
@@ -107,16 +117,17 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 		}
 	}
 
-	stmt, err := r.db.Prepare(`SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`)
+	// Prepare the statement for querying the database
+	stmt, err := r.db.PrepareContext(ctx, `SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare statement: %v", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
 	// Execute the prepared statement with parameters
-	rows, err := stmt.Query(offset, limit)
+	rows, err := stmt.QueryContext(ctx, offset, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch public profiles: %v", err)
+		return nil, fmt.Errorf("failed to fetch public profiles: %w", err)
 	}
 	defer rows.Close()
 
@@ -124,15 +135,16 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 	for rows.Next() {
 		var user domain.User
 		if err := rows.Scan(&user.ID, &user.Username, &user.ProfilePic); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %v", err)
+			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("row iteration error: %v", err)
+		return nil, fmt.Errorf("row iteration error: %w", err)
 	}
 
+	// Cache the result
 	data, err := json.Marshal(users)
 	if err == nil {
 		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
@@ -140,11 +152,10 @@ func (r *UserRepository) GetPublicProfiles(offset, limit int) ([]domain.User, er
 
 	return users, nil
 }
-
-func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
+func (r *UserRepository) GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
 	cacheKey := fmt.Sprintf("admin_profiles:limit:%d:offset:%d", limit, offset)
 
-	ctx := context.Background()
+	// Try to get the data from the cache
 	cachedData, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedData != "" {
 		var users []domain.User
@@ -153,19 +164,21 @@ func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, err
 		}
 	}
 
-	stmt, err := r.db.Prepare(`
+	// Prepare the statement for querying the database
+	stmt, err := r.db.PrepareContext(ctx, `
 		SELECT id, username, email, role, status, created_at, updated_at 
 		FROM users 
 		LIMIT $1 OFFSET $2
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare statement: %v", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(limit, offset)
+	// Execute the prepared statement with parameters
+	rows, err := stmt.QueryContext(ctx, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch admin profiles: %v", err)
+		return nil, fmt.Errorf("failed to fetch admin profiles: %w", err)
 	}
 	defer rows.Close()
 
@@ -181,15 +194,16 @@ func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, err
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %v", err)
+			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %v", err)
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
+	// Cache the result
 	data, err := json.Marshal(users)
 	if err == nil {
 		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
@@ -198,11 +212,12 @@ func (r *UserRepository) GetAdminProfiles(limit, offset int) ([]domain.User, err
 	return users, nil
 }
 
-func (r *UserRepository) GetUserProfileInfo(id int) (*domain.User, error) {
+func (r *UserRepository) GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error) {
 	var user domain.User
 
 	cacheKey := fmt.Sprintf("user-profile-info:%v", id)
-	ctx := context.Background()
+
+	// Try to get the data from the cache
 	cachedUser, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedUser != "" {
 		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
@@ -210,45 +225,48 @@ func (r *UserRepository) GetUserProfileInfo(id int) (*domain.User, error) {
 		}
 	}
 
-	// Prepare the statement
-	stmt, err := r.db.Prepare(`	
-	SELECT
-		id,
-		username,
-		first_name,
-		last_name,
-		email,
-		role,
-		profile_pic,
-		created_at,
-		updated_at
-	FROM public.users
-	WHERE status != 'banned'
-	AND id = $1;
-`)
+	// Prepare the statement for querying the database
+	stmt, err := r.db.PrepareContext(ctx, `	
+		SELECT
+			id,
+			username,
+			first_name,
+			last_name,
+			email,
+			role,
+			profile_pic,
+			created_at,
+			updated_at
+		FROM public.users
+		WHERE status != 'banned'
+		AND id = $1;
+	`)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(id).
+	// Execute the query with the context
+	err = stmt.QueryRowContext(ctx, id).
 		Scan(&user.ID, &user.Username, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.ProfilePic, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
+	// Cache the result
 	data, err := json.Marshal(user)
 	if err == nil {
 		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
 	}
+
 	return &user, nil
 }
-func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
 
 	cacheKey := fmt.Sprintf("user:%v", email)
 
-	ctx := context.Background()
+	// Try to get the data from the cache
 	cachedUser, err := r.cache.Get(ctx, cacheKey)
 	if err == nil && cachedUser != "" {
 		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
@@ -256,19 +274,21 @@ func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 		}
 	}
 
-	// Prepare the statement
-	stmt, err := r.db.Prepare("SELECT password, email, FROM users WHERE email = $1;")
+	// Prepare the statement for querying the database
+	stmt, err := r.db.PrepareContext(ctx, "SELECT password, email FROM users WHERE email = $1;")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare statement: %v", err)
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(email).
+	// Execute the query with the context
+	err = stmt.QueryRowContext(ctx, email).
 		Scan(&user.Password, &user.Email)
 	if err != nil {
 		return nil, err
 	}
 
+	// Cache the result
 	data, err := json.Marshal(user)
 	if err == nil {
 		r.cache.Set(ctx, cacheKey, string(data), 24*time.Hour)
@@ -277,20 +297,21 @@ func (r *UserRepository) GetUserByEmail(email string) (*domain.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateUser(user *domain.User) error {
+func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) error {
 	query, err := r.buildUpdateQuery(user)
 	if err != nil {
 		return err
 	}
 
-	// Prepare the statement
-	stmt, err := r.db.Prepare(query)
+	// Prepare the statement with context
+	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
-		return fmt.Errorf("Failed to prepare statement: %v", err)
+		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec()
+	// Execute the statement with context
+	_, err = stmt.ExecContext(ctx)
 	return err
 }
 
@@ -356,7 +377,7 @@ func (r *UserRepository) GetUsersByIDs(ctx context.Context, userIDs []int) ([]do
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute query: %v", err)
 	}
 	defer rows.Close()
 
@@ -364,13 +385,13 @@ func (r *UserRepository) GetUsersByIDs(ctx context.Context, userIDs []int) ([]do
 	for rows.Next() {
 		var user domain.User
 		if err := rows.Scan(&user.ID, &user.Username, &user.ProfilePic); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("row iteration error: %v", err)
 	}
 
 	return users, nil

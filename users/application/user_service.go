@@ -10,15 +10,15 @@ import (
 
 // UserServiceInterface defines methods for user-related operations.
 type UserServiceInterface interface {
-	Authenticate(email, password string) (*domain.User, error)
-	RegisterUser(user domain.CreateUserRequest) error
-	UpdateUserData(*domain.User) error
-	ChangeUserRole(userID int, newRole string, isAdmin bool) error
-	GetUserByID(id int) (*domain.User, error)
-	GetPublicProfiles(limit, offset int) ([]domain.User, error)
-	GetAdminProfiles(limit, offset int) ([]domain.User, error)
-	GetUserProfileInfo(id int) (*domain.User, error)
-	GetUsersByIDs(userIDs []int) (map[int]domain.User, error)
+	Authenticate(ctx context.Context, email, password string) (*domain.User, error)
+	RegisterUser(ctx context.Context, user domain.CreateUserRequest) error
+	UpdateUserData(ctx context.Context, user *domain.User) error
+	ChangeUserRole(ctx context.Context, userID int, newRole string, isAdmin bool) error
+	GetUserByID(ctx context.Context, id int) (*domain.User, error)
+	GetPublicProfiles(ctx context.Context, limit, offset int) ([]domain.User, error)
+	GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error)
+	GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error)
+	GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error)
 }
 type UserService struct {
 	userRepo domain.UserRepository
@@ -28,7 +28,7 @@ func NewUserService(userRepo domain.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) RegisterUser(u domain.CreateUserRequest) error {
+func (s *UserService) RegisterUser(ctx context.Context, u domain.CreateUserRequest) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -41,12 +41,12 @@ func (s *UserService) RegisterUser(u domain.CreateUserRequest) error {
 		Role:     "user",
 	}
 
-	return s.userRepo.CreateUser(user)
+	return s.userRepo.CreateUser(ctx, user)
 }
 
-func (s *UserService) Authenticate(email, password string) (*domain.User, error) {
+func (s *UserService) Authenticate(ctx context.Context, email, password string) (*domain.User, error) {
 	// Retrieve user by email
-	user, err := s.userRepo.GetUserByEmail(email)
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +60,8 @@ func (s *UserService) Authenticate(email, password string) (*domain.User, error)
 	return user, nil
 }
 
-func (s *UserService) UpdateUserData(userData *domain.User) error {
-	_, err := s.userRepo.GetUserByID(userData.ID)
+func (s *UserService) UpdateUserData(ctx context.Context, userData *domain.User) error {
+	_, err := s.userRepo.GetUserByID(ctx, userData.ID)
 	if err != nil {
 		return err
 	}
@@ -74,38 +74,38 @@ func (s *UserService) UpdateUserData(userData *domain.User) error {
 		userData.UpdatePassword(string(hashedPassword))
 	}
 
-	return s.userRepo.UpdateUser(userData)
+	return s.userRepo.UpdateUser(ctx, userData)
 }
 
-func (s *UserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error {
-	return s.userRepo.UpdateUser(&domain.User{
+func (s *UserService) ChangeUserRole(ctx context.Context, userID int, newRole string, isAdmin bool) error {
+	return s.userRepo.UpdateUser(ctx, &domain.User{
 		ID:   userID,
 		Role: newRole,
 	})
 }
 
-func (s *UserService) GetUserByID(id int) (*domain.User, error) {
-	return s.userRepo.GetUserByID(id)
+func (s *UserService) GetUserByID(ctx context.Context, id int) (*domain.User, error) {
+	return s.userRepo.GetUserByID(ctx, id)
 }
 
 // GetPublicProfiles retrieves public profiles with pagination
-func (s *UserService) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
-	return s.userRepo.GetPublicProfiles(limit, offset)
+func (s *UserService) GetPublicProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
+	return s.userRepo.GetPublicProfiles(ctx, limit, offset)
 }
 
 // GetAdminProfiles retrieves admin profiles with pagination
-func (s *UserService) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
-	return s.userRepo.GetAdminProfiles(limit, offset)
+func (s *UserService) GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
+	return s.userRepo.GetAdminProfiles(ctx, limit, offset)
 }
 
-func (s *UserService) GetUserProfileInfo(id int) (*domain.User, error) {
-	return s.userRepo.GetUserProfileInfo(id)
+func (s *UserService) GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error) {
+	return s.userRepo.GetUserProfileInfo(ctx, id)
 }
 
-func (s *UserService) GetUsersByIDs(userIDs []int) (map[int]domain.User, error) {
+func (s *UserService) GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error) {
 	userMap := make(map[int]domain.User)
 
-	userDetails, err := s.userRepo.GetUsersByIDs(context.Background(), userIDs)
+	userDetails, err := s.userRepo.GetUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, err
 	}

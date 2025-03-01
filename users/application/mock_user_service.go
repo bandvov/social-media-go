@@ -1,50 +1,53 @@
 package application
 
-import "users/domain"
+import (
+	"context"
+	"users/domain"
+)
 
 type MockUserService struct {
-	AuthenticateFunc       func(email, password string) (*domain.User, error)
-	RegisterUserFunc       func(user domain.CreateUserRequest) error
-	UpdateUserDataFunc     func(user *domain.User) error
-	ChangeUserRoleFunc     func(userID int, newRole string, isAdmin bool) error
-	FindByEmailFunc        func(email string) (*domain.User, error)
-	GetUserByIDFunc        func(id int) (*domain.User, error)
-	GetPublicProfilesFunc  func(limit, offset int) ([]domain.User, error)
-	GetAdminProfilesFunc   func(limit, offset int) ([]domain.User, error)
-	GetUserProfileInfoFunc func(id int) (*domain.User, error)
-	GetUsersByIDsFunc      func(userIDs []int) (map[int]domain.User, error)
+	AuthenticateFunc       func(ctx context.Context, email, password string) (*domain.User, error)
+	RegisterUserFunc       func(ctx context.Context, user domain.CreateUserRequest) error
+	UpdateUserDataFunc     func(ctx context.Context, user *domain.User) error
+	ChangeUserRoleFunc     func(ctx context.Context, userID int, newRole string, isAdmin bool) error
+	FindByEmailFunc        func(ctx context.Context, email string) (*domain.User, error)
+	GetUserByIDFunc        func(ctx context.Context, id int) (*domain.User, error)
+	GetPublicProfilesFunc  func(ctx context.Context, limit, offset int) ([]domain.User, error)
+	GetAdminProfilesFunc   func(ctx context.Context, limit, offset int) ([]domain.User, error)
+	GetUserProfileInfoFunc func(ctx context.Context, id int) (*domain.User, error)
+	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) (map[int]domain.User, error)
 }
 
-func (m *MockUserService) Authenticate(email, password string) (*domain.User, error) {
-	return m.AuthenticateFunc(email, password)
+func (m *MockUserService) Authenticate(ctx context.Context, email, password string) (*domain.User, error) {
+	return m.AuthenticateFunc(ctx, email, password)
 }
-func (m *MockUserService) RegisterUser(user domain.CreateUserRequest) error {
-	return m.RegisterUserFunc(user)
+func (m *MockUserService) RegisterUser(ctx context.Context, user domain.CreateUserRequest) error {
+	return m.RegisterUserFunc(ctx, user)
 }
-func (m *MockUserService) ChangeUserRole(userID int, newRole string, isAdmin bool) error {
-	return m.ChangeUserRoleFunc(userID, newRole, isAdmin)
-}
-
-func (m *MockUserService) UpdateUserData(user *domain.User) error {
-	return m.UpdateUserDataFunc(user)
-}
-func (m *MockUserService) FindByEmail(email string) (*domain.User, error) {
-	return m.FindByEmailFunc(email)
-}
-func (m *MockUserService) GetUserByID(id int) (*domain.User, error) {
-	return m.GetUserByIDFunc(id)
-}
-func (m *MockUserService) GetPublicProfiles(limit, offset int) ([]domain.User, error) {
-	return m.GetPublicProfilesFunc(limit, offset)
-}
-func (m *MockUserService) GetAdminProfiles(limit, offset int) ([]domain.User, error) {
-	return m.GetAdminProfilesFunc(limit, offset)
+func (m *MockUserService) ChangeUserRole(ctx context.Context, userID int, newRole string, isAdmin bool) error {
+	return m.ChangeUserRoleFunc(ctx, userID, newRole, isAdmin)
 }
 
-func (m *MockUserService) GetUserProfileInfo(id int) (*domain.User, error) {
-	return m.GetUserProfileInfoFunc(id)
+func (m *MockUserService) UpdateUserData(ctx context.Context, user *domain.User) error {
+	return m.UpdateUserDataFunc(ctx, user)
+}
+func (m *MockUserService) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	return m.FindByEmailFunc(ctx, email)
+}
+func (m *MockUserService) GetUserByID(ctx context.Context, id int) (*domain.User, error) {
+	return m.GetUserByIDFunc(ctx, id)
+}
+func (m *MockUserService) GetPublicProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
+	return m.GetPublicProfilesFunc(ctx, limit, offset)
+}
+func (m *MockUserService) GetAdminProfiles(ctx context.Context, limit, offset int) ([]domain.User, error) {
+	return m.GetAdminProfilesFunc(ctx, limit, offset)
 }
 
-func (m *MockUserService) GetUsersByIDs(userIDs []int) (map[int]domain.User, error) {
-	return m.GetUsersByIDs((userIDs))
+func (m *MockUserService) GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error) {
+	return m.GetUserProfileInfoFunc(ctx, id)
+}
+
+func (m *MockUserService) GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error) {
+	return m.GetUsersByIDsFunc(ctx, userIDs)
 }

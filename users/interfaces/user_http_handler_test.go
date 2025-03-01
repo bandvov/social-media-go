@@ -71,7 +71,7 @@ func TestLogin_Success(t *testing.T) {
 			name:        "Valid Login",
 			requestBody: string(reqJSON),
 			mockUserService: &application.MockUserService{
-				AuthenticateFunc: func(email, password string) (*domain.User, error) {
+				AuthenticateFunc: func(ctx context.Context, email, password string) (*domain.User, error) {
 					return &expectedUser, nil
 				},
 			},
@@ -210,7 +210,7 @@ func TestRegisterUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := &application.MockUserService{
-				RegisterUserFunc: func(user domain.CreateUserRequest) error {
+				RegisterUserFunc: func(ctx context.Context, user domain.CreateUserRequest) error {
 					return tt.mockResponse
 				},
 			}
@@ -292,7 +292,7 @@ func TestUpdateUser(t *testing.T) {
 			PathValue: "1",
 			body:      `{"email": "valid@example.com", "password": "ValidPassword123"}`,
 			mockUserService: &application.MockUserService{
-				UpdateUserDataFunc: func(user *domain.User) error {
+				UpdateUserDataFunc: func(ctx context.Context, user *domain.User) error {
 					return nil
 				},
 			},
@@ -304,7 +304,7 @@ func TestUpdateUser(t *testing.T) {
 			PathValue: "1",
 			body:      `{"email": "valid@example.com"}`,
 			mockUserService: &application.MockUserService{
-				UpdateUserDataFunc: func(user *domain.User) error {
+				UpdateUserDataFunc: func(ctx context.Context, user *domain.User) error {
 					return errors.New("database error")
 				},
 			},
@@ -363,7 +363,7 @@ func TestGetUserProfile(t *testing.T) {
 		userIDFromURL       string
 		expectedStatusCode  int
 		isAdmin             bool
-		mockGetUserByIDFunc func(id int) (*domain.User, error)
+		mockGetUserByIDFunc func(ctx context.Context, id int) (*domain.User, error)
 		expectedBody        interface{}
 	}{
 		{
@@ -372,7 +372,7 @@ func TestGetUserProfile(t *testing.T) {
 			isAdmin:            false,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusForbidden,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+			mockGetUserByIDFunc: func(ctx context.Context, id int) (*domain.User, error) {
 				return nil, nil
 			},
 			expectedBody: "Unauthorized\n",
@@ -383,7 +383,7 @@ func TestGetUserProfile(t *testing.T) {
 			userIDInContext:    1,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusInternalServerError,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+			mockGetUserByIDFunc: func(ctx context.Context, id int) (*domain.User, error) {
 				return nil, errors.New("some internal error")
 			},
 			expectedBody: "Internal server error\n",
@@ -393,7 +393,7 @@ func TestGetUserProfile(t *testing.T) {
 			userIDInContext:    1,
 			userIDFromURL:      "1",
 			expectedStatusCode: http.StatusOK,
-			mockGetUserByIDFunc: func(id int) (*domain.User, error) {
+			mockGetUserByIDFunc: func(ctx context.Context, id int) (*domain.User, error) {
 				return mockUser, nil
 			},
 			expectedBody: func() string {

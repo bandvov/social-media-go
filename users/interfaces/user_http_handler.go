@@ -55,7 +55,10 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.UserService.RegisterUser(newUser.Data)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	err := h.UserService.RegisterUser(ctx, newUser.Data)
 	if err != nil {
 		fmt.Println("err: ", err)
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
@@ -86,8 +89,11 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Authenticate user
-	user, err := h.UserService.Authenticate(request.Data.Email, request.Data.Password)
+	user, err := h.UserService.Authenticate(ctx, request.Data.Email, request.Data.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -152,7 +158,10 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = h.UserService.UpdateUserData(req)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	err = h.UserService.UpdateUserData(ctx, req)
 	if err != nil {
 		http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -189,7 +198,10 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.UserService.ChangeUserRole(userID, req.Role, isAdmin)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	err = h.UserService.ChangeUserRole(ctx, userID, req.Role, isAdmin)
 	if err != nil {
 		http.Error(w, "error changing user role: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -199,8 +211,12 @@ func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *UserHTTPHandler) GetPublicProfiles(w http.ResponseWriter, r *http.Request) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	limit, offset := utils.ParsePagination(r)
-	users, err := h.UserService.GetPublicProfiles(limit, offset)
+	users, err := h.UserService.GetPublicProfiles(ctx, limit, offset)
 	if err != nil {
 		http.Error(w, "Failed to fetch public profiles", http.StatusInternalServerError)
 		return
@@ -216,9 +232,11 @@ func (h *UserHTTPHandler) GetAdminProfiles(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
 
 	limit, offset := utils.ParsePagination(r)
-	users, err := h.UserService.GetAdminProfiles(limit, offset)
+	users, err := h.UserService.GetAdminProfiles(ctx, limit, offset)
 	if err != nil {
 		http.Error(w, "Failed to fetch admin profiles", http.StatusInternalServerError)
 		return
@@ -235,8 +253,11 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
 	// Ensure user lookup happens after authorization checks
-	user, err := h.UserService.GetUserProfileInfo(userID)
+	user, err := h.UserService.GetUserProfileInfo(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -287,9 +308,13 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+	
 	fmt.Println("here2========================")
 	// Retrieve user from the database
-	user, err := h.UserService.GetUserByID(claims.UserID)
+	user, err := h.UserService.GetUserByID(ctx, claims.UserID)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
@@ -305,6 +330,37 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
+}
+
+// Handler for getting users by IDs
+func (h *UserHTTPHandler) GetUsersByIDsHandler(w http.ResponseWriter, r *http.Request) {
+	// Decode the JSON request body
+	var request struct {
+		UserIDs []int `json:"user_ids"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error parsing request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	// Call GetUsersByIDs function
+	users, err := h.UserService.GetUsersByIDs(ctx, request.UserIDs)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching users: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the fetched user data in JSON format
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(users)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *UserHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"users/domain"
@@ -13,7 +14,7 @@ func TestRegisterUser(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          domain.CreateUserRequest
-		mockRepoFunc   func(user *domain.User) error
+		mockRepoFunc   func(ctx context.Context, user *domain.User) error
 		expectedErr    error
 		validateOutput func(t *testing.T, user *domain.User, input domain.CreateUserRequest)
 	}{
@@ -23,7 +24,7 @@ func TestRegisterUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "securepassword",
 			},
-			mockRepoFunc: func(user *domain.User) error {
+			mockRepoFunc: func(ctx context.Context, user *domain.User) error {
 				return nil
 			},
 			expectedErr: nil,
@@ -51,7 +52,7 @@ func TestRegisterUser(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "securepassword",
 			},
-			mockRepoFunc: func(user *domain.User) error {
+			mockRepoFunc: func(ctx context.Context, user *domain.User) error {
 				return errors.New("database error")
 			},
 			expectedErr:    errors.New("database error"),
@@ -67,7 +68,7 @@ func TestRegisterUser(t *testing.T) {
 
 			userService := NewUserService(mockRepo)
 
-			err := userService.RegisterUser(tt.input)
+			err := userService.RegisterUser(context.TODO(), tt.input)
 
 			// Assert errors
 			if (err != nil && tt.expectedErr == nil) || (err == nil && tt.expectedErr != nil) {
@@ -79,7 +80,7 @@ func TestRegisterUser(t *testing.T) {
 
 			// Validate output if applicable
 			if tt.validateOutput != nil {
-				mockRepo.CreateUserFunc = func(user *domain.User) error {
+				mockRepo.CreateUserFunc = func(ctx context.Context, user *domain.User) error {
 					tt.validateOutput(t, user, tt.input)
 					return nil
 				}
