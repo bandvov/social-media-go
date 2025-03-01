@@ -65,6 +65,18 @@ func (c *Comment) IsValidContent() bool {
 	return c.Content != ""
 }
 
+type User struct {
+	ID         int    `json:"id"`
+	Username   string `json:"username"`
+	ProfilePic string `json:"profile_pic"`
+}
+
+type Reaction struct {
+	EntityID int    `json:"entity_id"`
+	Reaction string `json:"reaction_type"`
+	Count    int    `json:"count"`
+}
+
 type CommentCount struct {
 	EntityID     int `json:"entity_id"`
 	CommentCount int `json:"comment_count"`

@@ -46,8 +46,11 @@ func main() {
 
 	cache := infrastructure.NewRedisCache(rdb)
 
+	// Initialize the CommentFetcher
+	commentFetcher := application.NewCommentFetcher(&http.Client{})
+
 	commentRepo := infrastructure.NewPostgresCommentRepository(db, cache)
-	commentService := application.NewCommentService(commentRepo)
+	commentService := application.NewCommentService(commentRepo, commentFetcher)
 	commentHandler := interfaces.NewCommentHandler(commentService, db, rdb)
 
 	// Create a custom router
