@@ -66,16 +66,17 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // parsePagination extracts limit and offset from query parameters with defaults
 func ParsePagination(r *http.Request) Pagination {
 	query := r.URL.Query()
+	page, err := strconv.Atoi(query.Get("page"))
+	if err != nil || page <= 0 {
+		page = 1
+	}
 	limit, err := strconv.Atoi(query.Get("limit"))
 	if err != nil || limit <= 0 {
 		limit = 10
 	}
-	offset, err := strconv.Atoi(query.Get("offset"))
-	if err != nil || offset < 0 {
-		offset = 0
-	}
+
 	return Pagination{
 		Limit:  limit,
-		Offset: offset,
+		Offset: (page - 1) * limit,
 	}
 }

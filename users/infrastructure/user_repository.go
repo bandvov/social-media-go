@@ -128,9 +128,12 @@ func (r *UserRepository) GetPublicProfiles(ctx context.Context, p utils.Paginati
 			return users, nil
 		}
 	}
-
 	// Prepare the statement for querying the database
-	stmt, err := r.db.PrepareContext(ctx, `SELECT id, username, profile_pic FROM users OFFSET $1 LIMIT $2`)
+	stmt, err := r.db.PrepareContext(ctx,
+		`SELECT id, username, profile_pic 
+		 FROM users 
+		 GROUP BY id 
+		 OFFSET $1 LIMIT $2`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -177,10 +180,11 @@ func (r *UserRepository) GetAdminProfiles(ctx context.Context, p utils.Paginatio
 	}
 
 	// Prepare the statement for querying the database
-	stmt, err := r.db.PrepareContext(ctx, `
-		SELECT id, username, email, role, status, created_at, updated_at 
-		FROM users 
-		LIMIT $1 OFFSET $2
+	stmt, err := r.db.PrepareContext(ctx,
+		`SELECT id, username, email, role, status, created_at, updated_at 
+		 FROM users
+		 GROUP BY id 
+		 OFFSET $1 LIMIT $2;
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare statement: %w", err)
