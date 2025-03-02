@@ -76,7 +76,9 @@ func (r *PostgresCommentRepository) FetchCommentsByEntityID(ctx context.Context,
 		var comment domain.Comment
 		if err := rows.Scan(
 			&comment.ID,
+			&comment.AuthorID,
 			&comment.EntityID,
+			&comment.EntityType,
 			&comment.Content,
 			&comment.CreatedAt,
 			&comment.RepliesCount,

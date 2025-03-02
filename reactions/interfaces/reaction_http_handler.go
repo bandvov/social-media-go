@@ -9,6 +9,7 @@ import (
 	"reactions/application"
 	"reactions/domain"
 	"reactions/internal"
+	"strconv"
 	"time"
 )
 
@@ -23,9 +24,9 @@ func NewReactionHandler(service application.ReactionServiceInterface, db *sql.DB
 }
 
 func (h *ReactionHandler) AddOrUpdateReaction(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	if !ok || userId == 0 {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
+	userId, err := strconv.Atoi(r.Header.Get("X-User-Id"))
+	if err != nil || userId == 0 {
+		http.Error(w, "Missing user ID", http.StatusBadRequest)
 		return
 	}
 	var reaction domain.Reaction
@@ -86,16 +87,18 @@ func (s *ReactionHandler) GetReactionsHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (s *ReactionHandler) GetReactionsCount(w http.ResponseWriter, r *http.Request) {
-	var entityIDs []int
+	var req struct {
+		Data []int `json:"data"`
+	}
 
 	// Decode the request body to get entityIDs
-	if err := json.NewDecoder(r.Body).Decode(&entityIDs); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
 	// Call the service method to get the reactions count
-	reactions, err := s.service.GetReactionsCount(r.Context(), entityIDs)
+	reactions, err := s.service.GetReactionsCount(r.Context(), req.Data)
 	if err != nil {
 		http.Error(w, "Failed to retrieve reactions count", http.StatusInternalServerError)
 		return

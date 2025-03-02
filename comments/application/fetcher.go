@@ -80,8 +80,8 @@ func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map
 
 // Fetch total reactions for comments
 func (f *CommentFetcher) FetchTotalReactions(ctx context.Context, commentIDs []int) (map[int]int, error) {
-	url := fmt.Sprintf("http://reactions:8080/total-reactions")
-	body := strings.NewReader(fmt.Sprintf(`{"comment_ids": %v}`, commentIDs))
+	url := fmt.Sprintf("http://reactions:8080/count")
+	body := strings.NewReader(fmt.Sprintf(`{"data": %v}`, commentIDs))
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, body)
 	if err != nil {

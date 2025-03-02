@@ -89,10 +89,11 @@ func (r *ReactionRepository) CountByEntityIDs(ctx context.Context, entityIDs []i
 	}
 
 	query := fmt.Sprintf(`
-        SELECT entity_id, COUNT(*) AS count
-        FROM reactions
-        WHERE entity_id IN (%s)
-        GROUP BY entity_id`, utils.Placeholders(len(entityIDs)))
+        SELECT entity_id,entity_type, COUNT(*) AS count
+		FROM reactions 
+		WHERE entity_id IN (%s)
+		GROUP BY entity_id,entity_type;`,
+		utils.Placeholders(len(entityIDs)))
 
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -109,7 +110,7 @@ func (r *ReactionRepository) CountByEntityIDs(ctx context.Context, entityIDs []i
 	var counts []domain.Reaction
 	for rows.Next() {
 		var count domain.Reaction
-		if err := rows.Scan(&count.EntityId, &count.Count); err != nil {
+		if err := rows.Scan(&count.EntityId, &count.EntityType, &count.Count); err != nil {
 			return nil, err
 		}
 		counts = append(counts, count)

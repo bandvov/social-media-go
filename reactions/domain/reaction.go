@@ -3,9 +3,10 @@ package domain
 import "context"
 
 type Reaction struct {
-	EntityId int    `json:"entity_id"`
-	Reaction string `json:"reaction_type_id"`
-	Count    int    `json:"count"`
+	EntityId   int    `json:"entity_id"`
+	EntityType string `json:"entity_type,omitempty"`
+	Reaction   string `json:"reaction_type_id,omitempty"`
+	Count      int    `json:"count"`
 }
 
 type ReactionRepository interface {

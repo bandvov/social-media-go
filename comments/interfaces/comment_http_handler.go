@@ -54,7 +54,7 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	entityID, err := strconv.Atoi(idStr)
-	if err != nil {
+	if err != nil || entityID <= 0 {
 		http.Error(w, "invalid post ID", http.StatusBadRequest)
 		return
 	}

@@ -56,8 +56,8 @@ func main() {
 	// Create a custom router
 	router := utils.NewRouter()
 
-	router.HandleFunc("POST /api/comments", interfaces.LoggerMiddleware(commentHandler.AddComment))
-	router.HandleFunc("GET /api/comments/{id}", interfaces.LoggerMiddleware(commentHandler.GetCommentsByEntityID))
+	router.HandleFunc("POST /", interfaces.LoggerMiddleware(commentHandler.AddComment))
+	router.HandleFunc("GET /{id}", interfaces.LoggerMiddleware(commentHandler.GetCommentsByEntityID))
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}

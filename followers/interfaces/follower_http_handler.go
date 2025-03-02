@@ -30,7 +30,10 @@ func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	var req domain.Follower
+
+	var req struct {
+		Data domain.Follower `json:"data"`
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -41,7 +44,7 @@ func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Call the service to add the follower
-	err = h.service.AddFollower(ctx, req)
+	err = h.service.AddFollower(ctx, req.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
