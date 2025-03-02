@@ -5,8 +5,8 @@ type UserRelationship struct {
 	IsFollowed bool
 }
 type Follower struct {
-	FollowerID int
-	FolloweeID int
+	FollowerID int `json:"follower_id"`
+	FolloweeID int `json:"followee_id"`
 }
 
 type Follow struct {

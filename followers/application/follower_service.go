@@ -8,8 +8,8 @@ import (
 
 // FollowServiceInterface defines methods for tags-related operations.
 type FollowServiceInterface interface {
-	AddFollower(ctx context.Context, followerID, followeeID int) error
-	RemoveFollower(ctx context.Context, followerID, followeeID int) error
+	AddFollower(ctx context.Context, follower domain.Follower) error
+	RemoveFollower(ctx context.Context, follower domain.Follower) error
 	GetFollowers(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowees(ctx context.Context, userID, otherUser, limit, offset int, sort, orderBy, search string) ([]domain.Follow, error)
 	GetFollowerStats(ctx context.Context, userID int) (int, int, error)
@@ -25,20 +25,18 @@ func NewFollowService(repo domain.FollowRepository) *FollowService {
 }
 
 // AddFollower adds a follower for a given user
-func (s *FollowService) AddFollower(ctx context.Context, followerID, followeeID int) error {
+func (s *FollowService) AddFollower(ctx context.Context, f domain.Follower) error {
 	// Business logic to prevent self-following
-	if followerID == followeeID {
+	if f.FollowerID == f.FolloweeID {
 		return errors.New("user cannot follow themselves")
 	}
 
-	follower := domain.NewFollower(followerID, followeeID)
-	return s.repo.AddFollower(ctx, follower)
+	return s.repo.AddFollower(ctx, f)
 }
 
 // RemoveFollower removes a follower from a given user
-func (s *FollowService) RemoveFollower(ctx context.Context, followerID, followeeID int) error {
-	follower := domain.NewFollower(followerID, followeeID)
-	return s.repo.RemoveFollower(ctx, follower)
+func (s *FollowService) RemoveFollower(ctx context.Context, f domain.Follower) error {
+	return s.repo.RemoveFollower(ctx, f)
 }
 
 // GetFollowers retrieves all followers for a user

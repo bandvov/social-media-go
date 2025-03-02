@@ -16,7 +16,7 @@ func NewFollowRepository(db *sql.DB, cache *RedisCache) *FollowRepository {
 	return &FollowRepository{db: db, cache: cache}
 }
 
-func (r *FollowRepository) AddFollower(ctx context.Context, follower *domain.Follower) error {
+func (r *FollowRepository) AddFollower(ctx context.Context, follower domain.Follower) error {
 	// Prepare the query for adding a follower relationship
 	query := "INSERT INTO followers (follower_id, followee_id) VALUES ($1, $2)"
 
@@ -36,7 +36,7 @@ func (r *FollowRepository) AddFollower(ctx context.Context, follower *domain.Fol
 	return nil
 }
 
-func (r *FollowRepository) RemoveFollower(ctx context.Context, follower *domain.Follower) error {
+func (r *FollowRepository) RemoveFollower(ctx context.Context, follower domain.Follower) error {
 	// Prepare the query for removing a follower relationship
 	query := "DELETE FROM followers WHERE follower_id = $1 AND followee_id = $2"
 

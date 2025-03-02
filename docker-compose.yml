@@ -149,7 +149,7 @@ services:
       - ./followers/.env
     # Uncomment below to test in postman  
     # ports:
-    #   - "8080:8080"
+    #   - "8083:8080"
     networks:
       - app-network    
   posts:
@@ -166,8 +166,8 @@ services:
     env_file:
       - ./posts/.env
     # Uncomment below to test in postman  
-    # ports:
-    #   - "8080:8080"
+    ports:
+      - "8082:8080"
     networks:
       - app-network
   comments:
@@ -186,7 +186,7 @@ services:
       - ./comments/.env
     # Uncomment below to test in postman  
     # ports:
-    #   - "8080:8080"
+    #   - "8084:8080"
     networks:
       - app-network
   reactions:
@@ -202,10 +202,10 @@ services:
       - posts
       - comments
     env_file:
-      - ./posts/.env
+      - ./reactions/.env
     # Uncomment below to test in postman  
     # ports:
-    #   - "8080:8080"
+    #   - "8085:8080"
     networks:
       - app-network                    
   notifications:
@@ -221,7 +221,7 @@ services:
       - ./notifications/.env
     # Uncomment below to test in postman    
     # ports:
-    #   - "8082:8080"
+    #   - "8086:8080"
     networks:
       - app-network      
 volumes:

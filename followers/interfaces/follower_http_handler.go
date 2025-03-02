@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"followers/application"
+	"followers/domain"
 	"followers/internal"
 	"log/slog"
 	"net/http"
@@ -24,17 +25,15 @@ func NewFollowHandler(service application.FollowServiceInterface, db *sql.DB, rd
 }
 
 func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
-	// Parse the URL parameters to get the follower and followee IDs
-	userID, ok := r.Context().Value(userIDKey).(interface{}).(int)
-	if !ok || userID == 0 {
-		http.Error(w, "unauthenticated", http.StatusBadRequest)
+	userID, err := strconv.Atoi(r.Header.Get("user_id"))
+	if err != nil || userID <= 0 {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
+	var req domain.Follower
 
-	id := r.PathValue("id")
-	followeeID, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "invalid follower ID", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
@@ -42,7 +41,7 @@ func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Call the service to add the follower
-	err = h.service.AddFollower(ctx, userID, followeeID)
+	err = h.service.AddFollower(ctx, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -54,18 +53,15 @@ func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-	targetUserId := query.Get("target_id")
-	targetUserIDFromUrl, err := strconv.Atoi(targetUserId)
-	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+	userID, err := strconv.Atoi(r.Header.Get("user_id"))
+	if err != nil || userID <= 0 {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
+	var req domain.Follower
 
-	id := r.PathValue("id")
-	followeeID, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "invalid followee ID", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
@@ -73,7 +69,7 @@ func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// Call the service to remove the follower
-	err = h.service.RemoveFollower(ctx, targetUserIDFromUrl, followeeID)
+	err = h.service.RemoveFollower(ctx, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
