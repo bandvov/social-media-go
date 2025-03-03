@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 )
 
 type Entity struct {
@@ -10,10 +11,10 @@ type Entity struct {
 }
 
 type ReactionStat struct {
-	EntityId   int    `json:"entity_id"`
-	EntityType string `json:"entity_type,omitempty"`
-	Reactions  string `json:"reactions,omitempty"`
-	TotalCount int    `json:"total_count,omitempty"`
+	EntityId   int             `json:"entity_id"`
+	EntityType string          `json:"entity_type,omitempty"`
+	Reactions  json.RawMessage `json:"reactions,omitempty"`
+	TotalCount int             `json:"total_count,omitempty"`
 }
 
 type Reaction struct {
