@@ -58,6 +58,7 @@ func main() {
 	router.HandleFunc("POST /", reactionHandler.AddOrUpdateReaction)
 	router.HandleFunc("DELETE /{id}", reactionHandler.RemoveReaction)
 	router.HandleFunc("POST /count", reactionHandler.GetReactionsCount)
+	router.HandleFunc("POST /stats", reactionHandler.GetReactionStats)
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}

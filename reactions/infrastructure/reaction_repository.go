@@ -3,9 +3,7 @@ package infrastructure
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"reactions/domain"
-	"reactions/utils"
 
 	pg "github.com/lib/pq"
 )
@@ -49,17 +47,25 @@ func (r *ReactionRepository) RemoveReaction(ctx context.Context, userID, entityI
 	return err
 }
 
-func (r *ReactionRepository) GetReactionsByEntityIDs(ctx context.Context, postIDs []int) ([]domain.Reaction, error) {
-	if len(postIDs) == 0 {
+func (r *ReactionRepository) GetReactionsByEntityIDsAndTypes(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
+	if len(entities) == 0 {
 		return nil, nil
 	}
 
-	query := fmt.Sprintf(`
+	// Extract entity IDs and types
+	var ids []int
+	var types []string
+	for _, e := range entities {
+		ids = append(ids, e.ID)
+		types = append(types, e.Type)
+	}
+
+	query := `
         SELECT r.entity_id, rt.name AS reaction, COUNT(r.id) AS count
         FROM reactions r
         JOIN reaction_types rt ON r.reaction_type_id = rt.id
-        WHERE r.entity_id IN (%s)
-        GROUP BY r.entity_id, rt.name`, utils.Placeholders(len(postIDs)))
+        WHERE (entity_id, entity_type) IN (SELECT * FROM UNNEST($1::int[], $2::entity_type[]))
+        GROUP BY r.entity_id, rt.name`
 
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
@@ -67,7 +73,7 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(ctx context.Context, postID
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, utils.ToInterface(postIDs)...)
+	rows, err := r.db.QueryContext(ctx, query, pg.Array(ids), pg.Array(types))
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +91,7 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(ctx context.Context, postID
 	return reactions, rows.Err() // Ensure any potential iteration errors are returned
 }
 
-func (r *ReactionRepository) CountByEntityIDsAndType(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
+func (r *ReactionRepository) CountByEntityIDsAndTypes(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
 	if len(entities) == 0 {
 		return nil, nil
 	}
@@ -122,4 +128,66 @@ func (r *ReactionRepository) CountByEntityIDsAndType(ctx context.Context, entiti
 	}
 
 	return counts, rows.Err() // Ensure any iteration errors are returned
+}
+
+func (r *ReactionRepository) GetReacionStats(ctx context.Context, entities []domain.Entity) ([]domain.ReactionStat, error) {
+	if len(entities) == 0 {
+		return nil, nil
+	}
+
+	// Extract entity IDs and types
+	var ids []int
+	var types []string
+	for _, e := range entities {
+		ids = append(ids, e.ID)
+		types = append(types, e.Type)
+	}
+
+	query := `
+	WITH reactions_aggregated AS (
+		SELECT 
+		entity_id,
+		entity_type,
+		user_id,
+		reaction_type_id,
+		COUNT(*) AS count
+		FROM reactions
+		WHERE (entity_id, entity_type) IN (SELECT * FROM UNNEST($1::int[], $2::entity_type[]))  -- Filtering by entity_id and entity_type
+		GROUP BY entity_id, entity_type, user_id, reaction_type_id
+		), reactions_grouped AS (
+			SELECT
+			entity_id,
+			entity_type,
+			jsonb_object_agg(rt.name, r.count) AS reactions  -- Aggregating reaction counts per type
+			FROM reactions_aggregated r
+			JOIN reaction_types rt ON r.reaction_type_id = rt.id
+			GROUP BY entity_id, entity_type
+			)
+			SELECT 
+			rg.entity_id,
+			rg.entity_type,
+			SUM(
+				(SELECT SUM((kv.value)::int) FROM jsonb_each_text(rg.reactions) AS kv(key, value))  -- Summing reaction counts across all types
+				) AS total_reactions,
+				rg.reactions  -- Returning the grouped reactions as is
+				FROM reactions_grouped rg
+				GROUP BY rg.entity_id, rg.entity_type, rg.reactions;`
+
+	// Execute query
+	rows, err := r.db.QueryContext(ctx, query, pg.Array(ids), pg.Array(types))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var stats []domain.ReactionStat
+	for rows.Next() {
+		var stat domain.ReactionStat
+		if err := rows.Scan(&stat.EntityId, &stat.EntityType, &stat.TotalCount, &stat.Reactions); err != nil {
+			return nil, err
+		}
+		stats = append(stats, stat)
+	}
+
+	return stats, rows.Err() // Ensure any iteration errors are returned
 }

@@ -67,16 +67,17 @@ func (h *ReactionHandler) RemoveReaction(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *ReactionHandler) GetReactionsHandler(w http.ResponseWriter, r *http.Request) {
-	var entityIDs []int
-
+	var req struct {
+		Data []domain.Entity `json:"data"`
+	}
 	// Decode request body to get entityIDs
-	if err := json.NewDecoder(r.Body).Decode(&entityIDs); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
 	// Call the service method to get reactions
-	reactions, err := s.service.GetReactions(r.Context(), entityIDs)
+	reactions, err := s.service.GetReactions(r.Context(), req.Data)
 	if err != nil {
 		http.Error(w, "Failed to retrieve reactions", http.StatusInternalServerError)
 		return
@@ -103,6 +104,31 @@ func (s *ReactionHandler) GetReactionsCount(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		slog.Error("Failed to retrieve reactions count", "error", err)
 		http.Error(w, "Failed to retrieve reactions count", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(reactions); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+func (s *ReactionHandler) GetReactionStats(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Data []domain.Entity `json:"data"`
+	}
+
+	// Decode the request body to get entityIDs
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.Error("Failed to decode request body", "error", err)
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Call the service method to get the reactions count
+	reactions, err := s.service.GetReactionStats(r.Context(), req.Data)
+	if err != nil {
+		slog.Error("Failed to retrieve reactions stats", "error", err)
+		http.Error(w, "Failed to retrieve reactions stats", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

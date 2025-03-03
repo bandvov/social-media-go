@@ -9,6 +9,13 @@ type Entity struct {
 	Type string `json:"type"`
 }
 
+type ReactionStat struct {
+	EntityId   int    `json:"entity_id"`
+	EntityType string `json:"entity_type,omitempty"`
+	Reactions  string `json:"reactions,omitempty"`
+	TotalCount int    `json:"total_count,omitempty"`
+}
+
 type Reaction struct {
 	EntityId   int    `json:"entity_id"`
 	EntityType string `json:"entity_type,omitempty"`
@@ -19,6 +26,7 @@ type Reaction struct {
 type ReactionRepository interface {
 	AddOrUpdateReaction(ctx context.Context, userId int, reaction Reaction) error
 	RemoveReaction(ctx context.Context, userID, contentID string) error
-	GetReactionsByEntityIDs(ctx context.Context, entityIDs []int) ([]Reaction, error)
-	CountByEntityIDsAndType(ctx context.Context, entities []Entity) ([]Reaction, error)
+	GetReactionsByEntityIDsAndTypes(ctx context.Context, entities []Entity) ([]Reaction, error)
+	CountByEntityIDsAndTypes(ctx context.Context, entities []Entity) ([]Reaction, error)
+	GetReacionStats(ctx context.Context, entities []Entity) ([]ReactionStat, error)
 }

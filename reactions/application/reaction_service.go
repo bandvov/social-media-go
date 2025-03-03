@@ -8,8 +8,9 @@ import (
 type ReactionServiceInterface interface {
 	AddOrUpdateReaction(ctx context.Context, userID int, reaction domain.Reaction) error
 	RemoveReaction(ctx context.Context, userID, contentID string) error
-	GetReactions(ctx context.Context, entityIDs []int) ([]domain.Reaction, error)
+	GetReactions(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error)
 	GetReactionsCount(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error)
+	GetReactionStats(ctx context.Context, entities []domain.Entity) ([]domain.ReactionStat, error)
 }
 type ReactionService struct {
 	reactionRepo domain.ReactionRepository
@@ -27,10 +28,14 @@ func (s *ReactionService) RemoveReaction(ctx context.Context, userID, contentID 
 	return s.reactionRepo.RemoveReaction(ctx, userID, contentID)
 }
 
-func (s *ReactionService) GetReactions(ctx context.Context, entityIDs []int) ([]domain.Reaction, error) {
-	return s.reactionRepo.GetReactionsByEntityIDs(ctx, entityIDs)
+func (s *ReactionService) GetReactions(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
+	return s.reactionRepo.GetReactionsByEntityIDsAndTypes(ctx, entities)
 }
 
 func (s *ReactionService) GetReactionsCount(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
-	return s.reactionRepo.CountByEntityIDsAndType(ctx, entities)
+	return s.reactionRepo.CountByEntityIDsAndTypes(ctx, entities)
+}
+
+func (s *ReactionService) GetReactionStats(ctx context.Context, entities []domain.Entity) ([]domain.ReactionStat, error) {
+	return s.reactionRepo.GetReacionStats(ctx, entities)
 }
