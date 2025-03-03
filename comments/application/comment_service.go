@@ -10,7 +10,7 @@ import (
 // CommentServiceInterface defines methods for tags-related operations.
 type CommentServiceInterface interface {
 	AddComment(ctx context.Context, c *domain.Comment) error
-	GetCommentsByEntityID(ctx context.Context, entityID, userID, offset, limit int) ([]domain.Comment, error)
+	GetCommentsByEntityID(ctx context.Context, entityId int, targetUserId int, pagination domain.Pagination) ([]domain.Comment, error)
 	GetCommentsAndRepliesCount(ctx context.Context, entityIDs []int) ([]domain.CommentCount, error)
 }
 type CommentService struct {
@@ -37,8 +37,8 @@ func (s *CommentService) AddComment(ctx context.Context, c *domain.Comment) erro
 }
 
 // Fetch comments with all necessary details
-func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID, userID, offset, limit int) ([]domain.Comment, error) {
-	comments, err := s.commentRepo.FetchCommentsByEntityID(ctx, entityID, offset, limit)
+func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int, userID int, p domain.Pagination) ([]domain.Comment, error) {
+	comments, err := s.commentRepo.FetchCommentsByEntityID(ctx, entityID, p)
 	if err != nil {
 		return nil, err
 	}
@@ -49,17 +49,20 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID, us
 
 	// Collect user IDs and comment IDs
 	userIDs := make(map[int]struct{})
-	commentIDs := make([]int, len(comments))
-	for i, comment := range comments {
+	userIDs[userID] = struct{}{}
+	entities := make([]domain.Entity, len(comments))
+	for _, comment := range comments {
 		userIDs[comment.AuthorID] = struct{}{}
-		commentIDs[i] = comment.ID
+		entities = append(entities, domain.Entity{
+			ID:   comment.ID,
+			Type: string(comment.EntityType),
+		})
 	}
 
 	// Maps for fetched data
 	var (
-		users          map[int]domain.User
-		totalReactions map[int]int
-		// reactions      map[int][]domain.Reaction
+		users         map[int]domain.User
+		reactionStats map[int]domain.ReactionStat
 	)
 
 	var eg errgroup.Group
@@ -71,17 +74,10 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID, us
 		return err
 	})
 
-	// // Fetch reactions
-	// eg.Go(func() error {
-	// 	var err error
-	// 	reactions, err = s.commentFetcher.FetchReactions(ctx, commentIDs, userID)
-	// 	return err
-	// })
-
 	// Fetch total reactions
 	eg.Go(func() error {
 		var err error
-		totalReactions, err = s.commentFetcher.FetchTotalReactions(ctx, commentIDs)
+		reactionStats, err = s.commentFetcher.FetchReactionStats(ctx, entities)
 		return err
 	})
 
@@ -97,11 +93,11 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID, us
 			comment.Username = user.Username
 			comment.ProfilePic = user.ProfilePic
 		}
-		// if reactionTypes, exists := reactions[comment.ID]; exists {
-		// 	comment.Reactions = reactios
-		// }
-		if count, exists := totalReactions[comment.ID]; exists {
-			comment.TotaReactionslCount = count
+		if reactionStat, exists := reactionStats[comment.ID]; exists {
+			comment.Reactions = reactionStat.Reactions
+		}
+		if reactionStat, exists := reactionStats[comment.ID]; exists {
+			comment.TotaReactionslCount = reactionStat.TotalCount
 		}
 	}
 

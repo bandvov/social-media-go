@@ -86,3 +86,15 @@ type Entity struct {
 	ID   int    `json:"id"`
 	Type string `json:"type"`
 }
+
+type ReactionStat struct {
+	EntityId   int             `json:"entity_id"`
+	EntityType string          `json:"entity_type,omitempty"`
+	Reactions  json.RawMessage `json:"reactions,omitempty"`
+	TotalCount int             `json:"total_count,omitempty"`
+}
+
+type Pagination struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}

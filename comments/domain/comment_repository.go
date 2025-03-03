@@ -1,9 +1,11 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
 
 type CommentRepository interface {
 	AddComment(ctx context.Context, comment Comment) error
-	FetchCommentsByEntityID(ctx context.Context, entityID, offset, limit int) ([]Comment, error)
+	FetchCommentsByEntityID(ctx context.Context, entityID int, pagination Pagination) ([]Comment, error)
 	CountByEntityIDs(ctx context.Context, entityIDs []int) ([]CommentCount, error)
 }

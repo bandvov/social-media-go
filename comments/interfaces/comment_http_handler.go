@@ -4,6 +4,7 @@ import (
 	"comments/application"
 	"comments/domain"
 	"comments/internal"
+	"comments/utils"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -66,24 +67,12 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-
-	// Parse `limit` and `offset` with default values
-	page, err := strconv.Atoi(query.Get("page"))
-	if err != nil || page < 1 {
-		page = 1 // Default offset
-	}
-
-	limit, err := strconv.Atoi(query.Get("limit"))
-	if err != nil || limit <= 0 {
-		limit = 10 // Default limit
-	}
-
-	offset := (page - 1) * limit
+	p := utils.ParsePagination(r)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	comments, err := h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, offset, limit)
+	comments, err := h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, p)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)

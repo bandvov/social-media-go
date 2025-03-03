@@ -34,7 +34,7 @@ func (r *PostgresCommentRepository) AddComment(ctx context.Context, comment doma
 	return nil
 }
 
-func (r *PostgresCommentRepository) FetchCommentsByEntityID(ctx context.Context, entityID, offset, limit int) ([]domain.Comment, error) {
+func (r *PostgresCommentRepository) FetchCommentsByEntityID(ctx context.Context, entityID int, p domain.Pagination) ([]domain.Comment, error) {
 
 	// Prepare the SQL query
 	stmt, err := r.db.PrepareContext(ctx, `
@@ -65,7 +65,7 @@ func (r *PostgresCommentRepository) FetchCommentsByEntityID(ctx context.Context,
 	defer stmt.Close()
 
 	// Execute the prepared statement
-	rows, err := stmt.QueryContext(ctx, entityID, offset, limit)
+	rows, err := stmt.QueryContext(ctx, entityID, p.Offset, p.Limit)
 	if err != nil {
 		return nil, err
 	}
