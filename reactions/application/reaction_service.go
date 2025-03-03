@@ -9,7 +9,7 @@ type ReactionServiceInterface interface {
 	AddOrUpdateReaction(ctx context.Context, userID int, reaction domain.Reaction) error
 	RemoveReaction(ctx context.Context, userID, contentID string) error
 	GetReactions(ctx context.Context, entityIDs []int) ([]domain.Reaction, error)
-	GetReactionsCount(ctx context.Context, entityIDs []int) ([]domain.Reaction, error)
+	GetReactionsCount(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error)
 }
 type ReactionService struct {
 	reactionRepo domain.ReactionRepository
@@ -31,6 +31,6 @@ func (s *ReactionService) GetReactions(ctx context.Context, entityIDs []int) ([]
 	return s.reactionRepo.GetReactionsByEntityIDs(ctx, entityIDs)
 }
 
-func (s *ReactionService) GetReactionsCount(ctx context.Context, entityIDs []int) ([]domain.Reaction, error) {
-	return s.reactionRepo.CountByEntityIDs(ctx, entityIDs)
+func (s *ReactionService) GetReactionsCount(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
+	return s.reactionRepo.CountByEntityIDsAndType(ctx, entities)
 }

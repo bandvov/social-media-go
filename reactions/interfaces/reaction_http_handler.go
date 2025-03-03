@@ -88,11 +88,12 @@ func (s *ReactionHandler) GetReactionsHandler(w http.ResponseWriter, r *http.Req
 
 func (s *ReactionHandler) GetReactionsCount(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Data []int `json:"data"`
+		Data []domain.Entity `json:"data"`
 	}
 
 	// Decode the request body to get entityIDs
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.Error("Failed to decode request body", "error", err)
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
@@ -100,10 +101,10 @@ func (s *ReactionHandler) GetReactionsCount(w http.ResponseWriter, r *http.Reque
 	// Call the service method to get the reactions count
 	reactions, err := s.service.GetReactionsCount(r.Context(), req.Data)
 	if err != nil {
+		slog.Error("Failed to retrieve reactions count", "error", err)
 		http.Error(w, "Failed to retrieve reactions count", http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(reactions); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)

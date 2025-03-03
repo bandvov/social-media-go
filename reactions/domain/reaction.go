@@ -1,6 +1,13 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
+
+type Entity struct {
+	ID   int    `json:"id"`
+	Type string `json:"type"`
+}
 
 type Reaction struct {
 	EntityId   int    `json:"entity_id"`
@@ -13,5 +20,5 @@ type ReactionRepository interface {
 	AddOrUpdateReaction(ctx context.Context, userId int, reaction Reaction) error
 	RemoveReaction(ctx context.Context, userID, contentID string) error
 	GetReactionsByEntityIDs(ctx context.Context, entityIDs []int) ([]Reaction, error)
-	CountByEntityIDs(ctx context.Context, entityIDs []int) ([]Reaction, error)
+	CountByEntityIDsAndType(ctx context.Context, entities []Entity) ([]Reaction, error)
 }

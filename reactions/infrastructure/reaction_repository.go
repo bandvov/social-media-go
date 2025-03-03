@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reactions/domain"
 	"reactions/utils"
+
+	pg "github.com/lib/pq"
 )
 
 type ReactionRepository struct {
@@ -83,25 +85,28 @@ func (r *ReactionRepository) GetReactionsByEntityIDs(ctx context.Context, postID
 	return reactions, rows.Err() // Ensure any potential iteration errors are returned
 }
 
-func (r *ReactionRepository) CountByEntityIDs(ctx context.Context, entityIDs []int) ([]domain.Reaction, error) {
-	if len(entityIDs) == 0 {
+func (r *ReactionRepository) CountByEntityIDsAndType(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error) {
+	if len(entities) == 0 {
 		return nil, nil
 	}
 
-	query := fmt.Sprintf(`
-        SELECT entity_id,entity_type, COUNT(*) AS count
-		FROM reactions 
-		WHERE entity_id IN (%s)
-		GROUP BY entity_id,entity_type;`,
-		utils.Placeholders(len(entityIDs)))
-
-	stmt, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
+	// Extract entity IDs and types
+	var ids []int
+	var types []string
+	for _, e := range entities {
+		ids = append(ids, e.ID)
+		types = append(types, e.Type)
 	}
-	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, utils.ToInterface(entityIDs)...)
+	query := `
+        SELECT entity_id, entity_type, COUNT(*) AS count
+        FROM reactions 
+        WHERE (entity_id, entity_type) IN (SELECT * FROM UNNEST($1::int[], $2::entity_type[]))
+        GROUP BY entity_id, entity_type;
+    `
+
+	// Execute query
+	rows, err := r.db.QueryContext(ctx, query, pg.Array(ids), pg.Array(types))
 	if err != nil {
 		return nil, err
 	}
@@ -116,5 +121,5 @@ func (r *ReactionRepository) CountByEntityIDs(ctx context.Context, entityIDs []i
 		counts = append(counts, count)
 	}
 
-	return counts, rows.Err() // Ensure any potential iteration errors are returned
+	return counts, rows.Err() // Ensure any iteration errors are returned
 }

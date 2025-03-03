@@ -79,6 +79,10 @@ type Reaction struct {
 
 type CommentCount struct {
 	EntityID     int `json:"entity_id"`
-	CommentCount int `json:"comment_count"`
-	ReplyCount   int `json:"reply_count"`
+	CommentCount int `json:"comment_count,omitempty"`
+	ReplyCount   int `json:"reply_count,omitempty"`
+}
+type Entity struct {
+	ID   int    `json:"id"`
+	Type string `json:"type"`
 }
