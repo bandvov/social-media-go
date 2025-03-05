@@ -124,7 +124,7 @@ services:
       context: ./users
       args:
         VERSION: ${USERS_VERSION}
-    container_name: users-${USERS_VERSION}
+    container_name: users${USERS_VERSION}
     restart: always
     depends_on:
       - postgres
@@ -132,8 +132,8 @@ services:
     env_file:
       - ./users/.env
     # Uncomment below to test in postman  
-    # ports:
-    #   - "8080:8080"
+    ports:
+      - "8080:8080"
     networks:
       - app-network
   followers:
@@ -196,7 +196,7 @@ services:
       context: ./reactions
       args:
         VERSION: ${REACTIONS_VERSION}
-    container_name: reactions-${REACTIONS_VERSION}
+    container_name: reactions${REACTIONS_VERSION}
     restart: always
     depends_on:
       - postgres

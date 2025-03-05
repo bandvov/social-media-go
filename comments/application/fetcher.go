@@ -41,7 +41,7 @@ func NewCommentFetcher(client *http.Client) *CommentFetcher {
 // Fetch user details
 func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map[int]domain.User, error) {
 
-	url := fmt.Sprintf("http://users-:8080/by-ids")
+	url := fmt.Sprintf("http://users:8080/by-ids")
 
 	requestBody, err := json.Marshal(UserRequest{Data: userIDs})
 	if err != nil {
@@ -65,17 +65,15 @@ func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return nil, err
 	}
-
-	userMap := make(map[int]domain.User)
-	for _, user := range res.Data {
-		userMap[user.ID] = user
-	}
-	return userMap, nil
+	fmt.Fprintln(os.Stdout, "user response", res)
+	return sliceToMap(res.Data, func(u domain.User) int {
+		return u.ID
+	}), nil
 }
 
 // Fetch total reactions for comments
 func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []domain.Entity) (map[int]domain.ReactionStat, error) {
-	url := fmt.Sprintf("http://reactions-:8080/stats")
+	url := fmt.Sprintf("http://reactions:8080/stats")
 
 	body, err := json.Marshal(StatsRequest{Data: entities})
 	if err != nil {
@@ -98,13 +96,15 @@ func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []doma
 	if err := json.NewDecoder(resp.Body).Decode(&reactionStats); err != nil {
 		return nil, err
 	}
-	return mapReactionsStats(reactionStats.Data), nil
+	return sliceToMap(reactionStats.Data, func(stat domain.ReactionStat) int {
+		return stat.EntityId
+	}), nil
 }
 
-func mapReactionsStats(reactionStats []domain.ReactionStat) map[int]domain.ReactionStat {
-	reactionStatsMap := make(map[int]domain.ReactionStat)
-	for _, tr := range reactionStats {
-		reactionStatsMap[tr.EntityId] = tr
+func sliceToMap[T any](data []T, getID func(T) int) map[int]T {
+	dataMap := make(map[int]T)
+	for _, tr := range data {
+		data[getID(tr)] = tr
 	}
-	return reactionStatsMap
+	return dataMap
 }

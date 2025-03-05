@@ -52,13 +52,13 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	// Collect user IDs and comment IDs
 	userIDs := make(map[int]struct{})
 	userIDs[userID] = struct{}{}
-	entities := make([]domain.Entity, len(comments))
-	for i, comment := range comments {
+	entities := make([]domain.Entity, 0, len(comments))
+	for _, comment := range comments {
 		userIDs[comment.AuthorID] = struct{}{}
-		entities[i] = domain.Entity{
+		entities = append(entities, domain.Entity{
 			ID:   comment.ID,
 			Type: string(comment.EntityType),
-		}
+		})
 	}
 
 	// Maps for fetched data
@@ -92,7 +92,6 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	for i := range comments {
 		comment := &comments[i]
 		fmt.Fprintln(os.Stdout, "users", users)
-		fmt.Fprintln(os.Stdout, "reaction stats", reactionStats)
 		if user, exists := users[comment.AuthorID]; exists {
 			comment.Username = user.Username
 			comment.ProfilePic = user.ProfilePic
