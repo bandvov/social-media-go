@@ -3,6 +3,8 @@ package application
 import (
 	"comments/domain"
 	"context"
+	"fmt"
+	"os"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -51,12 +53,12 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	userIDs := make(map[int]struct{})
 	userIDs[userID] = struct{}{}
 	entities := make([]domain.Entity, len(comments))
-	for _, comment := range comments {
+	for i, comment := range comments {
 		userIDs[comment.AuthorID] = struct{}{}
-		entities = append(entities, domain.Entity{
+		entities[i] = domain.Entity{
 			ID:   comment.ID,
 			Type: string(comment.EntityType),
-		})
+		}
 	}
 
 	// Maps for fetched data
@@ -89,6 +91,8 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	// Map fetched data to comments
 	for i := range comments {
 		comment := &comments[i]
+		fmt.Fprintln(os.Stdout, "users", users)
+		fmt.Fprintln(os.Stdout, "reaction stats", reactionStats)
 		if user, exists := users[comment.AuthorID]; exists {
 			comment.Username = user.Username
 			comment.ProfilePic = user.ProfilePic

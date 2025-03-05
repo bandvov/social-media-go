@@ -20,7 +20,7 @@ type UserServiceInterface interface {
 	GetPublicProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetAdminProfiles(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetUserProfileInfo(ctx context.Context, id int) (*domain.User, error)
-	GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error)
+	GetUsersByIDs(ctx context.Context, userIDs []int) ([]domain.User, error)
 }
 type UserService struct {
 	userRepo domain.UserRepository
@@ -104,17 +104,11 @@ func (s *UserService) GetUserProfileInfo(ctx context.Context, id int) (*domain.U
 	return s.userRepo.GetUserProfileInfo(ctx, id)
 }
 
-func (s *UserService) GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error) {
-	userMap := make(map[int]domain.User)
+func (s *UserService) GetUsersByIDs(ctx context.Context, userIDs []int) ([]domain.User, error) {
 	fmt.Fprintln(os.Stdout, userIDs)
 	userDetails, err := s.userRepo.GetUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, user := range userDetails {
-		userMap[user.ID] = user
-	}
-
-	return userMap, nil
+	return userDetails, nil
 }

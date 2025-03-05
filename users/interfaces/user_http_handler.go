@@ -359,9 +359,7 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 func (h *UserHTTPHandler) GetUsersByIDs(w http.ResponseWriter, r *http.Request) {
 	// Decode the JSON request body
 	var request struct {
-		Data struct {
-			UserIDs []int `json:"user_ids"`
-		} `json:"data"`
+		Data []int `json:"data"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -373,7 +371,7 @@ func (h *UserHTTPHandler) GetUsersByIDs(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 
 	// Call GetUsersByIDs function
-	users, err := h.UserService.GetUsersByIDs(ctx, request.Data.UserIDs)
+	users, err := h.UserService.GetUsersByIDs(ctx, request.Data)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error fetching users: %v", err), http.StatusInternalServerError)
 		return
@@ -381,7 +379,7 @@ func (h *UserHTTPHandler) GetUsersByIDs(w http.ResponseWriter, r *http.Request) 
 
 	// Respond with the fetched user data in JSON format
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(users)
+	err = json.NewEncoder(w).Encode(map[string][]domain.User{"data": users})
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
 		return

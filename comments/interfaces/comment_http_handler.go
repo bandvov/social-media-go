@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -74,7 +75,7 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	comments, err := h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, p)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stdout, err)
 		http.Error(w, "Failed to get comments", http.StatusInternalServerError)
 		return
 	}

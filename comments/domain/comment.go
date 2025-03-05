@@ -83,8 +83,8 @@ type CommentCount struct {
 	ReplyCount   int `json:"reply_count,omitempty"`
 }
 type Entity struct {
-	ID   int    `json:"id"`
-	Type string `json:"type"`
+	ID   int    `json:"id,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
 type ReactionStat struct {

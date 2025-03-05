@@ -15,7 +15,7 @@ type MockUserService struct {
 	GetPublicProfilesFunc  func(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetAdminProfilesFunc   func(ctx context.Context, p domain.Pagination) ([]domain.User, error)
 	GetUserProfileInfoFunc func(ctx context.Context, id int) (*domain.User, error)
-	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) (map[int]domain.User, error)
+	GetUsersByIDsFunc      func(ctx context.Context, userIDs []int) ([]domain.User, error)
 }
 
 func (m *MockUserService) Authenticate(ctx context.Context, email, password string) (*domain.User, error) {
@@ -48,6 +48,6 @@ func (m *MockUserService) GetUserProfileInfo(ctx context.Context, id int) (*doma
 	return m.GetUserProfileInfoFunc(ctx, id)
 }
 
-func (m *MockUserService) GetUsersByIDs(ctx context.Context, userIDs []int) (map[int]domain.User, error) {
+func (m *MockUserService) GetUsersByIDs(ctx context.Context, userIDs []int) ([]domain.User, error) {
 	return m.GetUsersByIDsFunc(ctx, userIDs)
 }

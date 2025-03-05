@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"reactions/application"
 	"reactions/domain"
 	"reactions/internal"
@@ -127,12 +129,12 @@ func (s *ReactionHandler) GetReactionStats(w http.ResponseWriter, r *http.Reques
 	// Call the service method to get the reactions count
 	reactions, err := s.service.GetReactionStats(r.Context(), req.Data)
 	if err != nil {
-		slog.Error("Failed to retrieve reactions stats", "error", err)
+		fmt.Fprintln(os.Stdout, "Failed to retrieve reactions stats", "error", err)
 		http.Error(w, "Failed to retrieve reactions stats", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(reactions); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string][]domain.ReactionStat{"data": reactions}); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
