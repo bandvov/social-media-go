@@ -49,16 +49,15 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 		return comments, nil
 	}
 
-	// Collect user IDs and comment IDs
+	// Collect user IDs and reaction entities
 	userIDs := make(map[int]struct{})
-	userIDs[userID] = struct{}{}
-	entities := make([]domain.Entity, 0, len(comments))
-	for _, comment := range comments {
+	entities := make([]domain.Entity, len(comments))
+	for i, comment := range comments {
 		userIDs[comment.AuthorID] = struct{}{}
-		entities = append(entities, domain.Entity{
+		entities[i] = domain.Entity{
 			ID:   comment.ID,
 			Type: string(comment.EntityType),
-		})
+		}
 	}
 
 	// Maps for fetched data

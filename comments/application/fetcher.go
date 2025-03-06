@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type UserRequest struct {
@@ -47,9 +46,9 @@ func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map
 	if err != nil {
 		return nil, err
 	}
-	body := strings.NewReader(string(requestBody))
+
 	fmt.Fprintln(os.Stdout, "user body", string(requestBody))
-	req, err := http.NewRequestWithContext(ctx, "POST", url, body)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +103,7 @@ func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []doma
 func sliceToMap[T any](data []T, getID func(T) int) map[int]T {
 	dataMap := make(map[int]T)
 	for _, tr := range data {
-		data[getID(tr)] = tr
+		dataMap[getID(tr)] = tr
 	}
 	return dataMap
 }

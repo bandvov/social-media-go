@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 	"users/application"
@@ -362,20 +363,23 @@ func (h *UserHTTPHandler) GetUsersByIDs(w http.ResponseWriter, r *http.Request) 
 		Data []int `json:"data"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&request)
+
 	if err != nil {
+		fmt.Fprintln(os.Stdout, "error decoding request body", err)
 		http.Error(w, fmt.Sprintf("Error parsing request body: %v", err), http.StatusBadRequest)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
-
+	fmt.Fprintln(os.Stdout, request.Data)
 	// Call GetUsersByIDs function
 	users, err := h.UserService.GetUsersByIDs(ctx, request.Data)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error fetching users: %v", err), http.StatusInternalServerError)
 		return
 	}
+	fmt.Fprintln(os.Stdout, "users:", users)
 
 	// Respond with the fetched user data in JSON format
 	w.Header().Set("Content-Type", "application/json")
