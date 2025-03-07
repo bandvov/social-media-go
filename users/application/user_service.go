@@ -3,10 +3,10 @@ package application
 import (
 	"context"
 	"errors"
-	"fmt"
-	"os"
 	"users/domain"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,10 +24,11 @@ type UserServiceInterface interface {
 }
 type UserService struct {
 	userRepo domain.UserRepository
+	tracer   trace.Tracer
 }
 
-func NewUserService(userRepo domain.UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(userRepo domain.UserRepository, tracer trace.Tracer) *UserService {
+	return &UserService{userRepo: userRepo, tracer: tracer}
 }
 
 func (s *UserService) RegisterUser(ctx context.Context, u domain.CreateUserRequest) error {
@@ -105,10 +106,14 @@ func (s *UserService) GetUserProfileInfo(ctx context.Context, id int) (*domain.U
 }
 
 func (s *UserService) GetUsersByIDs(ctx context.Context, userIDs []int) ([]domain.User, error) {
-	fmt.Fprintln(os.Stdout, userIDs)
-	userDetails, err := s.userRepo.GetUsersByIDs(ctx, userIDs)
+	ctx, span := s.tracer.Start(ctx, "service.GetUsersByIDs")
+	defer span.End()
+	usersDetails, err := s.userRepo.GetUsersByIDs(ctx, userIDs)
 	if err != nil {
+		span.AddEvent("error fetching users from database", trace.WithAttributes(
+			attribute.String("error:", err.Error()),
+		))
 		return nil, err
 	}
-	return userDetails, nil
+	return usersDetails, nil
 }

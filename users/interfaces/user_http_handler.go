@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 	"users/application"
@@ -17,6 +16,9 @@ import (
 	"users/utils"
 
 	"github.com/lib/pq"
+	"go.opentelemetry.io/otel/attribute"
+	semconv "go.opentelemetry.io/otel/semconv/v1.22.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Define keys for context
@@ -31,10 +33,11 @@ type UserHTTPHandler struct {
 	UserService application.UserServiceInterface
 	db          *sql.DB
 	rdb         internal.RedisClient
+	tracer      trace.Tracer
 }
 
-func NewUserHTTPHandler(userService application.UserServiceInterface, db *sql.DB, rdb internal.RedisClient) *UserHTTPHandler {
-	return &UserHTTPHandler{UserService: userService, db: db, rdb: rdb}
+func NewUserHTTPHandler(userService application.UserServiceInterface, db *sql.DB, rdb internal.RedisClient, tracer trace.Tracer) *UserHTTPHandler {
+	return &UserHTTPHandler{UserService: userService, db: db, rdb: rdb, tracer: tracer}
 }
 
 func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -358,36 +361,59 @@ func (h *UserHTTPHandler) Verify(w http.ResponseWriter, r *http.Request) {
 
 // Handler for getting users by IDs
 func (h *UserHTTPHandler) GetUsersByIDs(w http.ResponseWriter, r *http.Request) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+	// Parent span
+	ctx, parentSpan := h.tracer.Start(ctx, "handler.GetUsersByIDs")
+	defer parentSpan.End()
+	// Add an annotation when the request is received
+	parentSpan.AddEvent("Request received", trace.WithAttributes(
+		semconv.HTTPMethodKey.String(r.Method),
+		semconv.HTTPURLKey.String(r.URL.String()),
+		semconv.HTTPStatusCodeKey.Int(http.StatusOK),
+	))
+
 	// Decode the JSON request body
 	var request struct {
 		Data []int `json:"data"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&request)
-
 	if err != nil {
-		fmt.Fprintln(os.Stdout, "error decoding request body", err)
+		parentSpan.AddEvent("unmarshal-error", trace.WithAttributes(
+			attribute.Bool("success", false),
+			attribute.String("error", err.Error()),
+		))
 		http.Error(w, fmt.Sprintf("Error parsing request body: %v", err), http.StatusBadRequest)
 		return
 	}
+	parentSpan.AddEvent("unmarshal-success", trace.WithAttributes(
+		attribute.Bool("success", true),
+	))
 
-	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-	defer cancel()
-	fmt.Fprintln(os.Stdout, request.Data)
 	// Call GetUsersByIDs function
 	users, err := h.UserService.GetUsersByIDs(ctx, request.Data)
 	if err != nil {
+		parentSpan.AddEvent("Error fetching users from service", trace.WithAttributes(
+			attribute.String("error:", err.Error()),
+		))
 		http.Error(w, fmt.Sprintf("Error fetching users: %v", err), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(os.Stdout, "users:", users)
 
 	// Respond with the fetched user data in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string][]domain.User{"data": users})
 	if err != nil {
+		parentSpan.AddEvent("Error marshalling users", trace.WithAttributes(
+			attribute.String("error:", err.Error()),
+		))
 		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
 		return
 	}
+	parentSpan.AddEvent("success response", trace.WithAttributes(
+		attribute.Bool("success", true),
+	))
 }
 
 func (h *UserHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {

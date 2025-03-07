@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"users/utils"
 
 	_ "github.com/lib/pq" // Replace with the appropriate driver for your database
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 var PORT = ":8080"
@@ -43,16 +45,28 @@ func main() {
 		rdb.Close()
 	}()
 
+	tp := internal.InitTracer("users-service")
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
+
+	// client := &http.Client{
+	// 	Transport: otelhttp.NewTransport(http.DefaultTransport),
+	// }
+	tracer := tp.Tracer("users-tracer")
+
 	cache := infrastructure.NewRedisCache(rdb)
 
 	// Initialize PostgreSQL repository
 	userRepo := infrastructure.NewUserRepository(db, cache)
 
 	// Initialize service
-	userService := application.NewUserService(userRepo)
+	userService := application.NewUserService(userRepo, tracer)
 
 	// Initialize HTTP handler
-	userHandler := interfaces.NewUserHTTPHandler(userService, db, rdb)
+	userHandler := interfaces.NewUserHTTPHandler(userService, db, rdb, tracer)
 
 	// Create a custom router
 	router := utils.NewRouter()
@@ -74,7 +88,7 @@ func main() {
 	// router.HandleFunc("/seed", seeds.SeedData(db))
 
 	// Start server
-	server := &http.Server{Addr: PORT, Handler: router}
+	server := &http.Server{Addr: PORT, Handler: otelhttp.NewHandler(router, "users")}
 
 	// Start server in a goroutine
 	go func() {
