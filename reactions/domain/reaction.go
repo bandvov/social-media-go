@@ -23,7 +23,7 @@ type Reaction struct {
 	EntityType string `json:"entity_type,omitempty"`
 	Reaction   string `json:"reaction_type_id,omitempty"`
 	Count      int    `json:"count,omitempty"`
-	Name       string `json:"name,omitempty"`
+	Type       string `json:"type,omitempty"`
 }
 
 type ReactionRepository interface {

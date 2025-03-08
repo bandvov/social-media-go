@@ -250,7 +250,7 @@ func (r *ReactionRepository) GetUserReactions(ctx context.Context, userID int, e
 	var reactions []domain.Reaction
 	for rows.Next() {
 		var reaction domain.Reaction
-		if err := rows.Scan(&reaction.UserId, &reaction.EntityId, &reaction.EntityType, &reaction.Name); err != nil {
+		if err := rows.Scan(&reaction.UserId, &reaction.EntityId, &reaction.EntityType, &reaction.Type); err != nil {
 			return nil, err
 		}
 		reactions = append(reactions, reaction)

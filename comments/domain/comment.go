@@ -72,8 +72,11 @@ type User struct {
 }
 
 type Reaction struct {
-	Reaction string `json:"type"`
-	Count    int    `json:"count"`
+	Reaction   string `json:"type"`
+	Count      int    `json:"count"`
+	UserId     int    `json:"user_id"`
+	EntityId   int    `json:"entity_id"`
+	EntityType string `json:"entity_type,omitempty"`
 }
 
 type CommentCount struct {

@@ -10,23 +10,13 @@ import (
 	"os"
 )
 
-type UserRequest struct {
-	Data []int `json:"data"`
+type Request[T any] struct {
+	Data T `json:"data"`
 }
 
-type StatsRequest struct {
-	Data []domain.Entity `json:"data"`
-}
-
-type userResponse struct {
-	Data    []domain.User `json:"data,omitempty"`
-	Message string        `json:"message,omitempty"` // For error response
-
-}
-
-type ReactionsStatsResponse struct {
-	Data    []domain.ReactionStat `json:"data,omitempty"`
-	Message string                `json:"message,omitempty"` // For error response
+type Response[T any] struct {
+	Data    T      `json:"data,omitempty"`
+	Message string `json:"message,omitempty"` // For error response
 }
 
 // Helper struct for fetching data
@@ -45,7 +35,7 @@ func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map
 
 	url := fmt.Sprintf("http://users:8080/by-ids")
 
-	requestBody, err := json.Marshal(map[string][]int{"data": userIDs})
+	requestBody, err := json.Marshal(Request[[]int]{Data: userIDs})
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +53,7 @@ func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map
 	}
 	defer resp.Body.Close()
 
-	var res userResponse
+	var res Response[[]domain.User]
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return nil, err
 	}
@@ -81,7 +71,7 @@ func (f *CommentFetcher) FetchUsersByID(ctx context.Context, userIDs []int) (map
 func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []domain.Entity) (map[int]domain.ReactionStat, error) {
 	url := fmt.Sprintf("http://reactions:8080/stats")
 
-	body, err := json.Marshal(StatsRequest{Data: entities})
+	body, err := json.Marshal(Request[[]domain.Entity]{Data: entities})
 	if err != nil {
 		return nil, err
 	}
@@ -98,14 +88,48 @@ func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []doma
 	}
 	defer resp.Body.Close()
 
-	var reactionStats ReactionsStatsResponse
+	var reactionStats Response[[]domain.ReactionStat]
 	if err := json.NewDecoder(resp.Body).Decode(&reactionStats); err != nil {
 		return nil, err
 	}
+
 	if reactionStats.Message != "" && resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(reactionStats.Message)
 	}
 	return sliceToMap(reactionStats.Data, func(stat domain.ReactionStat) int {
+		return stat.EntityId
+	}), nil
+}
+
+// Fetch total reactions for comments
+func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, entities []domain.Entity) (map[int]domain.ReactionStat, error) {
+	url := fmt.Sprintf("http://reactions:8080/user-reactions")
+
+	body, err := json.Marshal(Request[[]domain.Entity]{Data: entities})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(os.Stdout, "reaction body", string(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := f.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var userResponse Response[[]domain.ReactionStat]
+	if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
+		return nil, err
+	}
+	if userResponse.Message != "" && resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(userResponse.Message)
+	}
+	return sliceToMap(userResponse.Data, func(stat domain.ReactionStat) int {
 		return stat.EntityId
 	}), nil
 }
