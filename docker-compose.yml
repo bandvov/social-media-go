@@ -237,7 +237,7 @@ services:
       context: ./notifications
       args:
         VERSION: ${NOTIFICATIONS_VERSION}
-    container_name: notifications-${NOTIFICATIONS_VERSION}
+    container_name: notifications${NOTIFICATIONS_VERSION}
     restart: always
     depends_on:
       - users
