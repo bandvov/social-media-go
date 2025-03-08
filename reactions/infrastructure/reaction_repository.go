@@ -2,9 +2,14 @@ package infrastructure
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"reactions/domain"
+	"time"
 
+	"github.com/lib/pq"
 	pg "github.com/lib/pq"
 )
 
@@ -190,4 +195,72 @@ func (r *ReactionRepository) GetReacionStats(ctx context.Context, entities []dom
 	}
 
 	return stats, rows.Err() // Ensure any iteration errors are returned
+}
+
+func (r *ReactionRepository) GetUserReactions(ctx context.Context, userID int, entities []domain.Entity) ([]domain.Reaction, error) {
+
+	// Generate cache key using a sorted JSON format for consistency
+	entityKey, _ := json.Marshal(entities)
+	cacheKey := fmt.Sprintf("user:%d:entities:%x", userID, sha256.Sum256(entityKey))
+
+	// Check Redis cache
+	cachedData, err := r.cache.Get(ctx, cacheKey)
+	if err == nil {
+		var reactions []domain.Reaction
+		if err := json.Unmarshal([]byte(cachedData), &reactions); err == nil {
+			return reactions, nil
+		}
+	}
+
+	if len(entities) == 0 {
+		return nil, nil
+	}
+
+	// Extract entity IDs and types
+	var ids []int
+	var types []string
+	for _, e := range entities {
+		ids = append(ids, e.ID)
+		types = append(types, e.Type)
+	}
+
+	// Query reactions
+	query := `SELECT user_id, entity_id, entity_type, rt.name 
+		FROM reactions
+		LEFT JOIN reaction_types rt 
+		ON  reaction_type_id = rt.id
+		WHERE user_id = $1 
+		AND entity_id = ANY($2::int[]) 
+		AND entity_type = ANY($3::entity_type[]);`
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer stmt.Close()
+
+	// Use prepared statement
+	rows, err := stmt.QueryContext(ctx, userID, pq.Array(ids), pg.Array(types))
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var reactions []domain.Reaction
+	for rows.Next() {
+		var reaction domain.Reaction
+		if err := rows.Scan(&reaction.UserId, &reaction.EntityId, &reaction.EntityType, &reaction.Name); err != nil {
+			return nil, err
+		}
+		reactions = append(reactions, reaction)
+	}
+
+	// Store in Redis for future requests
+	if len(reactions) > 0 {
+		data, _ := json.Marshal(reactions)
+		r.cache.Set(ctx, cacheKey, string(data), 10*time.Minute)
+	}
+
+	return reactions, nil
 }

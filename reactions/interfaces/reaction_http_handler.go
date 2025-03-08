@@ -139,6 +139,42 @@ func (s *ReactionHandler) GetReactionStats(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (h *ReactionHandler) GetUserReactions(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Data []domain.Entity `json:"data"`
+	}
+
+	// Decode the request body to get entityIDs
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.Error("Failed to decode request body", "error", err)
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+	id := r.PathValue("id")
+	userIDFromUrl, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	reaction, err := h.service.GetUserReactions(ctx, userIDFromUrl, req.Data)
+	if err != nil {
+		fmt.Fprintln(os.Stdout, err.Error())
+		http.Error(w, "Error fetching reaction", http.StatusInternalServerError)
+		return
+	}
+
+	if reaction == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(reaction)
+}
+
 func (h *ReactionHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()

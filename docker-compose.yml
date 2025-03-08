@@ -7,8 +7,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB} 
-    ports:
-      - "5432:5432"   
+    # ports:
+    #   - "5432:5432"   
     volumes:
       - postgres_sm_data:/var/lib/postgresql/data
     networks:
@@ -228,8 +228,8 @@ services:
     env_file:
       - ./reactions/.env
     # Uncomment below to test in postman  
-    # ports:
-    #   - "8084:8080"
+    ports:
+      - "8084:8080"
     networks:
       - app-network                    
   notifications:

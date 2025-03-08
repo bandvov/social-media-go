@@ -11,6 +11,7 @@ type ReactionServiceInterface interface {
 	GetReactions(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error)
 	GetReactionsCount(ctx context.Context, entities []domain.Entity) ([]domain.Reaction, error)
 	GetReactionStats(ctx context.Context, entities []domain.Entity) ([]domain.ReactionStat, error)
+	GetUserReactions(ctx context.Context, userId int, entities []domain.Entity) ([]domain.Reaction, error)
 }
 type ReactionService struct {
 	reactionRepo domain.ReactionRepository
@@ -38,4 +39,8 @@ func (s *ReactionService) GetReactionsCount(ctx context.Context, entities []doma
 
 func (s *ReactionService) GetReactionStats(ctx context.Context, entities []domain.Entity) ([]domain.ReactionStat, error) {
 	return s.reactionRepo.GetReacionStats(ctx, entities)
+}
+
+func (s *ReactionService) GetUserReactions(ctx context.Context, userID int, entities []domain.Entity) ([]domain.Reaction, error) {
+	return s.reactionRepo.GetUserReactions(ctx, userID, entities)
 }
