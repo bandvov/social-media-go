@@ -64,6 +64,7 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	var (
 		users         map[int]domain.User
 		reactionStats map[int]domain.ReactionStat
+		userReactions map[int]domain.Reaction
 	)
 
 	var eg errgroup.Group
@@ -79,6 +80,12 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	eg.Go(func() error {
 		var err error
 		reactionStats, err = s.commentFetcher.FetchReactionStats(ctx, entities)
+		return err
+	})
+	// Fetch user reactions
+	eg.Go(func() error {
+		var err error
+		userReactions, err = s.commentFetcher.FetchUsersReactions(ctx, entities)
 		return err
 	})
 
@@ -100,6 +107,9 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 		}
 		if reactionStat, exists := reactionStats[comment.ID]; exists {
 			comment.TotaReactionslCount = reactionStat.TotalCount
+		}
+		if reaction, exists := userReactions[comment.AuthorID]; exists {
+			comment.UserReaction = reaction.Reaction
 		}
 	}
 

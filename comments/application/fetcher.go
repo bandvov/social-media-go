@@ -102,7 +102,7 @@ func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []doma
 }
 
 // Fetch total reactions for comments
-func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, entities []domain.Entity) (map[int]domain.ReactionStat, error) {
+func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, entities []domain.Entity) (map[int]domain.Reaction, error) {
 	url := fmt.Sprintf("http://reactions:8080/user-reactions")
 
 	body, err := json.Marshal(Request[[]domain.Entity]{Data: entities})
@@ -122,15 +122,15 @@ func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, entities []dom
 	}
 	defer resp.Body.Close()
 
-	var userResponse Response[[]domain.ReactionStat]
+	var userResponse Response[[]domain.Reaction]
 	if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
 		return nil, err
 	}
 	if userResponse.Message != "" && resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(userResponse.Message)
 	}
-	return sliceToMap(userResponse.Data, func(stat domain.ReactionStat) int {
-		return stat.EntityId
+	return sliceToMap(userResponse.Data, func(r domain.Reaction) int {
+		return r.EntityId
 	}), nil
 }
 
