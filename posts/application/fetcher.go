@@ -24,7 +24,7 @@ func NewPostsFetcher(reactionsClient internal.ClientInterface, commentsClient in
 }
 
 // Fetch total reactions for comments
-func (f *PostsFetcher) FetchUsersReactions(ctx context.Context, userId int, entities []domain.Entity) (map[int]domain.Reaction, error) {
+func (f *PostsFetcher) FetchUserReactions(ctx context.Context, userId int, entities []domain.Entity) (map[int]domain.Reaction, error) {
 	url := fmt.Sprintf("/%v/user-reactions", userId)
 
 	body, err := json.Marshal(domain.Request[[]domain.Entity]{Data: entities})
@@ -40,6 +40,57 @@ func (f *PostsFetcher) FetchUsersReactions(ctx context.Context, userId int, enti
 
 	var urr domain.Response[[]domain.Reaction]
 	f.reactionsClient.GetJSON(req, &urr)
+
+	fmt.Fprintln(os.Stdout, urr)
+	if urr.Message != "" {
+		return nil, fmt.Errorf(urr.Message)
+	}
+	return sliceToMap(urr.Data, func(r domain.Reaction) int {
+		return r.EntityId
+	}), nil
+}
+
+// Fetch total reactions for comments
+func (f *PostsFetcher) FetchReactionStats(ctx context.Context, entities []domain.Entity) (map[int]domain.ReactionStat, error) {
+	url := "/stats"
+
+	body, err := json.Marshal(domain.Request[[]domain.Entity]{Data: entities})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(os.Stdout, "reaction body", string(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	var reactionStats domain.Response[[]domain.ReactionStat]
+
+	if reactionStats.Message != "" {
+		return nil, fmt.Errorf(reactionStats.Message)
+	}
+	return sliceToMap(reactionStats.Data, func(stat domain.ReactionStat) int {
+		return stat.EntityId
+	}), nil
+}
+
+// Fetch total reactions for comments
+func (f *PostsFetcher) FetchUsersReactions(ctx context.Context, userId int, entities []domain.Entity) (map[int]domain.Reaction, error) {
+	url := fmt.Sprintf("/%v/user-reactions", userId)
+
+	body, err := json.Marshal(domain.Request[[]domain.Entity]{Data: entities})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(os.Stdout, "reaction body", string(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	var urr domain.Response[[]domain.Reaction]
 
 	fmt.Fprintln(os.Stdout, urr)
 	if urr.Message != "" {

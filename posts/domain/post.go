@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -38,7 +39,7 @@ type Post struct {
 	Pinned              bool            `json:"pinned,omitempty"`
 	Tags                string          `json:"tags,omitempty"`
 	Visibility          *PostVisibility `json:"visibility,omitempty"`
-	Reactions           []Reaction      `json:"reactions,omitempty"`
+	Reactions           json.RawMessage `json:"reactions,omitempty"`
 	TotalReactionsCount int             `json:"total_reactions_count,omitempty"`
 	TotalCommentsCount  int             `json:"total_comments_count,omitempty"`
 	UserReaction        string          `json:"user_reaction,omitempty"`
@@ -81,7 +82,7 @@ type PostSearchOptions struct {
 }
 type Entity struct {
 	ID     int    `json:"id,omitempty"`
-	userID int    `json:"user_id,omitempty"`
+	UserID int    `json:"user_id,omitempty"`
 	Type   string `json:"type,omitempty"`
 }
 
@@ -92,4 +93,11 @@ type Request[T any] struct {
 type Response[T any] struct {
 	Data    T      `json:"data"`
 	Message string `json:"message"`
+}
+
+type ReactionStat struct {
+	EntityId   int             `json:"entity_id"`
+	EntityType string          `json:"entity_type,omitempty"`
+	Reactions  json.RawMessage `json:"reactions,omitempty"`
+	TotalCount int             `json:"total_count,omitempty"`
 }

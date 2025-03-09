@@ -50,11 +50,33 @@ func (s *PostService) GetPostByID(ctx context.Context, id, targetUserId int) (*d
 	if err != nil {
 		return nil, err
 	}
-	reactionsMap, err := s.fetcher.FetchUsersReactions(ctx, targetUserId, []domain.Entity{{ID: post.ID, Type: "post"}})
-	if err != nil {
+
+	var (
+		eg               errgroup.Group
+		reactionStatsMap map[int]domain.ReactionStat
+		reactionsMap     map[int]domain.Reaction
+	)
+
+	// Fetch user reactions
+	eg.Go(func() error {
+		var err error
+		reactionStatsMap, err = s.fetcher.FetchReactionStats(ctx, []domain.Entity{{ID: id, Type: "post"}})
+		return err
+	})
+
+	eg.Go(func() error {
+		var err error
+		reactionsMap, err = s.fetcher.FetchUserReactions(ctx, targetUserId, []domain.Entity{{ID: post.ID, Type: "post"}})
+		return err
+	})
+
+	// Wait for all goroutines to complete
+	if err := eg.Wait(); err != nil {
 		return nil, err
 	}
+
 	post.UserReaction = reactionsMap[post.ID].Type
+	post.Reactions = reactionStatsMap[post.ID].Reactions
 	return post, nil
 }
 
@@ -68,17 +90,18 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 		return nil, 0, err
 	}
 	var postIDs []int
+	var entities []domain.Entity
 	for _, v := range posts {
 		postIDs = append(postIDs, v.ID)
+		entities = append(entities, domain.Entity{ID: v.ID, Type: "post"})
 	}
 
 	var (
-		reactionMap map[int][]domain.Reaction
-		postsCount  int
-		eg          errgroup.Group
+		reactionStatsMap map[int]domain.ReactionStat
+		postsCount       int
+		eg               errgroup.Group
 	)
 	commentsCountsMap := make(map[int]domain.Comment)
-	reactionsCountsMap := make(map[int]domain.Reaction)
 
 	eg.Go(func() error {
 		// figure out if it is better to move it into outer scope
@@ -93,7 +116,7 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 		}
 
 		var counts []domain.Comment
-		err = s.fetcher.commentsClient.GetJSON(req, counts)
+		err = s.fetcher.commentsClient.GetJSON(req, &counts)
 		if err != nil {
 			return err
 		}
@@ -105,38 +128,8 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 	})
 
 	eg.Go(func() error {
-		jsonData, err := json.Marshal(postIDs)
-		if err != nil {
-			return err
-		}
-
-		req, err := http.NewRequest("GET", "/counts", bytes.NewBuffer(jsonData))
-		if err != nil {
-			return err
-		}
-
-		var counts []domain.Reaction
-		err = s.fetcher.reactionsClient.GetJSON(req, counts)
-		if err != nil {
-			return err
-		}
-
-		for _, count := range counts {
-			reactionsCountsMap[count.EntityId] = count
-		}
-		return nil
-	})
-
-	eg.Go(func() error {
-		jsonData, err := json.Marshal(postIDs)
-		if err != nil {
-			return err
-		}
-		req, err := http.NewRequest("GET", "/", bytes.NewBuffer(jsonData))
-		if err != nil {
-			return err
-		}
-		err = s.fetcher.reactionsClient.GetJSON(req, reactionMap)
+		var err error
+		reactionStatsMap, err = s.fetcher.FetchReactionStats(ctx, entities)
 		return err
 	})
 
@@ -155,9 +148,9 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 	}
 
 	for i, post := range posts {
-		posts[i].Reactions = reactionMap[post.ID]
+		posts[i].Reactions = reactionStatsMap[post.ID].Reactions
 		posts[i].TotalCommentsCount = commentsCountsMap[post.ID].CommentCount
-		posts[i].TotalReactionsCount = reactionsCountsMap[post.ID].Count
+		posts[i].TotalReactionsCount = reactionStatsMap[post.ID].TotalCount
 	}
 
 	return posts, postsCount, nil
