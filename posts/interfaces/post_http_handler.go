@@ -153,6 +153,14 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 }
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
 	s := time.Now()
+	query := r.URL.Query()
+	targetUserIdStr := query.Get("target_id")
+	targetUserId, err := strconv.Atoi(targetUserIdStr)
+	if err != nil {
+		http.Error(w, "invalid target id", http.StatusBadRequest)
+		return
+	}
+	
 	idStr := r.PathValue("id")
 	authorIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -165,7 +173,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 
 	p := utils.ParsePagination(r)
 	// Move the logic to the service layer
-	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, p)
+	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, targetUserId, p)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
