@@ -12,7 +12,8 @@ type Pagination struct {
 type Reaction struct {
 	EntityId int    `json:"entity_id"`
 	Reaction string `json:"reaction_type_id"`
-	Count    int    `json:"count"`
+	Count    int    `json:"count,omitempty"`
+	Type     string `json:"type",omitempty`
 }
 
 type Comment struct {
@@ -40,6 +41,7 @@ type Post struct {
 	Reactions           []Reaction      `json:"reactions,omitempty"`
 	TotalReactionsCount int             `json:"total_reactions_count,omitempty"`
 	TotalCommentsCount  int             `json:"total_comments_count,omitempty"`
+	UserReaction        string          `json:"user_reaction,omitempty"`
 	CreatedAt           time.Time       `json:"created_at,omitempty"`
 	UpdatedAt           time.Time       `json:"updated_at,omitempty"`
 }
@@ -76,4 +78,18 @@ type PostSearchOptions struct {
 	Offset int    `json:"offset"`
 	Sort   string `json:"sort"`
 	Search string `json:"search"`
+}
+type Entity struct {
+	ID     int    `json:"id,omitempty"`
+	userID int    `json:"user_id,omitempty"`
+	Type   string `json:"type,omitempty"`
+}
+
+type Request[T any] struct {
+	Data T `json:"data"`
+}
+
+type Response[T any] struct {
+	Data    T      `json:"data"`
+	Message string `json:"message"`
 }

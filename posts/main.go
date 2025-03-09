@@ -45,10 +45,12 @@ func main() {
 
 	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments-%v:8080", "../comments/VERSION"))
 	reactionsClient := internal.NewHTTPClient(fmt.Sprintf("http://reactions-%v:8080", "../reactions/VERSION"))
+	fetcher := application.NewPostsFetcher(reactionsClient, commentsClient)
+
 	cache := infrastructure.NewRedisCache(rdb)
 
 	postRepo := infrastructure.NewPostRepository(db, cache)
-	postService := application.NewPostService(postRepo, commentsClient, reactionsClient)
+	postService := application.NewPostService(postRepo, fetcher)
 	postHandler := interfaces.NewPostHTTPHandler(postService, rdb)
 
 	// Create a custom router

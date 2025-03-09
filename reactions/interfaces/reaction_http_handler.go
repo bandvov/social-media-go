@@ -168,7 +168,7 @@ func (h *ReactionHandler) GetUserReactions(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	fmt.Fprintln(os.Stdout, reactions)
+	fmt.Fprintf(os.Stdout, "%+v", reactions)
 	json.NewEncoder(w).Encode(map[string][]domain.Reaction{"data": reactions})
 }
 

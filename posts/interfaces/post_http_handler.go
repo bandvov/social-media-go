@@ -131,6 +131,13 @@ func (p *PostHTTPHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	targetUserIdStr := query.Get("target_id")
+	targetUserId, err := strconv.Atoi(targetUserIdStr)
+	if err != nil {
+		http.Error(w, "invalid target id", http.StatusBadRequest)
+		return
+	}
 
 	id := r.PathValue("id")
 	postID, err := strconv.Atoi(id)
@@ -141,9 +148,12 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	post, err := p.postService.GetPostByID(ctx, postID)
+	post, err := p.postService.GetPostByID(ctx, postID, targetUserId)
 	if err != nil {
-		fmt.Println(err)
+		if err == sql.ErrNoRows {
+			http.Error(w, "post not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -160,7 +170,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "invalid target id", http.StatusBadRequest)
 		return
 	}
-	
+
 	idStr := r.PathValue("id")
 	authorIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"posts/domain"
-	"posts/internal"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -15,25 +14,22 @@ type PostServiceInterface interface {
 	CreatePost(ctx context.Context, post *domain.CreatePostRequest) error
 	DeletePost(ctx context.Context, id int) error
 	UpdatePost(ctx context.Context, id int, post *domain.Post) error
-	GetPostByID(ctx context.Context, id int) (*domain.Post, error)
+	GetPostByID(ctx context.Context, id, targetUserId int) (*domain.Post, error)
 	GetPostsByUser(ctx context.Context, userID, targetUserId int, p domain.Pagination) ([]domain.Post, int, error)
 	GetCountPostsByUser(ctx context.Context, userID int) (int, error)
 }
 
 type PostService struct {
-	postRepo        domain.PostRepository
-	commentsClient  internal.ClientInterface
-	reactionsClient internal.ClientInterface
+	postRepo domain.PostRepository
+	fetcher  PostsFetcher
 }
 
 func NewPostService(
 	repo domain.PostRepository,
-	commentsClient internal.ClientInterface,
-	reactionsClient internal.ClientInterface,
+	fetcher PostsFetcher,
 ) *PostService {
 	return &PostService{postRepo: repo,
-		commentsClient:  commentsClient,
-		reactionsClient: reactionsClient,
+		fetcher: fetcher,
 	}
 }
 
@@ -49,8 +45,17 @@ func (s *PostService) UpdatePost(ctx context.Context, id int, post *domain.Post)
 	return s.postRepo.Update(ctx, id, post)
 }
 
-func (s *PostService) GetPostByID(ctx context.Context, id int) (*domain.Post, error) {
-	return s.postRepo.GetByID(ctx, id)
+func (s *PostService) GetPostByID(ctx context.Context, id, targetUserId int) (*domain.Post, error) {
+	post, err := s.postRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	reactionsMap, err := s.fetcher.FetchUsersReactions(ctx, targetUserId, []domain.Entity{{ID: post.ID, Type: "post"}})
+	if err != nil {
+		return nil, err
+	}
+	post.UserReaction = reactionsMap[post.ID].Type
+	return post, nil
 }
 
 func (s *PostService) GetCountPostsByUser(ctx context.Context, userID int) (int, error) {
@@ -88,7 +93,7 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 		}
 
 		var counts []domain.Comment
-		err = s.commentsClient.GetJSON(req, counts)
+		err = s.fetcher.commentsClient.GetJSON(req, counts)
 		if err != nil {
 			return err
 		}
@@ -111,7 +116,7 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 		}
 
 		var counts []domain.Reaction
-		err = s.reactionsClient.GetJSON(req, counts)
+		err = s.fetcher.reactionsClient.GetJSON(req, counts)
 		if err != nil {
 			return err
 		}
@@ -131,7 +136,7 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 		if err != nil {
 			return err
 		}
-		err = s.reactionsClient.GetJSON(req, reactionMap)
+		err = s.fetcher.reactionsClient.GetJSON(req, reactionMap)
 		return err
 	})
 
