@@ -43,8 +43,8 @@ func main() {
 		rdb.Close()
 	}()
 
-	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments-%v:8080", "../comments/VERSION"))
-	reactionsClient := internal.NewHTTPClient(fmt.Sprintf("http://reactions-%v:8080", "../reactions/VERSION"))
+	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments%v:8080", "../comments/VERSION"))
+	reactionsClient := internal.NewHTTPClient(fmt.Sprintf("http://reactions%v:8080", "../reactions/VERSION"))
 	fetcher := application.NewPostsFetcher(reactionsClient, commentsClient)
 
 	cache := infrastructure.NewRedisCache(rdb)
