@@ -102,8 +102,8 @@ func (f *CommentFetcher) FetchReactionStats(ctx context.Context, entities []doma
 }
 
 // Fetch total reactions for comments
-func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, entities []domain.Entity) (map[int]domain.Reaction, error) {
-	url := fmt.Sprintf("http://reactions:8080/user-reactions")
+func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, userId int, entities []domain.Entity) (map[int]domain.Reaction, error) {
+	url := fmt.Sprintf("http://reactions:8080/%v/user-reactions", userId)
 
 	body, err := json.Marshal(Request[[]domain.Entity]{Data: entities})
 	if err != nil {
@@ -122,14 +122,15 @@ func (f *CommentFetcher) FetchUsersReactions(ctx context.Context, entities []dom
 	}
 	defer resp.Body.Close()
 
-	var userResponse Response[[]domain.Reaction]
-	if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
+	var urr Response[[]domain.Reaction]
+	if err := json.NewDecoder(resp.Body).Decode(&urr); err != nil {
 		return nil, err
 	}
-	if userResponse.Message != "" && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(userResponse.Message)
+	fmt.Fprintln(os.Stdout, urr)
+	if urr.Message != "" && resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(urr.Message)
 	}
-	return sliceToMap(userResponse.Data, func(r domain.Reaction) int {
+	return sliceToMap(urr.Data, func(r domain.Reaction) int {
 		return r.EntityId
 	}), nil
 }

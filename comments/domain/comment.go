@@ -73,7 +73,7 @@ type User struct {
 
 type Reaction struct {
 	Reaction   string `json:"type"`
-	Count      int    `json:"count"`
+	Count      int    `json:"count,omitempty"`
 	UserId     int    `json:"user_id"`
 	EntityId   int    `json:"entity_id"`
 	EntityType string `json:"entity_type,omitempty"`

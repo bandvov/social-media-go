@@ -85,7 +85,7 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	// Fetch user reactions
 	eg.Go(func() error {
 		var err error
-		userReactions, err = s.commentFetcher.FetchUsersReactions(ctx, entities)
+		userReactions, err = s.commentFetcher.FetchUsersReactions(ctx, userID, entities)
 		return err
 	})
 

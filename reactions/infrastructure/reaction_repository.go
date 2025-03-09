@@ -225,13 +225,15 @@ func (r *ReactionRepository) GetUserReactions(ctx context.Context, userID int, e
 	}
 
 	// Query reactions
-	query := `SELECT user_id, entity_id, entity_type, rt.name 
+	query :=
+		`SELECT user_id, entity_id, entity_type, rt.name 
 		FROM reactions
 		LEFT JOIN reaction_types rt 
 		ON  reaction_type_id = rt.id
 		WHERE user_id = $1 
 		AND entity_id = ANY($2::int[]) 
-		AND entity_type = ANY($3::entity_type[]);`
+		AND entity_type = ANY($3::entity_type[])
+		ORDER BY created_at DESC;`
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err

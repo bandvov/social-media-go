@@ -150,6 +150,7 @@ func (h *ReactionHandler) GetUserReactions(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+
 	id := r.PathValue("id")
 	userIDFromUrl, err := strconv.Atoi(id)
 	if err != nil {
@@ -160,19 +161,15 @@ func (h *ReactionHandler) GetUserReactions(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	reaction, err := h.service.GetUserReactions(ctx, userIDFromUrl, req.Data)
+	reactions, err := h.service.GetUserReactions(ctx, userIDFromUrl, req.Data)
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err.Error())
 		http.Error(w, "Error fetching reaction", http.StatusInternalServerError)
 		return
 	}
 
-	if reaction == nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(reaction)
+	fmt.Fprintln(os.Stdout, reactions)
+	json.NewEncoder(w).Encode(map[string][]domain.Reaction{"data": reactions})
 }
 
 func (h *ReactionHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
