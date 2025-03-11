@@ -8,7 +8,7 @@ sequenceDiagram
     participant Users_Service
     participant Reactions_Service
 
-    Client->>API_Gateway: GET /comments/{entityID}
+    Client->>API_Gateway: GET /{entityID}
     API_Gateway->>Auth_Middleware: Validate Request
     Auth_Middleware->>API_Gateway: Auth Success
     API_Gateway->>Comments_Service: Fetch comments for entityID
