@@ -1,10 +1,9 @@
 package application
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"net/http"
+	"fmt"
+	"os"
 	"posts/domain"
 
 	"golang.org/x/sync/errgroup"
@@ -28,8 +27,9 @@ func NewPostService(
 	repo domain.PostRepository,
 	fetcher PostsFetcher,
 ) *PostService {
-	return &PostService{postRepo: repo,
-		fetcher: fetcher,
+	return &PostService{
+		postRepo: repo,
+		fetcher:  fetcher,
 	}
 }
 
@@ -85,6 +85,7 @@ func (s *PostService) GetCountPostsByUser(ctx context.Context, userID int) (int,
 }
 
 func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId int, p domain.Pagination) ([]domain.Post, int, error) {
+	fmt.Fprintln(os.Stdout, "GetPostsByUser in service")
 	posts, err := s.postRepo.GetByUserID(ctx, authorID, p)
 	if err != nil {
 		return nil, 0, err
@@ -104,27 +105,9 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 	commentsCountsMap := make(map[int]domain.Comment)
 
 	eg.Go(func() error {
-		// figure out if it is better to move it into outer scope
-		jsonData, err := json.Marshal(postIDs)
-		if err != nil {
-			return err
-		}
-
-		req, err := http.NewRequest("GET", "/count", bytes.NewBuffer(jsonData))
-		if err != nil {
-			return err
-		}
-
-		var counts []domain.Comment
-		err = s.fetcher.commentsClient.GetJSON(req, &counts)
-		if err != nil {
-			return err
-		}
-
-		for _, count := range counts {
-			commentsCountsMap[count.EntityID] = count
-		}
-		return nil
+		var err error
+		commentsCountsMap, err = s.fetcher.FetchCommentsCount(ctx, postIDs)
+		return err
 	})
 
 	eg.Go(func() error {

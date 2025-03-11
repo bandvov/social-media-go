@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -34,11 +35,13 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	if h.BasePath != "" {
 		req.URL.Path = h.BasePath + req.URL.Path
 	}
+	fmt.Fprintf(os.Stdout, "%+v", req)
 	return h.Client.Do(req)
 }
 
 // GetJSON performs a GET request and decodes the response into the provided struct.
 func (h *HTTPClient) GetJSON(req *http.Request, target interface{}) error {
+	fmt.Fprintf(os.Stdout, "%+v\n", req)
 	resp, err := h.Client.Do(req)
 	if err != nil {
 		return err

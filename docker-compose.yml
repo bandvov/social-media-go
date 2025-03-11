@@ -163,7 +163,7 @@ services:
       context: ./followers
       args:
         VERSION: ${FOLLOWERS_VERSION}
-    container_name: followers-${FOLLOWERS_VERSION}
+    container_name: followers${FOLLOWERS_VERSION}
     restart: always
     depends_on:
       - postgres
@@ -181,7 +181,7 @@ services:
       context: ./posts
       args:
         VERSION: ${POSTS_VERSION}
-    container_name: posts-${POSTS_VERSION}
+    container_name: posts${POSTS_VERSION}
     restart: always
     depends_on:
       - postgres
@@ -199,7 +199,7 @@ services:
       context: ./comments
       args:
         VERSION: ${COMMENTS_VERSION}
-    container_name: comments-${COMMENTS_VERSION}
+    container_name: comments${COMMENTS_VERSION}
     restart: always
     depends_on:
       - postgres

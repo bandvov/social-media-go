@@ -100,7 +100,6 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.P
 		SELECT
 			id AS post_id,
 			author_id,
-			username AS author_name,
 			content,
 			visibility,
 			pinned,
@@ -129,7 +128,7 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.P
 	var posts []domain.Post
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.ID, &post.AuthorID, &post.AuthorName, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt); err != nil {
+		if err := rows.Scan(&post.ID, &post.AuthorID, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)

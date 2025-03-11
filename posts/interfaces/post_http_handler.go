@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"posts/application"
 	"posts/domain"
 	"posts/internal"
@@ -162,6 +163,7 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(os.Stdout, "GetPostsByUser")
 	s := time.Now()
 	query := r.URL.Query()
 	targetUserIdStr := query.Get("target_id")
@@ -185,6 +187,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	// Move the logic to the service layer
 	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, targetUserId, p)
 	if err != nil {
+		fmt.Fprintln(os.Stdout, err.Error())
 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
 	}

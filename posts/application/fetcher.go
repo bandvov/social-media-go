@@ -67,6 +67,10 @@ func (f *PostsFetcher) FetchReactionStats(ctx context.Context, entities []domain
 
 	var reactionStats domain.Response[[]domain.ReactionStat]
 
+	err = f.reactionsClient.GetJSON(req, &reactionStats)
+	if err != nil {
+		return nil, err
+	}
 	if reactionStats.Message != "" {
 		return nil, fmt.Errorf(reactionStats.Message)
 	}
@@ -75,29 +79,27 @@ func (f *PostsFetcher) FetchReactionStats(ctx context.Context, entities []domain
 	}), nil
 }
 
-// Fetch total reactions for comments
-func (f *PostsFetcher) FetchUsersReactions(ctx context.Context, userId int, entities []domain.Entity) (map[int]domain.Reaction, error) {
-	url := fmt.Sprintf("/%v/user-reactions", userId)
-
-	body, err := json.Marshal(domain.Request[[]domain.Entity]{Data: entities})
+func (f *PostsFetcher) FetchCommentsCount(ctx context.Context, entityIds []int) (map[int]domain.Comment, error) {
+	url := "/count"
+	jsonData, err := json.Marshal(entityIds)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Fprintln(os.Stdout, "reaction body", string(body))
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(body))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	var urr domain.Response[[]domain.Reaction]
-
-	fmt.Fprintln(os.Stdout, urr)
-	if urr.Message != "" {
-		return nil, fmt.Errorf(urr.Message)
+	var commentsCounts domain.Response[[]domain.Comment]
+	err = f.commentsClient.GetJSON(req, &commentsCounts)
+	fmt.Fprintln(os.Stdout, err.Error())
+	if err != nil {
+		return nil, err
 	}
-	return sliceToMap(urr.Data, func(r domain.Reaction) int {
-		return r.EntityId
+
+	return sliceToMap(commentsCounts.Data, func(c domain.Comment) int {
+		return c.EntityID
 	}), nil
 }
 
