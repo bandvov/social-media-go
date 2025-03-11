@@ -1,0 +1,174 @@
+openapi: 3.0.0
+info:
+  title: Microservices API
+  version: 1.0.0
+  description: A combined API for Comments, Users, and Posts services.
+
+servers:
+  - url: http://localhost
+    description: Local Environment
+
+paths:
+  /comments:
+    post:
+      summary: Add a comment
+      operationId: addComment
+      tags:
+        - Comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [postId, userId, commentText]
+              properties:
+                postId:
+                  type: string
+                userId:
+                  type: string
+                commentText:
+                  type: string
+                parentCommentId:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  commentId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+
+  /comments/{commentId}:
+    get:
+      summary: Get a comment by ID
+      operationId: getComment
+      tags:
+        - Comments
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment found
+        "404":
+          description: Comment not found
+
+  /users/{userId}:
+    get:
+      summary: Get user details
+      operationId: getUser
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User details found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+        "404":
+          description: User not found
+
+  /posts/{postId}:
+    get:
+      summary: Get post details
+      operationId: getPost
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postId:
+                    type: string
+                  title:
+                    type: string
+                  content:
+                    type: string
+        "404":
+          description: Post not found
+
+components:
+  schemas:
+    Comment:
+      type: object
+      required:
+        - postId
+        - userId
+        - commentText
+      properties:
+        postId:
+          type: string
+        userId:
+          type: string
+        commentText:
+          type: string
+        parentCommentId:
+          type: string
+          nullable: true
+
+    User:
+      type: object
+      required:
+        - userId
+        - name
+        - email
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+
+    Post:
+      type: object
+      required:
+        - postId
+        - title
+        - content
+      properties:
+        postId:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
