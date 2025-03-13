@@ -5,7 +5,7 @@ import (
 )
 
 type PostRepository interface {
-	Create(ctx context.Context, post *CreatePostRequest) error
+	Create(ctx context.Context, post CreatePostRequest) error
 	GetByID(ctx context.Context, id int) (*Post, error)
 	Update(ctx context.Context, id int, post *Post) error
 	Delete(ctx context.Context, id int) error

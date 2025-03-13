@@ -18,7 +18,7 @@ func NewPostRepository(db *sql.DB, cache *RedisCache) *PostRepository {
 	return &PostRepository{db: db, cache: cache}
 }
 
-func (r *PostRepository) Create(ctx context.Context, post domain.Post) error {
+func (r *PostRepository) Create(ctx context.Context, post domain.CreatePostRequest) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
