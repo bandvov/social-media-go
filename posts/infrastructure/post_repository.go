@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"posts/domain"
+	"regexp"
+	"strings"
 )
 
 type PostRepository struct {
@@ -29,6 +31,55 @@ func (r *PostRepository) Create(ctx context.Context, post *domain.CreatePostRequ
 	// Execute the prepared statement with the context and parameters
 	_, err = stmt.ExecContext(ctx, post.AuthorID, post.Content, post.Visibility, post.Pinned)
 	return err
+}
+
+func (r *PostRepository) CreatePostWithKeywords(ctx context.Context, post domain.Post) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Prepare the insert query using a prepared statement with context
+	stmt, err := r.db.PrepareContext(ctx, `
+		INSERT INTO posts (author_id, content, visibility, pinned)
+		VALUES ($1, $2, $3, $4) RETURNING id;
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// Execute the prepared statement with the context and parameters
+	sqlResult, err := stmt.ExecContext(ctx, post.AuthorID, post.Content, post.Visibility, post.Pinned)
+	if err != nil {
+		return err
+	}
+
+	postID, err := sqlResult.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	keywords := extractKeywords(post.Content)
+
+	// Insert keywords and link them to the post
+	for _, keyword := range keywords {
+		var keywordID int
+		err = tx.QueryRow("INSERT INTO keywords (keyword) VALUES ($1) ON CONFLICT (keyword) DO UPDATE SET keyword=EXCLUDED.keyword RETURNING id", keyword).Scan(&keywordID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		_, err = tx.Exec("INSERT INTO post_keywords (post_id, keyword_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", postID, keywordID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Commit transaction
+	return tx.Commit()
 }
 
 func (r *PostRepository) Update(ctx context.Context, postId int, post *domain.Post) error {
@@ -161,4 +212,33 @@ func (r *PostRepository) GetCountPostsByUser(ctx context.Context, authorID int) 
 		return postsCount, fmt.Errorf("Failed to execute query: %v", err)
 	}
 	return postsCount, nil
+}
+
+// Function to extract keywords from content
+func extractKeywords(content string) []string {
+	// Convert to lowercase
+	content = strings.ToLower(content)
+
+	// Remove punctuation using regex
+	re := regexp.MustCompile(`[^\w\s]`)
+	content = re.ReplaceAllString(content, "")
+
+	// Split into words
+	words := strings.Fields(content)
+
+	// Define stopwords to ignore (extend as needed)
+	stopwords := map[string]bool{
+		"the": true, "is": true, "and": true, "or": true, "to": true, "a": true, "in": true, "of": true, "this": true,
+	}
+
+	// Filter out stopwords and short words
+	var keywords []string
+	seen := make(map[string]bool) // To avoid duplicates
+	for _, word := range words {
+		if len(word) > 2 && !stopwords[word] && !seen[word] { // Ignore short words and stopwords
+			keywords = append(keywords, word)
+			seen[word] = true
+		}
+	}
+	return keywords
 }
