@@ -17,23 +17,8 @@ type PostRepository struct {
 func NewPostRepository(db *sql.DB, cache *RedisCache) *PostRepository {
 	return &PostRepository{db: db, cache: cache}
 }
-func (r *PostRepository) Create(ctx context.Context, post *domain.CreatePostRequest) error {
-	// Prepare the insert query using a prepared statement with context
-	stmt, err := r.db.PrepareContext(ctx, `
-		INSERT INTO posts (author_id, content, visibility, pinned)
-		VALUES ($1, $2, $3, $4);
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
 
-	// Execute the prepared statement with the context and parameters
-	_, err = stmt.ExecContext(ctx, post.AuthorID, post.Content, post.Visibility, post.Pinned)
-	return err
-}
-
-func (r *PostRepository) CreatePostWithKeywords(ctx context.Context, post domain.Post) error {
+func (r *PostRepository) Create(ctx context.Context, post domain.Post) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -61,6 +46,7 @@ func (r *PostRepository) CreatePostWithKeywords(ctx context.Context, post domain
 	}
 
 	keywords := extractKeywords(post.Content)
+	tags := extractTags(post.Content)
 
 	// Insert keywords and link them to the post
 	for _, keyword := range keywords {
@@ -72,6 +58,22 @@ func (r *PostRepository) CreatePostWithKeywords(ctx context.Context, post domain
 		}
 
 		_, err = tx.Exec("INSERT INTO post_keywords (post_id, keyword_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", postID, keywordID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Insert tags
+	for _, tag := range tags {
+		var tagID int
+		err = tx.QueryRow("INSERT INTO tags (tag) VALUES ($1) ON CONFLICT (tag) DO UPDATE SET tag=EXCLUDED.tag RETURNING id", tag).Scan(&tagID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		_, err = tx.Exec("INSERT INTO post_tags (post_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", postID, tagID)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -241,4 +243,22 @@ func extractKeywords(content string) []string {
 		}
 	}
 	return keywords
+}
+
+// Extracts hashtags (tags) from the content
+func extractTags(content string) []string {
+	re := regexp.MustCompile(`#\w+`) // Matches words prefixed with #
+	matches := re.FindAllString(content, -1)
+
+	// Convert to lowercase and remove duplicates
+	tagSet := make(map[string]bool)
+	var tags []string
+	for _, tag := range matches {
+		tag = strings.ToLower(tag)
+		if !tagSet[tag] {
+			tagSet[tag] = true
+			tags = append(tags, tag)
+		}
+	}
+	return tags
 }
