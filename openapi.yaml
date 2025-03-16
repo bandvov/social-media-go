@@ -9,6 +9,51 @@ servers:
     description: Local Environment
 
 paths:
+  /users:
+    post:
+      summary: User registration
+      operationId: registerUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                missingFields:
+                  summary: Missing required fields
+                  value:
+                    message: "Email and password are required"
+                invalidEmail:
+                  summary: Invalid email format
+                  value:
+                    message: "Invalid email format"
+                weakPassword:
+                  summary: Weak password
+                  value:
+                    message: "Password must be at least 8 characters long"
+                  
   /users/login:
     post:
       summary: User login
@@ -78,7 +123,8 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Internal server error"  
+                    example: "Internal server error"
+    
   /comments:
     post:
       summary: Add a comment

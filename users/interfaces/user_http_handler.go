@@ -46,16 +46,16 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-		http.Error(w, `{"message": "invalid request body"}`, http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "invalid request body"}), http.StatusBadRequest)
 		return
 	}
 	if err := ValidateEmail(newUser.Data.Email); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: err.Error()}), http.StatusBadRequest)
 		return
 	}
 
 	if err := ValidatePassword(newUser.Data.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: err.Error()}), http.StatusBadRequest)
 		return
 	}
 
@@ -66,15 +66,15 @@ func (h *UserHTTPHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("err: ", err)
 		if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
-			http.Error(w, "error registering user: user already exists", http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "error registering user: user already exists"}), http.StatusBadRequest)
 			return
 		}
-		http.Error(w, "error registering user: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "error registering user: " + err.Error()}), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "user registered successfully"})
+	json.NewEncoder(w).Encode(domain.ErrorMessage{Message: "user registered successfully"})
 }
 
 func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
