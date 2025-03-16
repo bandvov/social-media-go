@@ -238,7 +238,7 @@ func (h *UserHTTPHandler) GetPublicProfiles(w http.ResponseWriter, r *http.Reque
 
 	users, err := h.UserService.GetPublicProfiles(ctx, p)
 	if err != nil {
-		http.Error(w, "Failed to fetch public profiles", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "Failed to fetch public profiles"}), http.StatusInternalServerError)
 		return
 	}
 
