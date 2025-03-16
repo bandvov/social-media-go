@@ -276,7 +276,7 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "{\"message\": \"invalid user ID\"}", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "invalid user ID"}), http.StatusBadRequest)
 		return
 	}
 
@@ -287,11 +287,11 @@ func (h *UserHTTPHandler) GetUserProfile(w http.ResponseWriter, r *http.Request)
 	user, err := h.UserService.GetUserProfileInfo(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "User not found", http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "User not found"}), http.StatusNotFound)
 			return
 		}
 		fmt.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "Internal server error"}), http.StatusInternalServerError)
 		return
 	}
 	user.Password = ""
