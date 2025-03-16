@@ -136,7 +136,7 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "{\"message\": \"invalid user ID\"}", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "invalid user ID"}), http.StatusBadRequest)
 		return
 	}
 
@@ -146,20 +146,20 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	req.Data.ID = userID
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "{\"message\": \"invalid request body\"}", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "invalid request body"}), http.StatusBadRequest)
 		return
 	}
 
 	if req.Data.Email != "" {
 		if err := ValidateEmail(req.Data.Email); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: err.Error()}), http.StatusBadRequest)
 			return
 		}
 	}
 
 	if req.Data.Password != "" {
 		if err := ValidatePassword(req.Data.Password); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: err.Error()}), http.StatusBadRequest)
 			return
 		}
 	}
@@ -173,10 +173,10 @@ func (h *UserHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err = h.UserService.UpdateUserData(ctx, &req.Data)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "error updating user: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("%v", domain.ErrorMessage{Message: "error updating user: " + err.Error()}), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{"message": "user updated successfully"})
+	json.NewEncoder(w).Encode(domain.ErrorMessage{Message: "user updated successfully"})
 }
 
 func (h *UserHTTPHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
