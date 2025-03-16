@@ -53,7 +53,7 @@ paths:
                   summary: Weak password
                   value:
                     message: "Password must be at least 8 characters long"
-                  
+
   /users/login:
     post:
       summary: User login
@@ -83,6 +83,7 @@ paths:
                     type: string
         "400":
           description: Invalid request
+
   /users/{id}/profile:
     get:
       summary: Get user profile
@@ -124,7 +125,82 @@ paths:
                   message:
                     type: string
                     example: "Internal server error"
-    
+
+  /users/{id}:
+    put:
+      summary: Update user details
+      operationId: updateUser
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  message:
+                    type: string
+                    example: "User details updated successfully"
+        "400":
+          description: Invalid user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                missingFields:
+                  summary: Missing required fields
+                  value:
+                    message: "Username and email are required"
+                invalidEmail:
+                  summary: Invalid email format
+                  value:
+                    message: "Invalid email format"
+                weakPassword:
+                  summary: Weak password
+                  value:
+                    message: "Password must be at least 8 characters long"            
+                
+        "404":
+          description: User not foun
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User with given id not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
+
   /comments:
     post:
       summary: Add a comment
@@ -171,7 +247,7 @@ paths:
         "200":
           description: Comment found
         "404":
-          description: Comment not found  
+          description: Comment not found
 
   /posts/{postId}:
     get:
@@ -207,9 +283,33 @@ components:
           type: string
         password:
           type: string
+
+    UpdateUserRequest:
+      type: object
+      required:
+        - email
+        - username
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        bio:
+          type: string
+        profile_pic:
+          type: string
+          format: uri
+
     cookie:
       type: string
-      example: access_token=abcde12345; Path=/; HttpOnly  
+      example: access_token=abcde12345; Path=/; HttpOnly
+
     Comment:
       type: object
       required:
