@@ -9,6 +9,76 @@ servers:
     description: Local Environment
 
 paths:
+  /users/login:
+    post:
+      summary: User login
+      operationId: loginUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "200":
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: Sets the access token as a cookie
+              schema:
+                $ref: "#/components/schemas/cookie"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        "400":
+          description: Invalid request
+  /users/{id}/profile:
+    get:
+      summary: Get user profile
+      operationId: getUserProfile
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid user ID"
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"  
   /comments:
     post:
       summary: Add a comment
@@ -20,18 +90,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [postId, userId, commentText]
-              properties:
-                postId:
-                  type: string
-                userId:
-                  type: string
-                commentText:
-                  type: string
-                parentCommentId:
-                  type: string
-                  nullable: true
+              $ref: "#/components/schemas/Comment"
       responses:
         "201":
           description: Comment created successfully
@@ -66,36 +125,7 @@ paths:
         "200":
           description: Comment found
         "404":
-          description: Comment not found
-
-  /users/{userId}:
-    get:
-      summary: Get user details
-      operationId: getUser
-      tags:
-        - Users
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: User details found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  userId:
-                    type: string
-                  name:
-                    type: string
-                  email:
-                    type: string
-        "404":
-          description: User not found
+          description: Comment not found  
 
   /posts/{postId}:
     get:
@@ -115,19 +145,25 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  postId:
-                    type: string
-                  title:
-                    type: string
-                  content:
-                    type: string
+                $ref: "#/components/schemas/Post"
         "404":
           description: Post not found
 
 components:
   schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    cookie:
+      type: string
+      example: access_token=abcde12345; Path=/; HttpOnly  
     Comment:
       type: object
       required:
@@ -148,16 +184,42 @@ components:
     User:
       type: object
       required:
-        - userId
-        - name
+        - id
         - email
       properties:
-        userId:
+        id:
+          type: integer
+          format: int64
+        username:
           type: string
-        name:
-          type: string
+          nullable: true
         email:
           type: string
+        status:
+          type: string
+          enum: ["active", "inactive", "banned"]
+        role:
+          type: string
+          enum: ["user", "admin", "moderator"]
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        profile_pic:
+          type: string
+          nullable: true
+          format: uri
+        bio:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
 
     Post:
       type: object
