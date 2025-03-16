@@ -69,7 +69,7 @@ func (p *PostHTTPHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	err = p.postService.CreatePost(ctx, &newPost.Data)
+	err = p.postService.CreatePost(ctx, newPost.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

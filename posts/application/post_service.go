@@ -10,7 +10,7 @@ import (
 )
 
 type PostServiceInterface interface {
-	CreatePost(ctx context.Context, post *domain.CreatePostRequest) error
+	CreatePost(ctx context.Context, post domain.CreatePostRequest) error
 	DeletePost(ctx context.Context, id int) error
 	UpdatePost(ctx context.Context, id int, post *domain.Post) error
 	GetPostByID(ctx context.Context, id, targetUserId int) (*domain.Post, error)
@@ -33,7 +33,7 @@ func NewPostService(
 	}
 }
 
-func (s *PostService) CreatePost(ctx context.Context, post *domain.CreatePostRequest) error {
+func (s *PostService) CreatePost(ctx context.Context, post domain.CreatePostRequest) error {
 	return s.postRepo.Create(ctx, post)
 }
 
