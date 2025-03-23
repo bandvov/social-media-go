@@ -122,7 +122,7 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *http.Request) {
 	var request EntityIDsRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, `{"message": "Invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -131,7 +131,7 @@ func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *ht
 
 	counts, err := h.service.GetCommentsAndRepliesCount(ctx, request.EntityIDs)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf(`{"message":%v}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
 
