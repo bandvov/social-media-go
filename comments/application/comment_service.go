@@ -11,7 +11,7 @@ import (
 
 // CommentServiceInterface defines methods for tags-related operations.
 type CommentServiceInterface interface {
-	AddComment(ctx context.Context, c *domain.Comment) error
+	AddComment(ctx context.Context, c domain.Comment) error
 	GetCommentsByEntityID(ctx context.Context, entityId int, targetUserId int, pagination domain.Pagination) ([]domain.Comment, error)
 	GetCommentsAndRepliesCount(ctx context.Context, entityIDs []int) ([]domain.CommentCount, error)
 }
@@ -27,7 +27,7 @@ func NewCommentService(repo domain.CommentRepository, commentFetcher *CommentFet
 	}
 }
 
-func (s *CommentService) AddComment(ctx context.Context, c *domain.Comment) error {
+func (s *CommentService) AddComment(ctx context.Context, c domain.Comment) error {
 	comment := domain.Comment{
 		EntityID:   c.EntityID,
 		EntityType: c.EntityType,

@@ -31,14 +31,14 @@ func NewCommentHandler(service *application.CommentService, db *sql.DB, rdb inte
 
 func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Data *domain.Comment `json:"data"`
+		Data domain.Comment `json:"data"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		http.Error(w, `{"message": "Invalid JSON request"}`, http.StatusBadRequest)
 		return
 	}
 	if !req.Data.IsValidAuthorId() || !req.Data.IsValidEntityId() || !req.Data.IsValidContent() {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		http.Error(w, `{"message": "Missing required fields"}`, http.StatusBadRequest)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
@@ -46,7 +46,7 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.service.AddComment(ctx, req.Data); err != nil {
 		fmt.Println(err)
-		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
+		http.Error(w, `{"message": "Failed to add comment"}`, http.StatusInternalServerError)
 		return
 	}
 

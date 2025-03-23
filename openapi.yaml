@@ -268,24 +268,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Comment"
+              type: object
+              properties:
+                data:
+                  $ref: "#/components/schemas/Comment"
       responses:
         "201":
           description: Comment created successfully
+        "400":
+          description: Invalid request
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  commentId:
+                  message:
                     type: string
-                  createdAt:
-                    type: string
-                    format: date-time
-        "400":
-          description: Invalid input
+              examples:
+                invalidJSON:
+                  summary: Invalid JSON request
+                  value:
+                    message: "Invalid JSON request"
+                missingFields:
+                  summary: Missing required fields
+                  value:
+                    message: "Missing required fields"
         "401":
           description: Unauthorized
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Failed to add comment"
 
   /comments/{commentId}:
     get:
@@ -369,19 +389,24 @@ components:
     Comment:
       type: object
       required:
-        - postId
-        - userId
-        - commentText
+        - entity_id
+        - entity_type
+        - content
+        - author_id
       properties:
-        postId:
+        entity_id:
           type: string
-        userId:
+          description: The ID of the entity being commented on (e.g., post ID)
+        entity_type:
           type: string
-        commentText:
+          enum: ["post", "comment"]
+          description: The type of entity being commented on
+        content:
           type: string
-        parentCommentId:
+          description: The text content of the comment
+        author_id:
           type: string
-          nullable: true
+          description: The ID of the author of the comment
 
     User:
       type: object
