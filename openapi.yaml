@@ -307,23 +307,101 @@ paths:
               example:
                 message: "Failed to add comment"
 
-  /comments/{commentId}:
+  /comments/{id}:
     get:
-      summary: Get a comment by ID
-      operationId: getComment
-      tags:
-        - Comments
+      summary: Get comments by entity ID
+      description: Fetch comments and replies for a specific entity, optionally filtered by user ID.
       parameters:
-        - name: commentId
+        - name: id
           in: path
+          description: The ID of the entity for which to fetch comments.
           required: true
           schema:
-            type: string
+            type: integer
+            example: 123
+        - name: target_id
+          in: query
+          description: The ID of the user to filter comments by (optional).
+          required: false
+          schema:
+            type: integer
+            example: 456
+        - name: page
+          in: query
+          description: The page number for pagination (optional).
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: The number of comments per page (optional).
+          required: false
+          schema:
+            type: integer
+            example: 10
       responses:
-        "200":
-          description: Comment found
-        "404":
-          description: Comment not found
+        '200':
+          description: Successfully retrieved comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 123
+                        entity_id:
+                          type: integer
+                          example: 123
+                        entity_type:
+                          type: string
+                          example: "post"
+                        author_id:
+                          type: integer
+                          example: 456
+                        replies_count:
+                          type: integer
+                          example: 456
+                        content:
+                          type: string
+                          example: "This is a comment"
+                        created_at:
+                          type: string
+                          format: date-time
+                          example: "2023-08-26T12:00:00Z"
+                        reactions:
+                          type: string
+                          format: json
+                          example: '{"like": 10, "dislike": 2}'    
+                  hasMore:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "invalid entity ID"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "failed to get comments: [error details]"
 
   /posts/{postId}:
     get:

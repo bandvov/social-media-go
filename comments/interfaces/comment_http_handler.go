@@ -13,6 +13,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type EntityIDsRequest struct {
@@ -57,7 +59,7 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	idStr := r.PathValue("id")
 	entityID, err := strconv.Atoi(idStr)
 	if err != nil || entityID <= 0 {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		http.Error(w, `{"message": "invalid entity ID"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -65,28 +67,56 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	targetUserId := query.Get("target_id")
 	targetUserIDFromUrl, err := strconv.Atoi(targetUserId)
 	if err != nil {
-		http.Error(w, "invalid user ID", http.StatusBadRequest)
+		http.Error(w, `{"message": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
+
 	p := utils.ParsePagination(r)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	comments, err := h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, p)
-	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
-		http.Error(w, "Failed to get comments", http.StatusInternalServerError)
+	var g errgroup.Group
+
+	var comments []domain.Comment
+	var counts []domain.CommentCount
+
+	g.Go(func() error {
+		var err error
+		comments, err = h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, p)
+		if err != nil {
+			fmt.Fprintln(os.Stdout, err)
+			return fmt.Errorf("failed to get comments: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		var err error
+		counts, err = h.service.GetCommentsAndRepliesCount(ctx, []int{entityID})
+		if err != nil {
+			return fmt.Errorf("failed to get comments and replies count: %w", err)
+		}
+		return nil
+	})
+
+	// Wait for both operations to complete
+	if err := g.Wait(); err != nil {
+		http.Error(w, fmt.Sprintf(`{"message": %v}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
 
+	// Construct the response
 	response := map[string]interface{}{
 		"data":    comments,
-		"hasMore": true,
+		"hasMore": counts[0].CommentCount > len(comments),
 	}
 
+	// Set the content type and return the response as JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, `{"message": "failed to encode response"}`, http.StatusInternalServerError)
+	}
 }
 
 func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *http.Request) {
