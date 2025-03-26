@@ -8,6 +8,7 @@ import (
 	"comments/utils"
 	"context"
 	"fmt"
+	"log"
 
 	"log/slog"
 	"net/http"
@@ -44,14 +45,26 @@ func main() {
 		rdb.Close()
 	}()
 
+	tp := internal.InitTracer("users-service")
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
+
+	// client := &http.Client{
+	// 	Transport: otelhttp.NewTransport(http.DefaultTransport),
+	// }
+	tracer := tp.Tracer("users-tracer")
+
 	cache := infrastructure.NewRedisCache(rdb)
 
 	// Initialize the CommentFetcher
 	commentFetcher := application.NewCommentFetcher(&http.Client{})
 
 	commentRepo := infrastructure.NewPostgresCommentRepository(db, cache)
-	commentService := application.NewCommentService(commentRepo, commentFetcher)
-	commentHandler := interfaces.NewCommentHandler(commentService, db, rdb)
+	commentService := application.NewCommentService(commentRepo, commentFetcher, tracer)
+	commentHandler := interfaces.NewCommentHandler(commentService, db, rdb, tracer)
 
 	// Create a custom router
 	router := utils.NewRouter()

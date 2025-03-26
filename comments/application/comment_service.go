@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -18,12 +19,14 @@ type CommentServiceInterface interface {
 type CommentService struct {
 	commentRepo    domain.CommentRepository
 	commentFetcher *CommentFetcher
+	tracer         trace.Tracer
 }
 
-func NewCommentService(repo domain.CommentRepository, commentFetcher *CommentFetcher) *CommentService {
+func NewCommentService(repo domain.CommentRepository, commentFetcher *CommentFetcher, tracer trace.Tracer) *CommentService {
 	return &CommentService{
 		commentRepo:    repo,
 		commentFetcher: commentFetcher,
+		tracer:         tracer,
 	}
 }
 

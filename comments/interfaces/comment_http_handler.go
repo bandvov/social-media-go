@@ -14,6 +14,9 @@ import (
 	"strconv"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+	semconv "go.opentelemetry.io/otel/semconv/v1.5.0"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -25,34 +28,61 @@ type CommentHandler struct {
 	service *application.CommentService
 	db      *sql.DB
 	rdb     internal.RedisClient
+	tracer  trace.Tracer
 }
 
-func NewCommentHandler(service *application.CommentService, db *sql.DB, rdb internal.RedisClient) *CommentHandler {
-	return &CommentHandler{service: service, db: db, rdb: rdb}
+func NewCommentHandler(service *application.CommentService, db *sql.DB, rdb internal.RedisClient, tracer trace.Tracer) *CommentHandler {
+	return &CommentHandler{service: service, db: db, rdb: rdb, tracer: tracer}
 }
 
 func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Data domain.Comment `json:"data"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"message": "Invalid JSON request"}`, http.StatusBadRequest)
-		return
-	}
-	if !req.Data.IsValidAuthorId() || !req.Data.IsValidEntityId() || !req.Data.IsValidContent() {
-		http.Error(w, `{"message": "Missing required fields"}`, http.StatusBadRequest)
-	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
+	// Parent span
+	ctx, parentSpan := h.tracer.Start(ctx, "handler.AddComment")
+	defer parentSpan.End()
+
+	// Add an annotation when the request is received
+	parentSpan.AddEvent("Request received", trace.WithAttributes(
+		semconv.HTTPMethodKey.String(r.Method),
+		semconv.HTTPURLKey.String(r.URL.String()),
+		semconv.HTTPStatusCodeKey.Int(http.StatusOK),
+	))
+
+	var req struct {
+		Data domain.Comment `json:"data"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		parentSpan.AddEvent("unmarshal-error", trace.WithAttributes(
+			attribute.Bool("success", false),
+			attribute.String("error", err.Error()),
+		))
+		http.Error(w, `{"message": "Invalid JSON request"}`, http.StatusBadRequest)
+		return
+	}
+
+	if !req.Data.IsValidAuthorId() || !req.Data.IsValidEntityId() || !req.Data.IsValidContent() {
+		parentSpan.AddEvent("validation-error", trace.WithAttributes(
+			attribute.String("error", "Missing required fields"),
+		))
+		http.Error(w, `{"message": "Missing required fields"}`, http.StatusBadRequest)
+	}
+
 	if err := h.service.AddComment(ctx, req.Data); err != nil {
-		fmt.Println(err)
+		parentSpan.AddEvent("Failed to add comment", trace.WithAttributes(
+			attribute.String("error:", err.Error()),
+		))
 		http.Error(w, `{"message": "Failed to add comment"}`, http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	parentSpan.AddEvent("success response", trace.WithAttributes(
+		attribute.Bool("success", true),
+	))
 }
 
 func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
