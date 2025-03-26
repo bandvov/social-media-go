@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -86,9 +85,26 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+	// Parent span
+	ctx, parentSpan := h.tracer.Start(ctx, "handler.GetUsersByIDs")
+	defer parentSpan.End()
+	// Add an annotation when the request is received
+	parentSpan.AddEvent("Request received", trace.WithAttributes(
+		semconv.HTTPMethodKey.String(r.Method),
+		semconv.HTTPURLKey.String(r.URL.String()),
+		semconv.HTTPStatusCodeKey.Int(http.StatusOK),
+	))
+
 	idStr := r.PathValue("id")
 	entityID, err := strconv.Atoi(idStr)
 	if err != nil || entityID <= 0 {
+		parentSpan.AddEvent("validation-error", trace.WithAttributes(
+			attribute.Bool("success", false),
+			attribute.String("error", err.Error()),
+		))
 		http.Error(w, `{"message": "invalid entity ID"}`, http.StatusBadRequest)
 		return
 	}
@@ -97,14 +113,15 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	targetUserId := query.Get("target_id")
 	targetUserIDFromUrl, err := strconv.Atoi(targetUserId)
 	if err != nil {
+		parentSpan.AddEvent("validation-error", trace.WithAttributes(
+			attribute.Bool("success", false),
+			attribute.String("error", err.Error()),
+		))
 		http.Error(w, `{"message": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
 
 	p := utils.ParsePagination(r)
-
-	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-	defer cancel()
 
 	var g errgroup.Group
 
@@ -115,7 +132,6 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 		var err error
 		comments, err = h.service.GetCommentsByEntityID(ctx, entityID, targetUserIDFromUrl, p)
 		if err != nil {
-			fmt.Fprintln(os.Stdout, err)
 			return fmt.Errorf("failed to get comments: %w", err)
 		}
 		return nil
@@ -132,6 +148,10 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	// Wait for both operations to complete
 	if err := g.Wait(); err != nil {
+		parentSpan.AddEvent("fetching-error", trace.WithAttributes(
+			attribute.Bool("success", false),
+			attribute.String("error", err.Error()),
+		))
 		http.Error(w, fmt.Sprintf(`{"message": %v}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
@@ -145,6 +165,10 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	// Set the content type and return the response as JSON
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
+		parentSpan.AddEvent("encode-error", trace.WithAttributes(
+			attribute.Bool("success", false),
+			attribute.String("error", err.Error()),
+		))
 		http.Error(w, `{"message": "failed to encode response"}`, http.StatusInternalServerError)
 	}
 }
