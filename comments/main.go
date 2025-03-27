@@ -45,7 +45,7 @@ func main() {
 		rdb.Close()
 	}()
 
-	tp := internal.InitTracer("users-service")
+	tp := internal.InitTracer("comments-service")
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
 			log.Printf("Error shutting down tracer provider: %v", err)
@@ -55,7 +55,7 @@ func main() {
 	// client := &http.Client{
 	// 	Transport: otelhttp.NewTransport(http.DefaultTransport),
 	// }
-	tracer := tp.Tracer("users-tracer")
+	tracer := tp.Tracer("comments-tracer")
 
 	cache := infrastructure.NewRedisCache(rdb)
 
