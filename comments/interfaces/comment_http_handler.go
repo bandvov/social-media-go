@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.5.0"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
@@ -55,33 +56,26 @@ func (h *CommentHandler) AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		parentSpan.AddEvent("unmarshal-error", trace.WithAttributes(
-			attribute.Bool("success", false),
-			attribute.String("error", err.Error()),
-		))
+		parentSpan.SetStatus(codes.Error, err.Error())
+		parentSpan.RecordError(err)
 		http.Error(w, `{"message": "Invalid JSON request"}`, http.StatusBadRequest)
 		return
 	}
 
 	if !req.Data.IsValidAuthorId() || !req.Data.IsValidEntityId() || !req.Data.IsValidContent() {
-		parentSpan.AddEvent("validation-error", trace.WithAttributes(
-			attribute.String("error", "Missing required fields"),
-		))
+		parentSpan.SetStatus(codes.Error, "Missing required fields")
 		http.Error(w, `{"message": "Missing required fields"}`, http.StatusBadRequest)
 	}
 
 	if err := h.service.AddComment(ctx, req.Data); err != nil {
-		parentSpan.AddEvent("Failed to add comment", trace.WithAttributes(
-			attribute.String("error:", err.Error()),
-		))
+		parentSpan.SetStatus(codes.Error, "Missing required fields")
 		http.Error(w, `{"message": "Failed to add comment"}`, http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	parentSpan.AddEvent("success response", trace.WithAttributes(
-		attribute.Bool("success", true),
-	))
+	parentSpan.SetStatus(codes.Ok, "success")
+
 }
 
 func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Request) {
