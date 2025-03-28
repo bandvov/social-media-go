@@ -1,6 +1,4 @@
 {
-    admin caddy:2019
-    # Global options for logging
     log {
         output file /var/log/caddy/access.log {
             roll_size 100mb
@@ -9,44 +7,53 @@
         }
         format json
     }
-    metrics    
+    metrics
 }
+
+
+:80 {
+    respond "This is port 80 (default HTTP)"
+}
+
 
 https://localhost:443 {
     tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem
     root * .
     file_server
-        
+
     @users {
         path /api/users*
         not path /login
     }
+
     @posts {
         path /api/posts*
     }
 
-    # Authentication
     forward_auth @users {$USERS_CONTAINER}:8000 {
         uri /verify
         copy_headers Cookie
     }
+
     forward_auth @posts {$USERS_CONTAINER}:8000 {
         uri /verify
         copy_headers Authorization Cookie
     }
 
-    # CORS Headers
-    header @users Access-Control-Allow-Origin "https://localhost:443"
-    header @users Access-Control-Allow-Credentials "true"
-    header @users Access-Control-Allow-Headers "Authorization, Cookie"
-    header @users Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header @users {
+        Access-Control-Allow-Origin "https://localhost:443"
+        Access-Control-Allow-Credentials "true"
+        Access-Control-Allow-Headers "Authorization, Cookie"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    }
 
-    header @posts Access-Control-Allow-Origin "https://localhost:443"
-    header @posts Access-Control-Allow-Credentials "true"
-    header @posts Access-Control-Allow-Headers "Authorization, Cookie"
-    header @posts Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header @posts {
+        Access-Control-Allow-Origin "https://localhost:443"
+        Access-Control-Allow-Credentials "true"
+        Access-Control-Allow-Headers "Authorization, Cookie"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    }
 
-    # Users Service with Health Check
     handle_path /api/users* {
         reverse_proxy {$USERS_CONTAINER}:8080 {
             health_uri /healthz
@@ -56,7 +63,6 @@ https://localhost:443 {
         }
     }
 
-    # Posts Service with Health Check
     handle_path /api/posts* {
         reverse_proxy {$POSTS_CONTAINER}:8080 {
             health_uri /healthz
@@ -65,7 +71,7 @@ https://localhost:443 {
             health_status 200
         }
     }
-    # Followers Service with Health Check
+
     handle_path /api/followers* {
         reverse_proxy {$FOLLOWERS_CONTAINER}:8080 {
             health_uri /healthz
@@ -74,7 +80,7 @@ https://localhost:443 {
             health_status 200
         }
     }
-     # Reactions Service with Health Check
+
     handle_path /api/reactions* {
         reverse_proxy {$REACTIONS_CONTAINER}:8080 {
             health_uri /healthz
@@ -83,7 +89,7 @@ https://localhost:443 {
             health_status 200
         }
     }
-     # Comments Service with Health Check
+
     handle_path /api/comments* {
         reverse_proxy {$COMMENTS_CONTAINER}:8080 {
             health_uri /healthz

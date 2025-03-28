@@ -66,11 +66,11 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - USERS_CONTAINER=users-${USERS_VERSION} # or directly in .env file  
-      - POSTS_CONTAINER=posts-${USERS_VERSION} # or directly in .env file  
-      - FOLLOWERS_CONTAINER=followers-${FOLLOWERS_VERSION} # or directly in .env file
-      - COMMENTS_CONTAINER=comments-${COMMENTS_VERSION} # or directly in .env file
-      - REACTIONS_CONTAINER=reactions-${COMMENTS_VERSION} # or directly in .env file
+      - USERS_CONTAINER=users${USERS_VERSION} # or directly in .env file  
+      - POSTS_CONTAINER=posts${USERS_VERSION} # or directly in .env file  
+      - FOLLOWERS_CONTAINER=followers${FOLLOWERS_VERSION} # or directly in .env file
+      - COMMENTS_CONTAINER=comments${COMMENTS_VERSION} # or directly in .env file
+      - REACTIONS_CONTAINER=reactions${COMMENTS_VERSION} # or directly in .env file
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
