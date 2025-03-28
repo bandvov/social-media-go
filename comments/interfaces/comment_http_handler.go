@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -185,4 +186,24 @@ func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *ht
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(counts)
+}
+
+func (h *CommentHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	if err := h.db.PingContext(ctx); err != nil {
+		slog.Warn("PostgreSQL health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+	if err := h.rdb.Ping(ctx).Err(); err != nil {
+		slog.Warn("Redis health check failed", "error", err)
+		http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+
+	slog.Info("Health check passed")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Ok")
 }

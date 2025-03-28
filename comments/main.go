@@ -72,6 +72,7 @@ func main() {
 	router.HandleFunc("POST /", interfaces.LoggerMiddleware(commentHandler.AddComment))
 	router.HandleFunc("GET /{id}", interfaces.LoggerMiddleware(commentHandler.GetCommentsByEntityID))
 	router.HandleFunc("GET /count", interfaces.LoggerMiddleware(commentHandler.GetCommentsAndRepliesCount))
+	router.HandleFunc("GET /healthz", interfaces.LoggerMiddleware(commentHandler.HealthCheckHandler))
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}

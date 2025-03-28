@@ -60,6 +60,7 @@ func main() {
 	router.HandleFunc("POST /count", reactionHandler.GetReactionsCount)
 	router.HandleFunc("POST /stats", reactionHandler.GetReactionStats)
 	router.HandleFunc("POST /{id}/user-reactions", reactionHandler.GetUserReactions)
+	router.HandleFunc("GET /healthz", reactionHandler.HealthCheckHandler)
 
 	// Start server
 	server := &http.Server{Addr: PORT, Handler: router}
