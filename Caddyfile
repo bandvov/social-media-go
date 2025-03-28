@@ -1,4 +1,5 @@
 {
+    admin :2019
     log {
         output file /var/log/caddy/access.log {
             roll_size 100mb
