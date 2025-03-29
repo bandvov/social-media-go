@@ -32,11 +32,13 @@ type PostHTTPHandler struct {
 
 func NewPostHTTPHandler(
 	postService application.PostServiceInterface,
+	db *sql.DB,
 	rdb internal.RedisClient,
 
 ) *PostHTTPHandler {
 	return &PostHTTPHandler{
 		postService: postService,
+		db:          db,
 		rdb:         rdb,
 	}
 }

@@ -51,7 +51,7 @@ func main() {
 
 	postRepo := infrastructure.NewPostRepository(db, cache)
 	postService := application.NewPostService(postRepo, fetcher)
-	postHandler := interfaces.NewPostHTTPHandler(postService, rdb)
+	postHandler := interfaces.NewPostHTTPHandler(postService, db, rdb)
 
 	// Create a custom router
 	router := utils.NewRouter()
