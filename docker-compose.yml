@@ -41,7 +41,7 @@ services:
       - app-network
   redis:
     image: redis:latest
-    container_name: redis-container
+    container_name: redis
     restart: unless-stopped
     networks:
       - app-network
