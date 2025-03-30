@@ -36,23 +36,32 @@ func (h *FollowHandler) AddFollower(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		http.Error(w, `{"message": "Invalid request"}`, http.StatusBadRequest)
 		return
+	}
+
+	if req.Data.FolloweeID == 0 || req.Data.FollowerID == 0 {
+		http.Error(w, `{"message":"Follower id and followee id must be different"}`, http.StatusBadRequest)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
+	if req.Data.FollowerID == req.Data.FolloweeID {
+		http.Error(w, `{"message":"Cannot follow myself"}`, http.StatusBadRequest)
+	}
 	// Call the service to add the follower
 	err = h.service.AddFollower(ctx, req.Data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		slog.Error(fmt.Sprintf(`{"message": %v}`, err.Error()))
+		http.Error(w, `{"message": "Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
 
 	// Send a response back
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Follower added successfully")
+	w.Header().Set("Content Type", "application/json")
+	fmt.Fprintf(w, `{"message": "Follower added successfully"}`)
 }
 
 func (h *FollowHandler) RemoveFollower(w http.ResponseWriter, r *http.Request) {

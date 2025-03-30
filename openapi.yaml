@@ -110,6 +110,71 @@ paths:
                   value:
                     message: "Password must be at least 8 characters long"
 
+  /followers:
+    post:
+      summary: Add a follower
+      description: Adds a follower to a user.
+      operationId: addFollower
+      tags:
+        - followers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  required:
+                    - follower_id
+                    - followee_id
+                  properties:
+                    follower_id:
+                      type: integer
+                      example: 4
+                    followee_id:
+                      type: integer
+                      example: 2
+      responses:
+        "201":
+          description: Follower added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Follower added successfully"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                missingFields:
+                  summary: Missing required fields
+                  value:
+                    message: "follower_id and followee_id are required"
+                invalidEmail:
+                  summary: follower_id and followee_id are equal
+                  value:
+                    message: "Follower id and followee id must be different"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
   /users/login:
     post:
       summary: User login
