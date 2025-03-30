@@ -14,14 +14,35 @@ storage:
     wal:
       path: /tmp/tempo/wal
 metrics_generator:
+  processor:
+    service_graphs:
+      wait: 2s  # Time to wait for spans from the same service before generating an edge
+      max_items: 10000  # Maximum number of service graph edges to track
+      workers: 10  # Number of workers processing spans for the service graph
   registry:
+    collection_interval: 15s  # How often to collect metrics
     external_labels:
       source: tempo
   storage:
     path: /tmp/tempo/metrics
+    remote_write:            # Send metrics to Prometheus
+      - url: http://prometheus:9090/api/v1/write  # Prometheus remote write URL
+           # Number of workers for processing
+  
   ring:
     kvstore:
       store: memberlist
+
 memberlist:
   join_members:
     - tempo:7946  # Default memberlist port, adjust if needed
+    
+ingester:
+  trace_idle_period: 10s    # Time to wait before considering a trace complete
+  max_block_duration: 5m    # Maximum duration of a block before it’s cut
+
+compactor:
+  compaction:
+    compaction_window: 1h   # Time window for compaction
+    max_block_bytes: 100_000_000  # Max size of compacted blocks
+ 
