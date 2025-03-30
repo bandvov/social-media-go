@@ -59,8 +59,10 @@ func main() {
 
 	cache := infrastructure.NewRedisCache(rdb)
 
+	usersClient := internal.NewHTTPClient("http://users:8080")
+	reactionsClient := internal.NewHTTPClient("http://reactions:8080")
 	// Initialize the CommentFetcher
-	commentFetcher := application.NewCommentFetcher(&http.Client{})
+	commentFetcher := application.NewCommentFetcher(usersClient, reactionsClient)
 
 	commentRepo := infrastructure.NewPostgresCommentRepository(db, cache)
 	commentService := application.NewCommentService(commentRepo, commentFetcher, tracer)
