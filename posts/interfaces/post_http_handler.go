@@ -14,6 +14,10 @@ import (
 	"posts/utils"
 	"strconv"
 	"time"
+
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.23.1"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Define keys for context
@@ -28,18 +32,21 @@ type PostHTTPHandler struct {
 	postService application.PostServiceInterface
 	db          *sql.DB
 	rdb         internal.RedisClient
+	tracer      trace.Tracer
 }
 
 func NewPostHTTPHandler(
 	postService application.PostServiceInterface,
 	db *sql.DB,
 	rdb internal.RedisClient,
+	tracer trace.Tracer,
 
 ) *PostHTTPHandler {
 	return &PostHTTPHandler{
 		postService: postService,
 		db:          db,
 		rdb:         rdb,
+		tracer:      tracer,
 	}
 }
 
@@ -165,12 +172,28 @@ func (p *PostHTTPHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	// Parent span
+	ctx, parentSpan := h.tracer.Start(ctx, "handler.GetPostsByUser")
+	defer parentSpan.End()
+
+	// Add an annotation when the request is received
+	parentSpan.AddEvent("Request received", trace.WithAttributes(
+		semconv.HTTPMethodKey.String(r.Method),
+		semconv.HTTPURLKey.String(r.URL.String()),
+		semconv.HTTPStatusCodeKey.Int(http.StatusOK),
+	))
+
 	fmt.Fprintln(os.Stdout, "GetPostsByUser")
 	s := time.Now()
 	query := r.URL.Query()
 	targetUserIdStr := query.Get("target_id")
 	targetUserId, err := strconv.Atoi(targetUserIdStr)
 	if err != nil {
+		parentSpan.SetStatus(codes.Error, err.Error())
+		parentSpan.RecordError(err)
 		http.Error(w, "invalid target id", http.StatusBadRequest)
 		return
 	}
@@ -178,17 +201,18 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	idStr := r.PathValue("id")
 	authorIDFromUrl, err := strconv.Atoi(idStr)
 	if err != nil {
+		parentSpan.SetStatus(codes.Error, err.Error())
+		parentSpan.RecordError(err)
 		http.Error(w, "invalid user ID", http.StatusBadRequest)
 		return
 	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-	defer cancel()
 
 	p := utils.ParsePagination(r)
 	// Move the logic to the service layer
 	posts, postsCount, err := h.postService.GetPostsByUser(ctx, authorIDFromUrl, targetUserId, p)
 	if err != nil {
+		parentSpan.SetStatus(codes.Error, err.Error())
+		parentSpan.RecordError(err)
 		fmt.Fprintln(os.Stdout, err.Error())
 		http.Error(w, "Failed to fetch posts", http.StatusBadRequest)
 		return
@@ -201,6 +225,7 @@ func (h *PostHTTPHandler) GetPostsByUser(w http.ResponseWriter, r *http.Request)
 	fmt.Println(time.Since(s))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+	parentSpan.SetStatus(codes.Ok, "success")
 }
 
 func (h *PostHTTPHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {

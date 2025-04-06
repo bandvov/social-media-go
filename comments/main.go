@@ -52,9 +52,6 @@ func main() {
 		}
 	}()
 
-	// client := &http.Client{
-	// 	Transport: otelhttp.NewTransport(http.DefaultTransport),
-	// }
 	tracer := tp.Tracer("comments-tracer")
 
 	cache := infrastructure.NewRedisCache(rdb)

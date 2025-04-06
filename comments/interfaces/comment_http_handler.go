@@ -84,7 +84,7 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 	// Parent span
-	ctx, parentSpan := h.tracer.Start(ctx, "handler.GetUsersByIDs")
+	ctx, parentSpan := h.tracer.Start(ctx, "handler.GetCommentsByEntityID")
 	defer parentSpan.End()
 	// Add an annotation when the request is received
 	parentSpan.AddEvent("Request received", trace.WithAttributes(
@@ -134,7 +134,9 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 
 	g.Go(func() error {
 		var err error
-		counts, err = h.service.GetCommentsAndRepliesCount(ctx, []int{entityID})
+		counts, err = h.service.GetCommentsAndRepliesCount(ctx, []domain.Entity{
+			{ID: entityID, Type: "post"},
+		})
 		if err != nil {
 			return fmt.Errorf("failed to get comments and replies count: %w", err)
 		}
@@ -169,7 +171,9 @@ func (h *CommentHandler) GetCommentsByEntityID(w http.ResponseWriter, r *http.Re
 }
 
 func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *http.Request) {
-	var request EntityIDsRequest
+	var request struct {
+		Data []domain.Entity `json:"data"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, `{"message": "Invalid request body"}`, http.StatusBadRequest)
 		return
@@ -178,7 +182,7 @@ func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *ht
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 
-	counts, err := h.service.GetCommentsAndRepliesCount(ctx, request.EntityIDs)
+	counts, err := h.service.GetCommentsAndRepliesCount(ctx, request.Data)
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"message":%v}`, err.Error()), http.StatusInternalServerError)
 		return

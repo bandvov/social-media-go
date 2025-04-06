@@ -7,5 +7,5 @@ import (
 type CommentRepository interface {
 	AddComment(ctx context.Context, comment Comment) error
 	FetchCommentsByEntityID(ctx context.Context, entityID int, pagination Pagination) ([]Comment, error)
-	CountByEntityIDs(ctx context.Context, entityIDs []int) ([]CommentCount, error)
+	CountByEntityIDAndType(ctx context.Context, entities []Entity) ([]CommentCount, error)
 }

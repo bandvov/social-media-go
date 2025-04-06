@@ -43,15 +43,24 @@ func main() {
 		rdb.Close()
 	}()
 
-	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments%s:8080", "../comments/VERSION"))
-	reactionsClient := internal.NewHTTPClient(fmt.Sprintf("http://reactions%s:8080", "../reactions/VERSION"))
+	tp := internal.InitTracer("posts-service")
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			slog.Info(fmt.Sprintf("Error shutting down tracer provider: %v", err))
+		}
+	}()
+
+	tracer := tp.Tracer("posts-tracer")
+
+	commentsClient := internal.NewHTTPClient(fmt.Sprintf("http://comments:8080"))
+	reactionsClient := internal.NewHTTPClient(fmt.Sprintf("http://reactions:8080"))
 	fetcher := application.NewPostsFetcher(reactionsClient, commentsClient)
 
 	cache := infrastructure.NewRedisCache(rdb)
 
-	postRepo := infrastructure.NewPostRepository(db, cache)
-	postService := application.NewPostService(postRepo, fetcher)
-	postHandler := interfaces.NewPostHTTPHandler(postService, db, rdb)
+	postRepo := infrastructure.NewPostRepository(db, cache, tracer)
+	postService := application.NewPostService(postRepo, fetcher, tracer)
+	postHandler := interfaces.NewPostHTTPHandler(postService, db, rdb, tracer)
 
 	// Create a custom router
 	router := utils.NewRouter()

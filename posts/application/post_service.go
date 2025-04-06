@@ -6,6 +6,8 @@ import (
 	"os"
 	"posts/domain"
 
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -21,15 +23,19 @@ type PostServiceInterface interface {
 type PostService struct {
 	postRepo domain.PostRepository
 	fetcher  PostsFetcher
+	tracer   trace.Tracer
 }
 
 func NewPostService(
 	repo domain.PostRepository,
 	fetcher PostsFetcher,
+	tracer trace.Tracer,
+
 ) *PostService {
 	return &PostService{
 		postRepo: repo,
 		fetcher:  fetcher,
+		tracer:   tracer,
 	}
 }
 
@@ -85,15 +91,20 @@ func (s *PostService) GetCountPostsByUser(ctx context.Context, userID int) (int,
 }
 
 func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId int, p domain.Pagination) ([]domain.Post, int, error) {
+
+	ctx, span := s.tracer.Start(ctx, "service.GetPostsByUser")
+	defer span.End()
+
 	fmt.Fprintln(os.Stdout, "GetPostsByUser in service")
 	posts, err := s.postRepo.GetByUserID(ctx, authorID, p)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, 0, err
 	}
-	var postIDs []int
+
 	var entities []domain.Entity
 	for _, v := range posts {
-		postIDs = append(postIDs, v.ID)
 		entities = append(entities, domain.Entity{ID: v.ID, Type: "post"})
 	}
 
@@ -106,7 +117,7 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 
 	eg.Go(func() error {
 		var err error
-		commentsCountsMap, err = s.fetcher.FetchCommentsCount(ctx, postIDs)
+		commentsCountsMap, err = s.fetcher.FetchCommentsCount(ctx, entities)
 		return err
 	})
 
@@ -127,6 +138,8 @@ func (s *PostService) GetPostsByUser(ctx context.Context, authorID, targetUserId
 	})
 
 	if err := eg.Wait(); err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, 0, err
 	}
 

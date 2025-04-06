@@ -7,15 +7,19 @@ import (
 	"posts/domain"
 	"regexp"
 	"strings"
+
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type PostRepository struct {
-	db    *sql.DB
-	cache *RedisCache
+	db     *sql.DB
+	cache  *RedisCache
+	tracer trace.Tracer
 }
 
-func NewPostRepository(db *sql.DB, cache *RedisCache) *PostRepository {
-	return &PostRepository{db: db, cache: cache}
+func NewPostRepository(db *sql.DB, cache *RedisCache, tracer trace.Tracer) *PostRepository {
+	return &PostRepository{db: db, cache: cache, tracer: tracer}
 }
 
 func (r *PostRepository) Create(ctx context.Context, post domain.CreatePostRequest) error {
@@ -149,6 +153,9 @@ func (r *PostRepository) GetByID(ctx context.Context, id int) (*domain.Post, err
 
 func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.Pagination) ([]domain.Post, error) {
 
+	ctx, span := r.tracer.Start(ctx, "infrastructure.GetByUserID")
+	defer span.End()
+
 	query := `
 		SELECT
 			id AS post_id,
@@ -163,16 +170,23 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.P
 		ORDER BY id DESC
 		OFFSET $2
 		LIMIT $3;`
+
+	span.AddEvent("prepare statements")
 	// Prepare the query using a prepared statement.
 	stmt, err := r.db.PrepareContext(ctx, query)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, err
 	}
 	defer stmt.Close()
 
+	span.AddEvent("fetch rows")
 	// Execute the query with context and parameters
 	rows, err := stmt.QueryContext(ctx, userID, p.Offset, p.Limit)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -182,6 +196,8 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.P
 	for rows.Next() {
 		var post domain.Post
 		if err := rows.Scan(&post.ID, &post.AuthorID, &post.Content, &post.Visibility, &post.Pinned, &post.CreatedAt, &post.UpdatedAt); err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
 			return nil, err
 		}
 		posts = append(posts, post)
@@ -189,9 +205,11 @@ func (r *PostRepository) GetByUserID(ctx context.Context, userID int, p domain.P
 
 	// Check for any errors that may have occurred during iteration
 	if err := rows.Err(); err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
 		return nil, err
 	}
-
+	span.AddEvent("return rows")
 	return posts, nil
 }
 

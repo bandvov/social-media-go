@@ -14,7 +14,7 @@ import (
 type CommentServiceInterface interface {
 	AddComment(ctx context.Context, c domain.Comment) error
 	GetCommentsByEntityID(ctx context.Context, entityId int, targetUserId int, pagination domain.Pagination) ([]domain.Comment, error)
-	GetCommentsAndRepliesCount(ctx context.Context, entityIDs []int) ([]domain.CommentCount, error)
+	GetCommentsAndRepliesCount(ctx context.Context, entities []domain.Entity) ([]domain.CommentCount, error)
 }
 type CommentService struct {
 	commentRepo    domain.CommentRepository
@@ -119,8 +119,8 @@ func (s *CommentService) GetCommentsByEntityID(ctx context.Context, entityID int
 	return comments, nil
 }
 
-func (s *CommentService) GetCommentsAndRepliesCount(ctx context.Context, entityIDs []int) ([]domain.CommentCount, error) {
-	return s.commentRepo.CountByEntityIDs(ctx, entityIDs)
+func (s *CommentService) GetCommentsAndRepliesCount(ctx context.Context, entities []domain.Entity) ([]domain.CommentCount, error) {
+	return s.commentRepo.CountByEntityIDAndType(ctx, entities)
 }
 
 // Helper function to extract keys from a map

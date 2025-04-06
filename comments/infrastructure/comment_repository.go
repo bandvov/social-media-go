@@ -2,10 +2,11 @@ package infrastructure
 
 import (
 	"comments/domain"
-	"comments/utils"
 	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/lib/pq"
 )
 
 type PostgresCommentRepository struct {
@@ -90,29 +91,35 @@ func (r *PostgresCommentRepository) FetchCommentsByEntityID(ctx context.Context,
 	return comments, nil
 }
 
-func (r *PostgresCommentRepository) CountByEntityIDs(ctx context.Context, entityIDs []int) ([]domain.CommentCount, error) {
-	// Generate the placeholders for the query based on the number of entityIDs
-	placeholders := utils.Placeholders(len(entityIDs))
-
-	// Prepare the query with placeholders
-	query := fmt.Sprintf(`
-        SELECT
-			entity_id,
-			COALESCE(COUNT(CASE WHEN entity_type = 'comment' THEN 1 END), 0) AS comment_count,
-            COALESCE(COUNT(CASE WHEN entity_type = 'post' THEN 1 END), 0) AS reply_count
-        FROM comments
-        WHERE entity_id IN (%s)
-		GROUP BY entity_id`, placeholders)
-
-	// Prepare the statement using the context
-	stmt, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to prepare query: %w", err)
+func (r *PostgresCommentRepository) CountByEntityIDAndType(ctx context.Context, entities []domain.Entity) ([]domain.CommentCount, error) {
+	if len(entities) == 0 {
+		return nil, nil
 	}
-	defer stmt.Close()
 
-	// Execute the query using the provided entityIDs
-	rows, err := stmt.QueryContext(ctx, utils.ToInterface(entityIDs)...)
+	// Split into slices of IDs and Types
+	ids := make([]int, 0, len(entities))
+	types := make([]string, 0, len(entities))
+	for _, e := range entities {
+		ids = append(ids, e.ID)
+		types = append(types, e.Type)
+	}
+
+	query := `
+		WITH entity_input AS (
+			SELECT UNNEST($1::int[]) AS entity_id, UNNEST($2::entity_type[]) AS entity_type
+		)
+		SELECT 
+			e.entity_id,
+			e.entity_type,
+			COALESCE(COUNT(CASE WHEN c.entity_type = 'comment' THEN 1 END), 0) AS comment_count,
+			COALESCE(COUNT(CASE WHEN c.entity_type = 'post' THEN 1 END), 0) AS reply_count
+		FROM entity_input e
+		LEFT JOIN comments c 
+			ON e.entity_id = c.entity_id AND e.entity_type = c.entity_type
+		GROUP BY e.entity_id, e.entity_type;
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, pq.Array(ids), pq.Array(types))
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
@@ -121,13 +128,12 @@ func (r *PostgresCommentRepository) CountByEntityIDs(ctx context.Context, entity
 	var counts []domain.CommentCount
 	for rows.Next() {
 		var count domain.CommentCount
-		if err := rows.Scan(&count.EntityID, &count.CommentCount, &count.ReplyCount); err != nil {
+		if err := rows.Scan(&count.EntityID, &count.EntityType, &count.CommentCount, &count.ReplyCount); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		counts = append(counts, count)
 	}
 
-	// Check for errors after the loop
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}

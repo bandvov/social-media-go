@@ -79,17 +79,19 @@ func (f *PostsFetcher) FetchReactionStats(ctx context.Context, entities []domain
 	}), nil
 }
 
-func (f *PostsFetcher) FetchCommentsCount(ctx context.Context, entityIds []int) (map[int]domain.Comment, error) {
+func (f *PostsFetcher) FetchCommentsCount(ctx context.Context, entities []domain.Entity) (map[int]domain.Comment, error) {
 	url := "/count"
-	jsonData, err := json.Marshal(entityIds)
+	body, err := json.Marshal(domain.Request[[]domain.Entity]{Data: entities})
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, bytes.NewBuffer(jsonData))
+	fmt.Fprintln(os.Stdout, "reaction body", string(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	var commentsCounts domain.Response[[]domain.Comment]
 	err = f.commentsClient.GetJSON(req, &commentsCounts)
