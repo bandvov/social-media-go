@@ -105,18 +105,40 @@ func (r *PostgresCommentRepository) CountByEntityIDAndType(ctx context.Context, 
 	}
 
 	query := `
-		WITH entity_input AS (
-			SELECT UNNEST($1::int[]) AS entity_id, UNNEST($2::entity_type[]) AS entity_type
-		)
-		SELECT 
-			e.entity_id,
-			e.entity_type,
-			COALESCE(COUNT(CASE WHEN c.entity_type = 'comment' THEN 1 END), 0) AS comment_count,
-			COALESCE(COUNT(CASE WHEN c.entity_type = 'post' THEN 1 END), 0) AS reply_count
-		FROM entity_input e
-		LEFT JOIN comments c 
-			ON e.entity_id = c.entity_id AND e.entity_type = c.entity_type
-		GROUP BY e.entity_id, e.entity_type;
+		WITH input_entities AS (
+  SELECT *
+  FROM UNNEST(
+    $1::INT[],          -- entity IDs
+    $2::entity_type[] -- entity types
+  ) AS t(entity_id, entity_type)
+),
+
+direct_comments AS (
+  SELECT i.entity_id, i.entity_type, COUNT(c.*) AS comment_count
+  FROM input_entities i
+  LEFT JOIN comments c
+    ON c.entity_type = i.entity_type AND c.entity_id = i.entity_id
+  GROUP BY i.entity_id, i.entity_type
+),
+
+replies AS (
+  SELECT i.entity_id, i.entity_type, COUNT(r.*) AS reply_count
+  FROM input_entities i
+  JOIN comments c
+    ON c.entity_type = i.entity_type AND c.entity_id = i.entity_id
+  LEFT JOIN comments r
+    ON r.entity_type = 'comment' AND r.entity_id = c.id
+  GROUP BY i.entity_id, i.entity_type
+)
+
+SELECT 
+  d.entity_id,
+  d.entity_type,
+  COALESCE(d.comment_count, 0) AS total_comments,
+  COALESCE(r.reply_count, 0) AS total_replies
+FROM direct_comments d
+LEFT JOIN replies r ON r.entity_id = d.entity_id AND r.entity_type = d.entity_type;
+
 	`
 
 	rows, err := r.db.QueryContext(ctx, query, pq.Array(ids), pq.Array(types))
