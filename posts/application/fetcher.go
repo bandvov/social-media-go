@@ -12,11 +12,11 @@ import (
 )
 
 type PostsFetcher struct {
-	reactionsClient internal.ClientInterface
-	commentsClient  internal.ClientInterface
+	reactionsClient *internal.HTTPClient
+	commentsClient  *internal.HTTPClient
 }
 
-func NewPostsFetcher(reactionsClient internal.ClientInterface, commentsClient internal.ClientInterface) PostsFetcher {
+func NewPostsFetcher(reactionsClient *internal.HTTPClient, commentsClient *internal.HTTPClient) PostsFetcher {
 	return PostsFetcher{
 		reactionsClient: reactionsClient,
 		commentsClient:  commentsClient,
@@ -86,7 +86,7 @@ func (f *PostsFetcher) FetchCommentsCount(ctx context.Context, entities []domain
 		return nil, err
 	}
 
-	fmt.Fprintln(os.Stdout, "reaction body", string(body))
+	fmt.Fprintln(os.Stdout, "comments body", string(body))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
@@ -95,7 +95,6 @@ func (f *PostsFetcher) FetchCommentsCount(ctx context.Context, entities []domain
 
 	var commentsCounts domain.Response[[]domain.Comment]
 	err = f.commentsClient.GetJSON(req, &commentsCounts)
-	fmt.Fprintln(os.Stdout, err.Error())
 	if err != nil {
 		return nil, err
 	}

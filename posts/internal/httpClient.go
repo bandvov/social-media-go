@@ -25,7 +25,7 @@ type HTTPClient struct {
 }
 
 // NewHTTPClient initializes a new HTTP client.
-func NewHTTPClient(basePath string) ClientInterface {
+func NewHTTPClient(basePath string) *HTTPClient {
 
 	return &HTTPClient{
 		Client: &http.Client{

@@ -187,9 +187,11 @@ func (h *CommentHandler) GetCommentsAndRepliesCount(w http.ResponseWriter, r *ht
 		http.Error(w, fmt.Sprintf(`{"message":%v}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
-
+	response := map[string]interface{}{
+		"data": counts,
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(counts)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *CommentHandler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {

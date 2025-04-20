@@ -69,8 +69,8 @@ func main() {
 	router := utils.NewRouter()
 
 	router.HandleFunc("POST /", interfaces.LoggerMiddleware(commentHandler.AddComment))
-	router.HandleFunc("GET /{id}", interfaces.LoggerMiddleware(commentHandler.GetCommentsByEntityID))
-	router.HandleFunc("GET /count", interfaces.LoggerMiddleware(commentHandler.GetCommentsAndRepliesCount))
+	router.HandleFunc("POST /{id}", interfaces.LoggerMiddleware(commentHandler.GetCommentsByEntityID))
+	router.HandleFunc("POST /count", interfaces.LoggerMiddleware(commentHandler.GetCommentsAndRepliesCount))
 	router.HandleFunc("GET /healthz", interfaces.LoggerMiddleware(commentHandler.HealthCheckHandler))
 
 	// Start server

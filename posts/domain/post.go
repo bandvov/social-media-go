@@ -14,13 +14,14 @@ type Reaction struct {
 	EntityId int    `json:"entity_id"`
 	Reaction string `json:"reaction_type_id"`
 	Count    int    `json:"count,omitempty"`
-	Type     string `json:"type",omitempty`
+	Type     string `json:"type,omitempty"`
 }
 
 type Comment struct {
-	EntityID     int `json:"entity_id"`
-	CommentCount int `json:"comment_count"`
-	ReplyCount   int `json:"reply_count"`
+	EntityID     int    `json:"entity_id"`
+	EntityType   string `json:"entity_type"`
+	CommentCount int    `json:"comment_count"`
+	ReplyCount   int    `json:"reply_count"`
 }
 
 type CreatePostRequest struct {
@@ -91,8 +92,8 @@ type Request[T any] struct {
 }
 
 type Response[T any] struct {
-	Data    T      `json:"data"`
-	Message string `json:"message"`
+	Data    T      `json:"data,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type ReactionStat struct {
